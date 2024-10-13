@@ -15,19 +15,78 @@ captures/
 *.apk
 output.json
 
-# IntelliJ
-*.iml
+# Flutter/Dart/Pub related files
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
 .idea/
-misc.xml
-deploymentTargetDropDown.xml
-render.experimental.xml
+.vscode/
+*.iml
 
-# Keystore files
-*.jks
-*.keystore
+# iOS related files
+ios/Flutter/.last_build_id
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/ServiceDefinitions.json
+ios/Runner.xcworkspace/
+ios/Runner.xcworkspace/xcuserdata/
+ios/Runner.xcworkspace/xcshareddata/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/Generated.xcconfig.debug
+ios/Flutter/Generated.xcconfig.release
 
-# Google Services (e.g. APIs or Firebase)
-google-services.json
+# Android related files
+android/.gradle/
+android/app/build/
+android/local.properties
+android/.idea/
+android/.vscode/
+android/key.properties
+android/app/key.properties
+android/key.jks
+android/app/key.jks
 
-# Android Profiling
-*.hprof
+# Web related files
+web/.dart_tool/
+web/.packages
+web/.flutter-plugins
+web/.flutter-plugins-dependencies
+web/.pub-cache/
+web/.pub/
+web/build/
+
+# Windows related files
+windows/.dart_tool/
+windows/.packages
+windows/.flutter-plugins
+windows/.flutter-plugins-dependencies
+windows/.pub-cache/
+windows/.pub/
+windows/build/
+
+# macOS related files
+macos/.dart_tool/
+macos/.packages
+macos/.flutter-plugins
+macos/.flutter-plugins-dependencies
+macos/.pub-cache/
+macos/.pub/
+macos/build/
+
+# Linux related files
+linux/.dart_tool/
+linux/.packages
+linux/.flutter-plugins
+linux/.flutter-plugins-dependencies
+linux/.pub-cache/
+linux/.pub/
+linux/build/
