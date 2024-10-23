@@ -1,78 +1,73 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:screenshot/screenshot.dart';
-import 'package:image/image.dart' as img;
-import 'dart:io';
 
-class ImageHandlerViewModel extends ChangeNotifier {
-  File? _selectedImage;
+class ImageHandlerViewModel with ChangeNotifier {
+  static const int maxImages = 10;
+  List<File> _selectedImages = [];
   final ImagePicker _picker = ImagePicker();
-  ScreenshotController screenshotController = ScreenshotController();
-  bool _isPickerActive = false;
 
-  File? get selectedImage => _selectedImage;
+  List<File> get selectedImages => _selectedImages;
+  int get selectedImageCount => _selectedImages.length;
+  bool get canAddMoreImages => _selectedImages.length < maxImages;
 
-  Future<File> _resizeImage(File imageFile) async {
-    final bytes = await imageFile.readAsBytes();
-    final image = img.decodeImage(bytes);
-    final resized = img.copyResize(image!, width: 800);
-    final resizedBytes = img.encodeJpg(resized, quality: 85);
-    final tempDir = await Directory.systemTemp.createTemp();
-    final tempFile = File('${tempDir.path}/resized_image.jpg');
-    await tempFile.writeAsBytes(resizedBytes);
-    return tempFile;
+  Future<Map<String, dynamic>> pickImages() async {
+    if (!canAddMoreImages) return {'added': 0, 'limitReached': true};
+
+    final List<XFile>? pickedFiles = await _picker.pickMultiImage();
+    if (pickedFiles == null || pickedFiles.isEmpty) {
+      return {'added': 0, 'limitReached': false};
+    }
+
+    int remainingSlots = maxImages - _selectedImages.length;
+    List<File> newImages = pickedFiles
+        .take(remainingSlots)
+        .map((xFile) => File(xFile.path))
+        .toList();
+
+    _selectedImages.addAll(newImages);
+    notifyListeners();
+
+    return {
+      'added': newImages.length,
+      'limitReached': _selectedImages.length >= maxImages,
+      'totalSelected': _selectedImages.length,
+    };
   }
 
-  Future<void> pickImage() async {
-    if (_isPickerActive) return;
-    _isPickerActive = true;
-    try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        final resizedImage = await _resizeImage(File(image.path));
-        _selectedImage = resizedImage;
-        notifyListeners();
-      }
-    } finally {
-      _isPickerActive = false;
+  Future<Map<String, dynamic>> takePhoto() async {
+    if (!canAddMoreImages) return {'added': 0, 'limitReached': true};
+
+    final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
+    if (photo == null) {
+      return {'added': 0, 'limitReached': false};
+    }
+
+    File newImage = File(photo.path);
+    _selectedImages.add(newImage);
+    notifyListeners();
+
+    return {
+      'added': 1,
+      'limitReached': _selectedImages.length >= maxImages,
+      'totalSelected': _selectedImages.length,
+    };
+  }
+
+  void removeImage(File image) {
+    _selectedImages.remove(image);
+    notifyListeners();
+  }
+
+  void removeImageAt(int index) {
+    if (index >= 0 && index < _selectedImages.length) {
+      _selectedImages.removeAt(index);
+      notifyListeners();
     }
   }
 
-  Future<void> takePhoto() async {
-    if (_isPickerActive) return;
-    _isPickerActive = true;
-    try {
-      final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
-      if (photo != null) {
-        final resizedImage = await _resizeImage(File(photo.path));
-        _selectedImage = resizedImage;
-        notifyListeners();
-      }
-    } finally {
-      _isPickerActive = false;
-    }
-  }
-
-  Future<void> captureScreenshot(BuildContext context) async {
-    if (_isPickerActive) return;
-    _isPickerActive = true;
-    try {
-      final screenshot = await screenshotController.capture();
-      if (screenshot != null) {
-        final tempDir = await Directory.systemTemp.createTemp();
-        final tempFile = File('${tempDir.path}/screenshot.png');
-        await tempFile.writeAsBytes(screenshot);
-        final resizedImage = await _resizeImage(tempFile);
-        _selectedImage = resizedImage;
-        notifyListeners();
-      }
-    } finally {
-      _isPickerActive = false;
-    }
-  }
-
-  void clearImage() {
-    _selectedImage = null;
+  void removeAllImages() {
+    _selectedImages.clear();
     notifyListeners();
   }
 }
