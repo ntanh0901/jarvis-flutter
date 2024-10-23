@@ -159,6 +159,15 @@ class _SignupPageState extends State<SignupPage> {
                             },
                           ),
                           const SizedBox(height: 20),
+                          const Text(
+                            'By continuing, you agree to our Terms of Service and Privacy Policy',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 20),
                           SizedBox(
                             width: double.infinity,
                             child: CustomGradientButton(
