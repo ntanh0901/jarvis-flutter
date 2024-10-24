@@ -246,7 +246,7 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: const BoxDecoration(
-                  color: Color(0xFFFFD700), // Gold color
+                  color: Colors.amber, // Amber color
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -407,20 +407,30 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1E3A8A), // Dark blue color
+            letterSpacing: 1.2,
+          ),
         ),
         const SizedBox(height: 16),
         ...features.map((feature) => Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(bottom: 12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.check_circle, color: Colors.green, size: 20),
-              const SizedBox(width: 8),
+              const Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   feature,
-                  style: const TextStyle(fontSize: 16),
+                  style: const TextStyle(
+                    fontSize: 14, // Smaller font size
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w400, // Regular weight
+                    height: 1.4, // Adjusted line height
+                  ),
                 ),
               ),
             ],
