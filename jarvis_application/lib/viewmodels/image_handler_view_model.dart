@@ -13,7 +13,7 @@ class ImageHandlerViewModel extends ChangeNotifier {
   bool get canAddMoreImages => _selectedImages.length < maxImages;
 
   Future<Map<String, dynamic>> pickImages() async {
-    final List<XFile>? pickedFiles = await _picker.pickMultiImage();
+    final List<XFile> pickedFiles = await _picker.pickMultiImage();
     return _processPickedImages(pickedFiles);
   }
 
