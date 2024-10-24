@@ -82,19 +82,20 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
                   ),
                 ],
               ),
-              ElevatedButton(
-                onPressed: () {
-                  // Implement upgrade logic
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.blue,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+              if (plan.name != 'Basic')
+                ElevatedButton(
+                  onPressed: () {
+                    // Implement upgrade logic
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
+                  child: const Text('Upgrade'),
                 ),
-                child: const Text('Upgrade'),
-              ),
             ],
           ),
         ),
