@@ -67,9 +67,12 @@ class ImageInputSection extends StatelessWidget {
           margin: const EdgeInsets.all(4),
           width: 50,
           height: 50,
-          child: Image.memory(
-            imageData,
-            fit: BoxFit.cover,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.memory(
+              imageData,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         Positioned(
