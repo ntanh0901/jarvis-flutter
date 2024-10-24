@@ -1,6 +1,6 @@
-import 'dart:io';
+import 'dart:typed_data';
 
-import 'package:another_flushbar/flushbar.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:jarvis_application/styles/chat_screen_styles.dart';
 import 'package:jarvis_application/viewmodels/image_handler_view_model.dart';
@@ -60,14 +60,17 @@ class ImageInputSection extends StatelessWidget {
 
   Widget _buildImagePreviewItem(
       ImageHandlerViewModel imageHandler, int idx, BuildContext context) {
-    File imageFile = imageHandler.selectedImages[idx];
+    Uint8List imageData = imageHandler.selectedImages[idx];
     return Stack(
       children: [
         Container(
           margin: const EdgeInsets.all(4),
           width: 50,
           height: 50,
-          child: Image.file(imageFile, fit: BoxFit.cover),
+          child: Image.memory(
+            imageData,
+            fit: BoxFit.cover,
+          ),
         ),
         Positioned(
           right: 0,
@@ -105,148 +108,114 @@ class ImageInputSection extends StatelessWidget {
   }
 
   void _showOptionMenu(BuildContext context) {
+    _showImagePickerOptions(context);
+  }
+
+  void _showImagePickerOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
-        return Consumer<ImageHandlerViewModel>(
-          builder: (context, imageHandler, child) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.image_outlined,
-                      color: ChatScreenStyles.iconColor),
-                  title: const Text('Choose from Gallery'),
-                  onTap: () => _handleImageOptionTap(
-                      context, true, imageHandler.pickImages,
-                      isImagePicker: true),
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Choose from gallery'),
+                onTap: () => _handleImageOptionTap(
+                  context,
+                  () => Provider.of<ImageHandlerViewModel>(context, listen: false).pickImages(),
+                  isImagePicker: true,
                 ),
-                ListTile(
-                  leading: const Icon(Icons.camera_alt_outlined,
-                      color: ChatScreenStyles.iconColor),
-                  title: const Text('Take a Photo'),
-                  onTap: () => _handleImageOptionTap(context,
-                      imageHandler.canAddMoreImages, imageHandler.takePhoto),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Take a photo'),
+                onTap: () => _handleImageOptionTap(
+                  context,
+                  () => Provider.of<ImageHandlerViewModel>(context, listen: false).takePhoto(),
                 ),
-                ListTile(
-                  leading: const Icon(Icons.screenshot_outlined,
-                      color: ChatScreenStyles.iconColor),
-                  title: const Text('Capture Screenshot'),
-                  onTap: () => _handleImageOptionTap(
-                      context,
-                      imageHandler.canAddMoreImages,
-                      () => imageHandler.takeScreenshot(screenshotController)),
+              ),
+              ListTile(
+                leading: const Icon(Icons.screenshot),
+                title: const Text('Take a screenshot'),
+                onTap: () => _handleImageOptionTap(
+                  context,
+                  () => Provider.of<ImageHandlerViewModel>(context, listen: false).takeScreenshot(screenshotController),
                 ),
-              ],
-            );
-          },
+              ),
+            ],
+          ),
         );
       },
     );
   }
 
-  void _showFlushbar(
+  void _handleImageOptionTap(
     BuildContext context,
-    ImageHandlerViewModel imageHandler, {
-    int? totalSelected,
-    int? added,
-    bool isLimitReached = false,
-  }) {
-    Flushbar(
-      duration: Duration(seconds: isLimitReached ? 3 : 2),
-      margin: const EdgeInsets.all(8),
-      borderRadius: BorderRadius.circular(8),
-      flushbarPosition: FlushbarPosition.TOP,
-      backgroundColor: Theme.of(context).colorScheme.error.withOpacity(0.9),
-      messageColor: Colors.white,
-      messageText: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.warning_outlined,
-                color: Colors.white,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Max image limit reached ${imageHandler.selectedImageCount}/${ImageHandlerViewModel.maxImages}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          if (isLimitReached && totalSelected != null && added != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                'Added $added image(s). ${totalSelected - ImageHandlerViewModel.maxImages} image(s) discarded.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-        ],
-      ),
-    ).show(context);
-  }
+    Future<Map<String, dynamic>> Function() action, {
+    bool isImagePicker = false,
+  }) async {
+    final imageHandler = Provider.of<ImageHandlerViewModel>(context, listen: false);
 
-  void _handleImageOptionTap(BuildContext context, bool canAddMore,
-      Future<Map<String, dynamic>> Function() action,
-      {bool isImagePicker = false}) async {
-    final imageHandler =
-        Provider.of<ImageHandlerViewModel>(context, listen: false);
+    if (!imageHandler.canAddMoreImages) {
+      _showImageAddedFeedback(context, {
+        'added': 0,
+        'totalSelected': imageHandler.selectedImageCount,
+        'limitReached': true
+      });
+      return;
+    }
 
-    if (isImagePicker || canAddMore) {
-      Navigator.pop(context);
-      final result = await action();
+    // Wait for the action to complete
+    final result = await action();
 
-      if (!context.mounted) return;
-
-      if (isImagePicker && result['limitReached']) {
-        _showFlushbar(
-          context,
-          imageHandler,
-          totalSelected: result['totalSelected'],
-          added: result['added'],
-          isLimitReached: true,
-        );
+    // Show feedback after the action is completed
+    if (context.mounted) {
+      if (result['error'] != null) {
+        _showErrorFlushbar(context, result['error']);
       } else {
         _showImageAddedFeedback(context, result);
       }
-    } else {
-      _showFlushbar(context, imageHandler);
     }
   }
 
-  void _showImageAddedFeedback(
-      BuildContext context, Map<String, dynamic> result) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (context.mounted) {
-        if (result['added'] > 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                  'Added ${result['added']} image(s). Total: ${result['totalSelected']}/${ImageHandlerViewModel.maxImages}'),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-
-        if (result['limitReached']) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                  'Image limit reached. You can add up to ${ImageHandlerViewModel.maxImages} images.'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-      }
-    });
+  void _showErrorFlushbar(BuildContext context, String errorMessage) {
+    ChatScreenStyles.createCenteredFlushbar(
+      message: errorMessage,
+      backgroundColor: Colors.red,
+      duration: const Duration(seconds: 3),
+      icon: Icons.error_outline,
+    ).show(context);
   }
 
+void _showImageAddedFeedback(
+      BuildContext context, Map<String, dynamic> result) {
+    String message;
+    IconData icon;
+    Color backgroundColor;
+
+    if (result['added'] > 0) {
+      message =
+          'Added ${result['added']} image(s). Total: ${result['totalSelected']}/${ImageHandlerViewModel.maxImages}';
+      icon = Icons.check_circle_outline;
+      backgroundColor = Colors.green;
+    } else if (result['limitReached']) {
+      message =
+          'Max image limit reached (${result['totalSelected']}/${ImageHandlerViewModel.maxImages})';
+      icon = Icons.warning_amber_rounded;
+      backgroundColor = Theme.of(context).colorScheme.error;
+    } else {
+      message = 'No images added';
+      icon = Icons.info_outline;
+      backgroundColor = Colors.blue;
+    }
+
+    ChatScreenStyles.createCenteredFlushbar(
+      message: message,
+      backgroundColor: backgroundColor,
+      icon: icon,
+    ).show(context);
+  }
   void _confirmRemoveAllImages(BuildContext context) {
     showDialog(
       context: context,
@@ -268,12 +237,11 @@ class ImageInputSection extends StatelessWidget {
                 Navigator.of(context).pop();
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('All images removed'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    ChatScreenStyles.createCenteredFlushbar(
+                      message: 'All images removed',
+                      backgroundColor: Colors.green,
+                      icon: Icons.delete_sweep,
+                    ).show(context);
                   }
                 });
               },
