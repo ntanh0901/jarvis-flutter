@@ -51,77 +51,123 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
   }
 
   Widget _buildPlanPage(AccountPlanModel plan, AccountViewModel viewModel) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return ListView(
-          children: [
-            // Plan header with wave effect
-            Container(
-              constraints: BoxConstraints(
-                minHeight: 180,
-                maxHeight: constraints.maxHeight * 0.3,
-              ),
-              child: Stack(
+    return ListView(
+      children: [
+        // Plan header with gradient background
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Colors.blue.shade300, Colors.purple.shade300],
+            ),
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(20),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
                 children: [
-                  CustomPaint(
-                    size: Size(constraints.maxWidth, double.infinity),
-                    painter: WavePainter(_getPlanColor(plan.name)),
-                  ),
-                  Positioned.fill(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _getPlanIcon(plan.name),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  plan.name,
-                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              if (plan.name == 'Pro Annually') _buildHotPickBadge(),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          _buildPriceSection(plan),
-                          if (plan.name != 'Basic') ...[
-                            const SizedBox(height: 8),
-                            _buildSubscribeButton(plan),
-                          ],
-                          if (plan.name == 'Pro Annually') ...[
-                            const SizedBox(height: 4),
-                            _buildSavingsBadge(),
-                          ],
-                        ],
-                      ),
+                  const Icon(Icons.send, color: Colors.white, size: 24),
+                  const SizedBox(width: 8),
+                  Text(
+                    plan.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
-            ),
-            // Rest of the plan details
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              ElevatedButton(
+                onPressed: () {
+                  // Implement upgrade logic
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: const Text('Upgrade'),
+              ),
+            ],
+          ),
+        ),
+        // Queries section
+        Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 5,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildFeatureSection('Basic features', plan.basicFeatures),
-                  const SizedBox(height: 20),
-                  _buildFeatureSection('Advanced Features', plan.advancedFeatures),
-                  const SizedBox(height: 20),
-                  _buildFeatureSection('Other Benefits', plan.otherBenefits),
+                  Text(
+                    'Queries',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    'Resets daily',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ],
               ),
-            ),
-          ],
-        );
-      },
+              SizedBox(height: 16),
+              Row(
+                children: [
+                  Icon(Icons.bolt, color: Colors.green),
+                  SizedBox(width: 8),
+                  Text('Limited Queries'),
+                  Spacer(),
+                  Text(
+                    '50',
+                    style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8),
+              Text(
+                'GPT-3.5, GPT-4o, Claude 3.5 Sonnet ...',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+        // Rest of the plan details
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildFeatureSection('Basic features', plan.basicFeatures),
+              const SizedBox(height: 20),
+              _buildFeatureSection('Advanced Features', plan.advancedFeatures),
+              const SizedBox(height: 20),
+              _buildFeatureSection('Other Benefits', plan.otherBenefits),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
