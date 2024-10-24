@@ -101,6 +101,9 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
           ),
         ),
         // Queries section
+        _buildQueriesSection(plan, viewModel),
+
+        // Features section
         Container(
           margin: const EdgeInsets.all(16),
           padding: const EdgeInsets.all(16),
@@ -116,58 +119,74 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
               ),
             ],
           ),
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Queries',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    'Resets daily',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
-              SizedBox(height: 16),
-              Row(
-                children: [
-                  Icon(Icons.bolt, color: Colors.green),
-                  SizedBox(width: 8),
-                  Text('Limited Queries'),
-                  Spacer(),
-                  Text(
-                    '50',
-                    style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              SizedBox(height: 8),
-              Text(
-                'GPT-3.5, GPT-4o, Claude 3.5 Sonnet ...',
-                style: TextStyle(color: Colors.grey),
-              ),
-            ],
-          ),
-        ),
-        // Rest of the plan details
-        Padding(
-          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildFeatureSection('Basic features', plan.basicFeatures),
-              const SizedBox(height: 20),
+              _buildFeatureSection('Basic Features', plan.basicFeatures),
+              const Divider(height: 32, thickness: 1),
               _buildFeatureSection('Advanced Features', plan.advancedFeatures),
-              const SizedBox(height: 20),
+              const Divider(height: 32, thickness: 1),
               _buildFeatureSection('Other Benefits', plan.otherBenefits),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildQueriesSection(AccountPlanModel plan, AccountViewModel viewModel) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Queries',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                plan.name == 'Basic' ? 'Resets daily' : 'No daily reset',
+                style: const TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              const Icon(Icons.bolt, color: Colors.green),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(plan.name == 'Basic' ? 'Limited Queries' : 'Unlimited Queries'),
+              ),
+              Text(
+                viewModel.getQueriesInfo(plan),
+                style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            viewModel.getAvailableModels(plan),
+            style: const TextStyle(color: Colors.grey),
+          ),
+        ],
+      ),
     );
   }
 
@@ -279,36 +298,77 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
     }
   }
 
+  Widget _buildFeatureCard(String title, List<String> features) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          ...features.map((feature) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    feature,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFeatureSection(String title, List<String> features) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 15),
-        ...features.map((feature) => _buildFeatureItem(feature)),
-      ],
-    );
-  }
-
-  Widget _buildFeatureItem(String feature) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.check_circle, color: Colors.green, size: 24),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Text(
-              feature,
-              style: const TextStyle(fontSize: 18),
-            ),
+        const SizedBox(height: 16),
+        ...features.map((feature) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.check_circle, color: Colors.green, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  feature,
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        )),
+      ],
     );
   }
 }

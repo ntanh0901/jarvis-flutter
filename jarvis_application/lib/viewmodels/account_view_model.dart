@@ -82,4 +82,20 @@ class AccountViewModel extends ChangeNotifier {
     currentPlan = newPlan;
     notifyListeners();
   }
+
+  String getQueriesInfo(AccountPlanModel plan) {
+    return plan.queriesDescription;
+  }
+
+  String getAvailableModels(AccountPlanModel plan) {
+    switch (plan.name) {
+      case 'Basic':
+        return 'GPT-3.5';
+      case 'Starter':
+      case 'Pro Annually':
+        return 'GPT-3.5, GPT-4.0/Turbo, Gemini Pro, Gemini Ultra';
+      default:
+        return 'N/A';
+    }
+  }
 }
