@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:jarvis_application/models/account_plan_model.dart';
 import 'package:jarvis_application/viewmodels/account_view_model.dart';
@@ -53,7 +52,6 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
   Widget _buildPlanPage(AccountPlanModel plan, AccountViewModel viewModel) {
     return ListView(
       children: [
-        // Plan header with gradient background
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -72,7 +70,7 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.send, color: Colors.white, size: 24),
+                  _getPlanIcon(plan.name),
                   const SizedBox(width: 8),
                   Text(
                     plan.name,
@@ -156,34 +154,52 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Queries',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Expanded(
+                child: Text(
+                  plan.name == 'Basic' ? 'Free' : '1-month Free Trial',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
               ),
-              Text(
-                plan.name == 'Basic' ? 'Resets daily' : 'No daily reset',
-                style: const TextStyle(color: Colors.grey),
-              ),
+              if (plan.name == 'Pro Annually') _buildHotPickBadge(),
             ],
           ),
+          if (plan.name != 'Basic') ...[
+            const SizedBox(height: 8),
+            const Text(
+              'Then',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              plan.name == 'Starter' ? '\$9.99/month' : '\$79.99/year',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           Row(
             children: [
               const Icon(Icons.bolt, color: Colors.green),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(plan.name == 'Basic' ? 'Limited Queries' : 'Unlimited Queries'),
-              ),
-              Text(
-                viewModel.getQueriesInfo(plan),
-                style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                child: Text(
+                  viewModel.getQueriesInfo(plan),
+                  style: const TextStyle(fontSize: 16),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            viewModel.getAvailableModels(plan),
-            style: const TextStyle(color: Colors.grey),
+            'Available Models: ${viewModel.getAvailableModels(plan)}',
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
           ),
         ],
       ),
@@ -193,64 +209,106 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
   Widget _getPlanIcon(String planName) {
     switch (planName) {
       case 'Basic':
-        return const Icon(Icons.brightness_5, color: Colors.white, size: 20);
+        return const Icon(Icons.brightness_low, color: Color(0xFF3498DB), size: 24);
       case 'Starter':
-        return const Icon(Icons.all_inclusive, color: Colors.white, size: 20);
+        return const Icon(Icons.all_inclusive, color: Color(0xFF00008B), size: 24);
       case 'Pro Annually':
-        return const FaIcon(FontAwesomeIcons.crown, color: Colors.white, size: 20);
+        return const FaIcon(FontAwesomeIcons.crown, color: Colors.amber, size: 24);
       default:
-        return const Icon(Icons.category, color: Colors.white, size: 20);
+        return const Icon(Icons.star, color: Colors.white, size: 24);
     }
   }
 
   Widget _buildHotPickBadge() {
-    return Container(
-      margin: const EdgeInsets.only(left: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.thumb_up, color: Colors.orange, size: 12),
-          SizedBox(width: 2),
-          Text(
-            'HOT PICK',
-            style: TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
+    return Column(
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E3A8A), // Dark blue background
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'HOT PICK',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Positioned(
+              top: -12,
+              left: -12,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFD700), // Gold color
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.thumb_up,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
   Widget _buildPriceSection(AccountPlanModel plan) {
-    if (plan.name == 'Basic') {
-      return const Text(
-        'Free',
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-      );
-    } else {
-      return Column(
-        children: [
-          const Text(
-            '1-month Free Trial',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          plan.name == 'Basic' ? 'Free' : '1-month Free Trial',
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
-          const SizedBox(height: 4),
+        ),
+        if (plan.name != 'Basic') ...[
+          const SizedBox(height: 8),
           const Text(
             'Then',
-            style: TextStyle(fontSize: 14, color: Colors.white70),
+            style: TextStyle(fontSize: 16, color: Colors.white70),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Text(
             plan.name == 'Starter' ? '\$9.99/month' : '\$79.99/year',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
+          if (plan.name == 'Pro Annually')
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade900,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                'SAVE 33% ON ANNUAL PLAN!',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
         ],
-      );
-    }
+      ],
+    );
   }
 
   Widget _buildSubscribeButton(AccountPlanModel plan) {
