@@ -131,6 +131,7 @@ class EmailComposeViewModel extends ChangeNotifier {
       responses.add(newResponse);
       conversationHistory[requestIndex]['currentResponseIndex'] = responses.length - 1;
       currentEmailResponse = newResponse;
+      isLoading = false;
       notifyListeners();
     } catch (error) {
       hasError = true;
