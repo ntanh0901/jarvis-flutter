@@ -1,11 +1,12 @@
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
-import 'package:jarvis_application/viewmodels/image_handler_view_model.dart';
 import 'package:jarvis_application/styles/chat_screen_styles.dart';
+import 'package:jarvis_application/viewmodels/image_handler_view_model.dart';
+import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 
 class ChatPage extends StatefulWidget {
@@ -18,7 +19,7 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
-  int _selectedIconIndex = -1;
+  final int _selectedIconIndex = -1;
   late ScreenshotController screenshotController;
 
   final List<Map<String, dynamic>> aiModels = [
@@ -71,7 +72,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   String _formatDate(DateTime date) {
     return DateFormat('hh:mm a').format(date);
   }
-  
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Handle app lifecycle changes if needed
@@ -151,7 +152,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     );
   }
 
- Widget _buildSuggestionButton(String text) {
+  Widget _buildSuggestionButton(String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 20),
       child: ElevatedButton(
@@ -159,9 +160,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
           foregroundColor: Colors.black,
           backgroundColor: Colors.grey.shade200,
           padding: const EdgeInsets.symmetric(
-              vertical: 15, horizontal: 20), // Add horizontal padding
+              vertical: 15, horizontal: 20), 
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30), // Rounded corners
+            borderRadius: BorderRadius.circular(30), 
           ),
           elevation: 5, // Shadow effect
         ),
@@ -169,14 +170,18 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
           // Handle suggestion button tap
         },
         child: Row(
-          mainAxisAlignment:
-              MainAxisAlignment.spaceBetween, // Space between text and icon
+          mainAxisSize: MainAxisSize.min, 
           children: [
-            Text(
-              text,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 10),
+              child: Text(
+                text,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
             const Icon(
@@ -190,9 +195,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     );
   }
 
-
   // Action Row Widget
-Widget _buildActionRow() {
+  Widget _buildActionRow() {
     return LayoutBuilder(
       builder: (context, constraints) {
         // Check if the screen width is small (you can adjust the threshold as needed)
@@ -230,8 +234,7 @@ Widget _buildActionRow() {
     );
   }
 
-
-Widget _buildAIModelDropdown() {
+  Widget _buildAIModelDropdown() {
     return Align(
       alignment: Alignment
           .centerLeft, // Ensures the dropdown floats to the left of the parent
@@ -267,7 +270,6 @@ Widget _buildAIModelDropdown() {
     );
   }
 
-  
   // Icon Buttons Row
   Widget _buildIconButtons() {
     return Row(
@@ -275,18 +277,22 @@ Widget _buildAIModelDropdown() {
       mainAxisSize: MainAxisSize.min,
       children: [
         _buildIconButton(Icons.content_cut),
-        _buildIconButton(Icons.add_box_outlined, onPressed: () => _showUploadDialog(context)),
+        _buildIconButton(Icons.add_box_outlined,
+            onPressed: () => _showUploadDialog(context)),
         _buildIconButton(Icons.menu_book_outlined),
-        _buildIconButton(Icons.access_time, onPressed: () => _showConversationHistoryDialog(context)),
-        _buildIconButton(Icons.add_comment, onPressed: () => _showConversationHistoryDialog(context)),
+        _buildIconButton(Icons.access_time,
+            onPressed: () => _showConversationHistoryDialog(context)),
+        _buildIconButton(Icons.add_comment,
+            onPressed: () => _showConversationHistoryDialog(context)),
       ],
     );
   }
 
- // Reusable Icon Button Widget
+  // Reusable Icon Button Widget
   Widget _buildIconButton(IconData icon, {void Function()? onPressed}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 1.0), // Adjust the padding as needed
+      padding: const EdgeInsets.symmetric(
+          horizontal: 1.0), // Adjust the padding as needed
       child: IconButton(
         icon: Icon(icon),
         iconSize: 18,
@@ -295,7 +301,7 @@ Widget _buildAIModelDropdown() {
     );
   }
 
-   Widget _buildChatInput() {
+  Widget _buildChatInput() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       child: Container(
@@ -732,7 +738,7 @@ Widget _buildAIModelDropdown() {
     );
   }
 
- // Search Bar with Icons Widget
+  // Search Bar with Icons Widget
   Widget _buildSearchBarWithIcons() {
     return Row(
       children: [
@@ -785,7 +791,6 @@ Widget _buildAIModelDropdown() {
     );
   }
 }
-
 
 // Thread class to store thread information
 class Thread {
