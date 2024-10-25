@@ -1,4 +1,3 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:jarvis_application/ui/bot_list_page.dart';
 import 'package:jarvis_application/ui/chat_page.dart';
@@ -8,22 +7,7 @@ import 'package:jarvis_application/screens/knowledgeBase/knowledge_base_screen.d
 import 'package:jarvis_application/screens/prompts/prompt_library_screen.dart';
 
 void main() {
-  runApp(
-    MultiProvider(
-      providers: [
-        Provider<AIService>(create: (_) => MockAIService()),
-        ChangeNotifierProvider(create: (_) => ChatViewModel()),
-        ChangeNotifierProvider(create: (_) => ImageHandlerViewModel()),
-        ChangeNotifierProvider(create: (_) => AccountViewModel()),
-        ChangeNotifierProxyProvider<AIService, EmailComposeViewModel>(
-          create: (context) => EmailComposeViewModel(context.read<AIService>()),
-          update: (context, aiService, previous) => 
-            previous ?? EmailComposeViewModel(aiService),
-        ),
-      ],
-      child: const MyApp(),
-    ),
-  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
