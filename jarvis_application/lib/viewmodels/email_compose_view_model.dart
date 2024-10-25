@@ -1,141 +1,155 @@
 import 'package:flutter/material.dart';
-import '../services/ai_service.dart';
-import '../services/mock_ai_service.dart';
+import 'package:jarvis_application/services/ai_service.dart'; // Assume you have this service
 
 class EmailComposeViewModel extends ChangeNotifier {
-  TextEditingController emailController = TextEditingController();
-  String currentEmailResponse = '';
-  String userInput = '';
-  bool isLoading = false;
-  bool hasError = false;
-  String errorMessage = '';
-
-  // Use dynamic for values to allow different types, but ensure responses is List<String>
+  final AIService _aiService;
   List<Map<String, dynamic>> conversationHistory = [];
+  TextEditingController inputController = TextEditingController();
+  bool isLoading = false;
+  String? errorMessage;
 
-  final AIService aiService;
+  EmailComposeViewModel(this._aiService);
 
-  EmailComposeViewModel({AIService? aiService})
-      : aiService = aiService ?? MockAIService();
+  Future<void> refreshResponse(int index) async {
+    if (index < 0 ||
+        index >= conversationHistory.length ||
+        conversationHistory[index]['role'] != 'ai') {
+      return;
+    }
 
-  Future<void> simulateAICall(String emailContent) async {
     isLoading = true;
-    hasError = false;
-    errorMessage = '';
+    errorMessage = null;
     notifyListeners();
 
     try {
-      if (emailContent.isEmpty) {
-        throw Exception("Email content is empty. Unable to generate response.");
-      }
-
-      // Add user input to the conversation history
-      conversationHistory.add({
-        'role': 'user',
-        'content': emailContent,
-        'responses': <String>[], // Initialize as a list of strings
-        'currentResponseIndex': 0 // Store as an int
-      });
-
-      // Generate the first response
-      final response = await aiService.generateResponse(
-        conversationHistory.map((entry) {
-          return {
-            'role': entry['role']?.toString() ?? '',
-            'content': entry['content']?.toString() ?? ''
-          };
-        }).toList(),
-      );
-
-      // Add AI response to the conversation history
-      conversationHistory.add({
-        'role': 'ai',
-        'content': '',
-        'responses': [response], // Add the response to the list
-        'currentResponseIndex': 0
-      });
-
-      currentEmailResponse = response;
-    } catch (error) {
-      hasError = true;
-      errorMessage = error.toString();
-      currentEmailResponse = "Failed to generate response. Please try again.";
-    } finally {
-      isLoading = false;
-      notifyListeners(); // Ensure this is called to update the UI
-    }
-  }
-
-  void setUserInput(String input) {
-    userInput = input;
-    notifyListeners();
-  }
-
-  void reset() {
-    emailController.clear();
-    currentEmailResponse = '';
-    userInput = '';
-    hasError = false;
-    errorMessage = '';
-    conversationHistory.clear();
-    notifyListeners();
-  }
-
-  void navigateResponse(int requestIndex, bool forward) {
-    if (requestIndex < 0 || requestIndex >= conversationHistory.length) {
-      return; // Ensure the requestIndex is within bounds
-    }
-
-    // Safely access the responses list and currentResponseIndex
-    final responses =
-        conversationHistory[requestIndex]['responses'] as List<String>? ?? [];
-    int currentResponseIndex =
-        conversationHistory[requestIndex]['currentResponseIndex'] as int? ?? 0;
-
-    if (forward && currentResponseIndex < responses.length - 1) {
-      currentResponseIndex++;
-    } else if (!forward && currentResponseIndex > 0) {
-      currentResponseIndex--;
-    }
-
-    // Update the currentResponseIndex in the conversationHistory
-    conversationHistory[requestIndex]['currentResponseIndex'] =
-        currentResponseIndex;
-
-    // Update the currentEmailResponse to reflect the new response
-    if (responses.isNotEmpty) {
-      currentEmailResponse = responses[currentResponseIndex];
-    }
-
-    notifyListeners();
-  }
-
-  Future<void> refreshResponse(int requestIndex) async {
-    try {
-      if (requestIndex < 0 || requestIndex >= conversationHistory.length) {
-        return;
-      }
-
-      // Create a new list of maps with only string values
-      List<Map<String, String>> stringConversationHistory = conversationHistory.map((entry) {
-        return {
-          'role': entry['role']?.toString() ?? '',
-          'content': entry['content']?.toString() ?? ''
-        };
+      final context = conversationHistory.sublist(0, index).map((e) => {
+        'role': e['role'] as String,
+        'content': e['content'] as String
       }).toList();
 
-      final newResponse = await aiService.generateResponse(stringConversationHistory);
+      final newResponse = await _aiService.generateResponse(context);
 
-      // Ensure responses is initialized
-      final responses = conversationHistory[requestIndex]['responses'] as List<String>;
-      responses.add(newResponse);
-      conversationHistory[requestIndex]['currentResponseIndex'] = responses.length - 1;
-      currentEmailResponse = newResponse;
+      conversationHistory[index] = {
+        'role': 'ai',
+        'content': newResponse,
+        'responses': <String>[newResponse],
+        'currentResponseIndex': 0
+      };
+
       isLoading = false;
       notifyListeners();
-    } catch (error) {
-      hasError = true;
-      errorMessage = error.toString();
+    } catch (e) {
+      isLoading = false;
+      errorMessage = 'Failed to refresh response: ${e.toString()}';
+      notifyListeners();
+    }
+  }
+
+  void sendMessage() async {
+    if (inputController.text.isNotEmpty) {
+      final userMessage = inputController.text;
+      conversationHistory.add({
+        'role': 'user',
+        'content': userMessage,
+      });
+      inputController.clear();
+      notifyListeners();
+
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
+      try {
+        final context = conversationHistory.map((e) => {
+          'role': e['role'] as String,
+          'content': e['content'] as String
+        }).toList();
+        final aiResponse = await _aiService.generateResponse(context);
+        conversationHistory.add({
+          'role': 'ai',
+          'content': aiResponse,
+          'responses': <String>[aiResponse],
+          'currentResponseIndex': 0
+        });
+        isLoading = false;
+        notifyListeners();
+      } catch (e) {
+        isLoading = false;
+        errorMessage = 'Failed to generate response: ${e.toString()}';
+        notifyListeners();
+      }
+    }
+  }
+
+  void navigateResponse(int index, bool forward) {
+    if (index < 0 ||
+        index >= conversationHistory.length ||
+        conversationHistory[index]['role'] != 'ai') {
+      return;
+    }
+
+    final responses = conversationHistory[index]['responses'] as List<String>;
+    var currentIndex = conversationHistory[index]['currentResponseIndex'] as int;
+
+    if (forward && currentIndex < responses.length - 1) {
+      currentIndex++;
+    } else if (!forward && currentIndex > 0) {
+      currentIndex--;
+    } else {
+      return; // No change, so we don't need to update
+    }
+
+    conversationHistory[index]['currentResponseIndex'] = currentIndex;
+    conversationHistory[index]['content'] = responses[currentIndex];
+    notifyListeners();
+  }
+
+  bool canNavigateBack(int index) {
+    if (index < 0 || index >= conversationHistory.length || conversationHistory[index]['role'] != 'ai') {
+      return false;
+    }
+    return (conversationHistory[index]['currentResponseIndex'] as int) > 0;
+  }
+
+  bool canNavigateForward(int index) {
+    if (index < 0 || index >= conversationHistory.length || conversationHistory[index]['role'] != 'ai') {
+      return false;
+    }
+    final responses = conversationHistory[index]['responses'] as List<String>;
+    final currentIndex = conversationHistory[index]['currentResponseIndex'] as int;
+    return currentIndex < responses.length - 1;
+  }
+
+  Future<void> generateQuickResponse(String action) async {
+    if (conversationHistory.isEmpty) {
+      errorMessage = 'No conversation context available.';
+      notifyListeners();
+      return;
+    }
+
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      final lastMessage = conversationHistory.last['content'] as String;
+
+      final quickResponse = await _aiService.generateResponse([
+        {'role': 'system', 'content': 'Generate a quick response for the action: $action'},
+        {'role': 'user', 'content': lastMessage}
+      ]);
+
+      conversationHistory.add({
+        'role': 'ai',
+        'content': quickResponse,
+        'responses': [quickResponse],
+        'currentResponseIndex': 0
+      });
+      isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      isLoading = false;
+      errorMessage = 'Failed to generate quick response: ${e.toString()}';
       notifyListeners();
     }
   }

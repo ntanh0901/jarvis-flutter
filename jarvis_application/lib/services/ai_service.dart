@@ -1,3 +1,3 @@
 abstract class AIService {
-  Future<String> generateResponse(List<Map<String, String>> conversationHistory);
+  Future<String> generateResponse(List<Map<String, String>> context);
 }
