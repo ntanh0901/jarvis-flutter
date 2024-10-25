@@ -75,25 +75,34 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildChatInput(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: context.read<ChatViewModel>().messageController,
-            decoration: const InputDecoration(
-              hintText: 'Type a message...',
-              border: InputBorder.none,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline, color: ChatScreenStyles.iconColor),
+            onPressed: () {
+              // Handle add image button tap
+            },
+          ),
+          Expanded(
+            child: TextField(
+              controller: context.read<ChatViewModel>().messageController,
+              decoration: const InputDecoration(
+                hintText: 'Type a message...',
+                border: InputBorder.none,
+              ),
             ),
           ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.send, color: ChatScreenStyles.iconColor),
-          onPressed: () {
-            final chatVM = context.read<ChatViewModel>();
-            chatVM.sendMessage(chatVM.messageController.text);
-          },
-        ),
-      ],
+          IconButton(
+            icon: const Icon(Icons.send, color: ChatScreenStyles.iconColor),
+            onPressed: () {
+              final chatVM = context.read<ChatViewModel>();
+              chatVM.sendMessage(chatVM.messageController.text);
+            },
+          ),
+        ],
+      ),
     );
   }
 }
