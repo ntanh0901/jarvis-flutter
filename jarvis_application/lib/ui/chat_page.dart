@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:jarvis_application/viewmodels/image_handler_view_model.dart';
 import 'package:jarvis_application/styles/chat_screen_styles.dart';
@@ -64,6 +67,11 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  // Helper function to format date
+  String _formatDate(DateTime date) {
+    return DateFormat('hh:mm a').format(date);
+  }
+  
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Handle app lifecycle changes if needed
@@ -160,23 +168,45 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     );
   }
 
+  // Action Row Widget
 Widget _buildActionRow() {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: _buildAIModelDropdown(),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: _buildIconButtons(),
-          ),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Check if the screen width is small (you can adjust the threshold as needed)
+        bool isSmallScreen = constraints.maxWidth < 400;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+          child: isSmallScreen
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width:
+                          double.infinity, // Take full width on small screens
+                      child: _buildAIModelDropdown(),
+                    ),
+                    const SizedBox(height: 8.0), // Add spacing between elements
+                    _buildIconButtons(),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(
+                      width: 120, // Fixed width for larger screens
+                      child: _buildAIModelDropdown(),
+                    ),
+                    Expanded(
+                      child: _buildIconButtons(),
+                    ),
+                  ],
+                ),
+        );
+      },
     );
   }
+
 
 Widget _buildAIModelDropdown() {
     return Align(
@@ -215,59 +245,34 @@ Widget _buildAIModelDropdown() {
   }
 
   
-  List<Widget> _buildIconButtons() {
-    List<IconData> icons = [
-      Icons.content_cut,
-      Icons.add_box_outlined,
-      Icons.menu_book_outlined,
-      Icons.access_time,
-      Icons.add_comment,
-    ];
-
-    return List.generate(icons.length, (index) {
-      return _buildIconButton(
-        icons[index],
-        index: index,
-        onPressed: () {
-          setState(() {
-            _selectedIconIndex = index;
-          });
-          if (index == 1) _showUploadDialog(context);
-          if (index == 3 || index == 4) _showConversationHistoryDialog(context);
-        },
-      );
-    });
+  // Icon Buttons Row
+  Widget _buildIconButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildIconButton(Icons.content_cut),
+        _buildIconButton(Icons.add_box_outlined, onPressed: () => _showUploadDialog(context)),
+        _buildIconButton(Icons.menu_book_outlined),
+        _buildIconButton(Icons.access_time, onPressed: () => _showConversationHistoryDialog(context)),
+        _buildIconButton(Icons.add_comment, onPressed: () => _showConversationHistoryDialog(context)),
+      ],
+    );
   }
 
-  Widget _buildIconButton(IconData icon,
-      {required int index, required VoidCallback onPressed}) {
-    bool isSelected = index == _selectedIconIndex;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 2),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: onPressed,
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? Colors.grey.withOpacity(0.3)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Icon(
-              icon,
-              color: isSelected ? Colors.blue : Colors.grey[600],
-              size: 24,
-            ),
-          ),
-        ),
+ // Reusable Icon Button Widget
+  Widget _buildIconButton(IconData icon, {void Function()? onPressed}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 1.0), // Adjust the padding as needed
+      child: IconButton(
+        icon: Icon(icon),
+        iconSize: 18,
+        onPressed: onPressed ?? () {},
       ),
     );
   }
 
+    
 Widget _buildChatInput() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
@@ -553,15 +558,205 @@ Widget _buildChatInput() {
     );
   }
 
-  void _showUploadDialog(BuildContext context) {
-    // Implement upload dialog
+  // Hàm hiển thị hộp thoại upload PDF
+  Future<void> _showUploadDialog(BuildContext context) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Upload PDF'),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  Navigator.of(context)
+                      .pop(); // Đóng hộp thoại khi nhấn vào nút "X"
+                },
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                  'Use Chat with PDF to easily get intelligent summaries and answers for your documents.'),
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: () => _pickPdfFile(context), // Hàm chọn file PDF
+                child: Container(
+                  height: 150,
+                  width: 300,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.picture_as_pdf, size: 50),
+                      const SizedBox(height: 10),
+                      const Text('Click or drag and drop here to upload'),
+                      const SizedBox(height: 5),
+                      Text('File types supported: PDF  |  Max file size: 50MB',
+                          style: TextStyle(
+                              fontSize: 10, color: Colors.grey.shade600)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
+// Hàm chọn file PDF
+  Future<void> _pickPdfFile(BuildContext context) async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'], // Chỉ cho phép chọn file PDF
+    );
+
+    if (result != null) {
+      File file = File(result.files.single.path!);
+      print('Selected PDF: ${file.path}');
+      // Đóng hộp thoại sau khi chọn file
+      Navigator.of(context).pop();
+      // Bạn có thể xử lý file PDF ở đây (upload hoặc đọc file)
+    } else {
+      // Nếu người dùng hủy chọn file
+      print('User canceled the picker.');
+    }
+  }
+
+  // Dialog Header Widget
+  Widget _buildDialogHeader(String title) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ],
+    );
+  }
+
+// Dialog to show conversation history
   void _showConversationHistoryDialog(BuildContext context) {
-    // Implement conversation history dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Container(
+            height: 500,
+            width: MediaQuery.of(context).size.width * 0.8,
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDialogHeader('Conversation History'),
+                _buildSearchBarWithIcons(),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: threads.length,
+                    itemBuilder: (context, index) {
+                      final thread = threads[index];
+                      return ListTile(
+                        title: Text(thread.title,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(_formatDate(thread.creationTime)),
+                            Text(thread.firstMessage),
+                            Text(thread.source,
+                                style: TextStyle(color: Colors.grey.shade600)),
+                          ],
+                        ),
+                        isThreeLine: true,
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+ // Search Bar with Icons Widget
+  Widget _buildSearchBarWithIcons() {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Row(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Icon(Icons.search, color: Colors.grey),
+                ),
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search',
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        _buildCircleIcon(Icons.star_border),
+        const SizedBox(width: 8),
+        _buildCircleIcon(Icons.work_outline),
+      ],
+    );
+  }
+
+  // Circle Icon Button Widget
+  Widget _buildCircleIcon(IconData icon) {
+    return Container(
+      height: 40,
+      width: 40,
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        shape: BoxShape.circle,
+      ),
+      child: IconButton(
+        icon: Icon(icon),
+        onPressed: () {},
+      ),
+    );
   }
 }
 
+
+// Thread class to store thread information
 class Thread {
   final String title;
   final DateTime creationTime;
