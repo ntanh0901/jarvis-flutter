@@ -3,6 +3,8 @@ import 'package:jarvis_application/views/auth/forget_password_page.dart';
 import 'package:jarvis_application/views/auth/signup_page.dart';
 import 'package:jarvis_application/widgets/custom_gradient_button.dart';
 import 'package:jarvis_application/widgets/custom_input_decorator.dart';
+import 'package:provider/provider.dart';
+import 'package:jarvis_application/providers/auth_provider.dart';
 
 class SigninPage extends StatefulWidget {
   const SigninPage({super.key});
@@ -250,15 +252,18 @@ class _SignInButton extends StatelessWidget {
   final GlobalKey<FormState> formKey;
 
   const _SignInButton({required this.formKey});
+  
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     return SizedBox(
       width: double.infinity,
       child: CustomGradientButton(
         child: const Text('Sign In'),
         onPressed: () {
           if (formKey.currentState!.validate()) {
-            // Handle sign in logic
+            // Simulate successful sign-in
+            authProvider.signIn();
           }
         },
       ),

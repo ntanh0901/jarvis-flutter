@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:jarvis_application/ui/bot_list_page.dart';
 import 'package:jarvis_application/ui/chat_page.dart';
+import 'package:jarvis_application/views/auth/signin_page.dart';
 import 'package:provider/provider.dart'; // Import provider package
 import 'package:jarvis_application/providers/ai_bot_provider.dart'; // Import AIBotProvider
+import 'package:jarvis_application/providers/auth_provider.dart'; // Import AuthProvider
 import 'package:jarvis_application/screens/knowledgeBase/knowledge_base_screen.dart';
 import 'package:jarvis_application/screens/prompts/prompt_library_screen.dart';
 
@@ -17,8 +19,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-            create: (context) => AIBotProvider()), // Cung cấp AIBotProvider
+        ChangeNotifierProvider(create: (context) => AIBotProvider()),
+        ChangeNotifierProvider(create: (context) => AuthProvider()),
       ],
       child: MaterialApp(
         title: 'Chat Bot',
@@ -26,9 +28,21 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
           useMaterial3: true,
         ),
-        home: const MainScreen(),
+        home: const AuthWrapper(),
       ),
     );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    return authProvider.isAuthenticated
+        ? const MainScreen()
+        : const SigninPage();
   }
 }
 
