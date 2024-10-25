@@ -3,6 +3,8 @@ import 'package:jarvis_application/ui/bot_list_page.dart';
 import 'package:jarvis_application/ui/chat_page.dart';
 import 'package:provider/provider.dart'; // Import provider package
 import 'package:jarvis_application/providers/ai_bot_provider.dart'; // Import AIBotProvider
+import 'package:jarvis_application/screens/knowledgeBase/knowledge_base_screen.dart';
+import 'package:jarvis_application/screens/prompts/prompt_library_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -43,6 +45,8 @@ class _MainScreenState extends State<MainScreen> {
   static List<Widget> _pages = <Widget>[
     ChatPage(),
     BotListPage(),
+    KnowledgeBase(),
+    PromptLibrary(),
   ];
 
   void _onItemTapped(int index) {
@@ -74,6 +78,16 @@ class _MainScreenState extends State<MainScreen> {
                 icon: Icon(Icons.list),
                 selectedIcon: Icon(Icons.list_alt),
                 label: Text('Bot List'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.book),
+                selectedIcon: Icon(Icons.bookmark),
+                label: Text('KB'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.lightbulb),
+                selectedIcon: Icon(Icons.lightbulb_outline),
+                label: Text('Prompts'),
               ),
             ],
           ),
