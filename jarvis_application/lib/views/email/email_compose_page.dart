@@ -16,10 +16,6 @@ class EmailComposeScreen extends StatelessWidget {
           appBar: AppBar(
             backgroundColor: Colors.white,
             elevation: 0,
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.blue[700]),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
             title: Row(
               children: [
                 Container(
@@ -86,156 +82,144 @@ class EmailComposeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawer(BuildContext context) {
+   Widget _buildDrawer(BuildContext context) {
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Colors.blue[700]!, Colors.blue[900]!],
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.blue[300]!, Colors.blue[500]!],
+          ),
+        ),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.3),
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 5,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 5,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(6.0),
+                          child: Image.asset('assets/app_circle_icon.png'),
+                        ),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Image.asset('assets/app_circle_icon.png'),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'Jarvis',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    'AI Email Assistant',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
                     ),
-                    const SizedBox(width: 15),
-                    const Text(
-                      'Jarvis',
+                  ),
+                  const SizedBox(height: 3),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[400],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Text(
+                      'Powered by AI',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'AI Email Assistant',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
+                        fontSize: 8,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 5),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[400],
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        'Powered by AI',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.email, color: Colors.blue),
-            title: const Text('New Email'),
-            onTap: () {
+            _buildDrawerItem(Icons.email, 'New Email', Colors.white, () {
               Navigator.pop(context);
               // Handle new email composition
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.history, color: Colors.green),
-            title: const Text('Email History'),
-            onTap: () {
+            }),
+            _buildDrawerItem(Icons.history, 'Email History', Colors.white70,
+                () {
               Navigator.pop(context);
               // Show history of AI-assisted emails
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.style, color: Colors.orange),
-            title: const Text('Writing Styles'),
-            onTap: () {
+            }),
+            _buildDrawerItem(Icons.style, 'Writing Styles', Colors.white70, () {
               Navigator.pop(context);
               // Show/edit available writing styles
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.person, color: Colors.purple),
-            title: const Text('Recipient Profiles'),
-            onTap: () {
+            }),
+            _buildDrawerItem(Icons.person, 'Recipient Profiles', Colors.white70,
+                () {
               Navigator.pop(context);
               // Manage recipient profiles for personalized emails
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.settings, color: Colors.grey),
-            title: const Text('AI Settings'),
-            onTap: () {
+            }),
+            const Divider(color: Colors.white24, height: 1),
+            _buildDrawerItem(Icons.settings, 'AI Settings', Colors.white70, () {
               Navigator.pop(context);
               // Adjust AI behavior and preferences
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.analytics, color: Colors.blue),
-            title: const Text('Usage Analytics'),
-            onTap: () {
+            }),
+            _buildDrawerItem(Icons.analytics, 'Usage Analytics', Colors.white70,
+                () {
               Navigator.pop(context);
               // Show AI usage statistics
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.help_outline, color: Colors.teal),
-            title: const Text('Help & Tutorials'),
-            onTap: () {
+            }),
+            const Divider(color: Colors.white24, height: 1),
+            _buildDrawerItem(
+                Icons.help_outline, 'Help & Tutorials', Colors.white70, () {
               Navigator.pop(context);
               // Show help and tutorials for using the AI assistant
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.feedback, color: Colors.amber),
-            title: const Text('Feedback'),
-            onTap: () {
+            }),
+            _buildDrawerItem(Icons.feedback, 'Feedback', Colors.white70, () {
               Navigator.pop(context);
               // Allow users to provide feedback on the AI
-            },
-          ),
-        ],
+            }),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildDrawerItem(
+      IconData icon, String title, Color color, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: color, size: 20),
+      title: Text(
+        title,
+        style: TextStyle(color: color, fontSize: 14),
+      ),
+      onTap: onTap,
+      dense: true,
+      visualDensity: VisualDensity.compact,
     );
   }
 }
