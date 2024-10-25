@@ -32,7 +32,7 @@ class AIBotProvider with ChangeNotifier {
       id: DateTime.now().toString(),
       name: name,
       description: description,
-      imageUrl: imageUrl.isNotEmpty ? imageUrl : 'assets/images/default_bot.png', // Nếu không có hình ảnh thì sử dụng ảnh mặc định
+      imageUrl: imageUrl.isNotEmpty ? imageUrl : 'assets/images/bot_alpha.png', // Nếu không có hình ảnh thì sử dụng ảnh mặc định
       promptTemplate: '',
       knowledgeBaseIds: [],
       isPublished: false,

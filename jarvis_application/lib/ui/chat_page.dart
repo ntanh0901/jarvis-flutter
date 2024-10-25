@@ -1,6 +1,7 @@
 // lib/chat_page.dart
 
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
@@ -73,6 +74,17 @@ class _ChatPageState extends State<ChatPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pushNamed(context, '/publishing-platforms'); // Điều hướng tới trang Publishing Platform
+            },
+            child: const Text(
+              'Publish',
+              style: TextStyle(color: Colors.blue, fontSize: 16),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -108,8 +120,8 @@ class _ChatPageState extends State<ChatPage> {
               mainAxisAlignment: MainAxisAlignment.end,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildIconButton(Icons.content_cut),
-                _buildIconButton(Icons.add_box_outlined, onPressed: () => _showUploadDialog(context)),
+                _buildIconButton(CupertinoIcons.plus_circle),
+                _buildIconButton(Icons.picture_as_pdf , onPressed: () => _showUploadDialog(context)),
                 _buildIconButton(Icons.menu_book_outlined),
                 _buildIconButton(Icons.access_time, onPressed: () => _showConversationHistoryDialog(context)),
                 _buildIconButton(Icons.add_comment, onPressed: () => _showConversationHistoryDialog(context)),
