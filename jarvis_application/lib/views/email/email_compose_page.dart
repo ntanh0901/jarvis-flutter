@@ -95,14 +95,20 @@ class _ResponseActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final message = emailViewModel.conversationHistory[requestIndex];
+    final responses = message['responses'] as List<String>;
+    final currentResponseIndex = message['currentResponseIndex'] as int;
+
+    final isAtStart = currentResponseIndex == 0;
+    final isAtEnd = currentResponseIndex == responses.length - 1;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         IconButton(
           icon: const Icon(Icons.copy),
           onPressed: () {
-            final response =
-                emailViewModel.conversationHistory[requestIndex]['content'];
+            final response = responses[currentResponseIndex];
             Clipboard.setData(ClipboardData(text: response));
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Response copied to clipboard')),
@@ -117,13 +123,13 @@ class _ResponseActions extends StatelessWidget {
         ),
         IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
+          onPressed: isAtStart ? null : () {
             emailViewModel.navigateResponse(requestIndex, false);
           },
         ),
         IconButton(
           icon: const Icon(Icons.arrow_forward),
-          onPressed: () {
+          onPressed: isAtEnd ? null : () {
             emailViewModel.navigateResponse(requestIndex, true);
           },
         ),
