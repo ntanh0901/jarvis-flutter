@@ -1,8 +1,16 @@
-import 'dart:io';
+// lib/chat_page.dart
 
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // For formatting DateTime
+import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
+
+import '../widgets/chat_input_widget.dart';
+import '../widgets/greeting_text_widget.dart';
+import '../widgets/logo_widget.dart';
+import '../widgets/suggestion_button_widget.dart';
+
+
 
 class ChatPage extends StatefulWidget {
   static const String routeName = '/chat';
@@ -14,7 +22,6 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  // List of AI Models
   final List<Map<String, dynamic>> aiModels = [
     {"name": "GPT-3.5 Turbo", "icon": 'assets/images/gpt-3.5.png'},
     {"name": "GPT-4 Turbo", "icon": 'assets/images/gpt-4.jpg'},
@@ -24,10 +31,7 @@ class _ChatPageState extends State<ChatPage> {
     {"name": "Gemini Pro", "icon": 'assets/images/gemini.png'}
   ];
 
-  // Selected AI Model
   Map<String, dynamic>? selectedModel;
-
-  // List of Threads
   final List<Thread> threads = [
     Thread(
       title: "Assistance Offered",
@@ -56,17 +60,6 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this as WidgetsBindingObserver);
-    super.dispose();
-  }
-
-  // Helper function to format date
-  String _formatDate(DateTime date) {
-    return DateFormat('hh:mm a').format(date);
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -84,77 +77,17 @@ class _ChatPageState extends State<ChatPage> {
       body: Column(
         children: [
           const SizedBox(height: 20),
-          _buildLogo(),
+          LogoWidget(),
           const SizedBox(height: 20),
-          _buildGreetingText(),
+          GreetingTextWidget(),
           const SizedBox(height: 20),
-          _buildSuggestionButton("Tell me something about the Big Bang..."),
-          _buildSuggestionButton("Please provide 10 gift ideas..."),
-          _buildSuggestionButton("Generate five catchy titles..."),
+          SuggestionButtonWidget(text: "Tell me something about the Big Bang..."),
+          SuggestionButtonWidget(text: "Please provide 10 gift ideas..."),
+          SuggestionButtonWidget(text: "Generate five catchy titles..."),
           const Spacer(),
-          // floatting _buildActionRow(), _buildChatInput() when keyboard is open mak
           _buildActionRow(),
-          _buildChatInput(),
+          ChatInputWidget(onSend: () => print("Message sent")),
         ],
-      ),
-    );
-  }
-
-  // Reusable Logo Widget
-  Widget _buildLogo() {
-    return Center(
-      child: CircleAvatar(
-        backgroundColor: Colors.purpleAccent.withOpacity(0.1),
-        radius: 50,
-        child: ClipOval(
-          child: Image.asset(
-            'assets/images/brain.jpg',
-            fit: BoxFit.cover,
-            width: 80,
-            height: 80,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Greeting Text Widget
-  Widget _buildGreetingText() {
-    return const Text(
-      "How can I assist you today?",
-      style: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w500,
-      ),
-    );
-  }
-
-  // Suggestion Button Widget
-  Widget _buildSuggestionButton(String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 20),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          foregroundColor: Colors.black,
-          backgroundColor: Colors.grey.shade200,
-          padding: const EdgeInsets.symmetric(vertical: 15),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-        ),
-        onPressed: () {},
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Text(text),
-              ),
-            ),
-            const Icon(Icons.arrow_forward),
-          ],
-        ),
       ),
     );
   }
@@ -166,69 +99,56 @@ class _ChatPageState extends State<ChatPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-        SizedBox(
-          width: 120, // Fixed width for _buildAIModelDropdown
-          child: _buildAIModelDropdown(),
-        ),
-        Expanded(
-          child: _buildIconButtons(),
-        )
+          SizedBox(
+            width: 120,
+            child: _buildAIModelDropdown(),
+          ),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildIconButton(Icons.content_cut),
+                _buildIconButton(Icons.add_box_outlined, onPressed: () => _showUploadDialog(context)),
+                _buildIconButton(Icons.menu_book_outlined),
+                _buildIconButton(Icons.access_time, onPressed: () => _showConversationHistoryDialog(context)),
+                _buildIconButton(Icons.add_comment, onPressed: () => _showConversationHistoryDialog(context)),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  // AI Model Dropdown Button
   Widget _buildAIModelDropdown() {
-    return Expanded(
-      child: SizedBox(
-        width: 300,
-        height: 40,
-        child: ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            foregroundColor: Colors.black,
-            backgroundColor: Colors.grey.shade200,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-          ),
-          icon: Image.asset(
-            selectedModel?['icon'],  // Đường dẫn đến ảnh từ danh sách `aiModels`
-            width: 18,  // Kích thước tương ứng với icon
-            height: 18,
-            fit: BoxFit.cover,  // Đảm bảo hình ảnh không bị méo
-          ),
-          label: Text(
-            selectedModel?['name'],
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 13),
-          ),
-          onPressed: () => _showModelSelectionDialog(context),
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        foregroundColor: Colors.black,
+        backgroundColor: Colors.grey.shade200,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
         ),
-      )
+      ),
+      icon: Image.asset(
+        selectedModel?['icon'] ?? 'assets/images/default_icon.png',
+        width: 18,
+        height: 18,
+        fit: BoxFit.cover,
+      ),
+      label: Text(
+        selectedModel?['name'] ?? "Select Model",
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontSize: 13),
+      ),
+      onPressed: () => _showModelSelectionDialog(context),
     );
   }
 
-  // Icon Buttons Row
-  Widget _buildIconButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildIconButton(Icons.content_cut),
-        _buildIconButton(Icons.add_box_outlined, onPressed: () => _showUploadDialog(context)),
-        _buildIconButton(Icons.menu_book_outlined),
-        _buildIconButton(Icons.access_time, onPressed: () => _showConversationHistoryDialog(context)),
-        _buildIconButton(Icons.add_comment, onPressed: () => _showConversationHistoryDialog(context)),
-      ],
-    );
-  }
-
-  // Reusable Icon Button Widget
   Widget _buildIconButton(IconData icon, {void Function()? onPressed}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 1.0), // Adjust the padding as needed
+      padding: const EdgeInsets.symmetric(horizontal: 1.0),
       child: IconButton(
         icon: Icon(icon),
         iconSize: 18,
@@ -237,8 +157,6 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  // Hàm hiển thị hộp thoại upload PDF
-  // Hàm hiển thị hộp thoại upload PDF
   Future<void> _showUploadDialog(BuildContext context) async {
     showDialog(
       context: context,
@@ -250,98 +168,52 @@ class _ChatPageState extends State<ChatPage> {
               Text('Upload PDF'),
               IconButton(
                 icon: Icon(Icons.close),
-                onPressed: () {
-                  Navigator.of(context).pop(); // Đóng hộp thoại khi nhấn vào nút "X"
-                },
+                onPressed: () => Navigator.of(context).pop(),
               ),
             ],
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Use Chat with PDF to easily get intelligent summaries and answers for your documents.'),
-              SizedBox(height: 20),
-              GestureDetector(
-                onTap: () => _pickPdfFile(context), // Hàm chọn file PDF
-                child: Container(
-                  height: 150,
-                  width: 300,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.picture_as_pdf, size: 50),
-                      SizedBox(height: 10),
-                      Text('Click or drag and drop here to upload'),
-                      SizedBox(height: 5),
-                      Text('File types supported: PDF  |  Max file size: 50MB',
-                      style: TextStyle(fontSize: 10, color: Colors.grey.shade600)
-                      ),
-                    ],
-                  ),
-                ),
+          content: GestureDetector(
+            onTap: () => _pickPdfFile(context),
+            child: Container(
+              height: 150,
+              width: 300,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(10),
               ),
-            ],
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.picture_as_pdf, size: 50),
+                  SizedBox(height: 10),
+                  Text('Click or drag and drop here to upload'),
+                  SizedBox(height: 5),
+                  Text('File types supported: PDF | Max file size: 50MB',
+                      style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+                ],
+              ),
+            ),
           ),
         );
       },
     );
   }
 
-  // Hàm chọn file PDF
   Future<void> _pickPdfFile(BuildContext context) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf'], // Chỉ cho phép chọn file PDF
+      allowedExtensions: ['pdf'],
     );
 
     if (result != null) {
       File file = File(result.files.single.path!);
       print('Selected PDF: ${file.path}');
-      // Đóng hộp thoại sau khi chọn file
       Navigator.of(context).pop();
-      // Bạn có thể xử lý file PDF ở đây (upload hoặc đọc file)
     } else {
-      // Nếu người dùng hủy chọn file
       print('User canceled the picker.');
     }
   }
 
-
-
-
-  // Chat Input Widget
-  Widget _buildChatInput() {
-    return Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: "Type a message...",
-                filled: true,
-                fillColor: Colors.grey.shade200,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.send),
-            onPressed: () {},
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Dialog to Select AI Model
   void _showModelSelectionDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -351,7 +223,7 @@ class _ChatPageState extends State<ChatPage> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: Container(
-            height: 400,  // Adjust height as necessary
+            height: 400,
             padding: const EdgeInsets.all(10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,30 +242,19 @@ class _ChatPageState extends State<ChatPage> {
                           leading: CircleAvatar(
                             backgroundColor: Colors.purpleAccent.withOpacity(0.1),
                             child: Image.asset(
-                              aiModels[index]['icon'],  // Hiển thị hình ảnh từ đường dẫn trong assets
+                              model['icon'],
                               fit: BoxFit.cover,
                               width: 40,
                               height: 40,
                             ),
                           ),
-                          title: Text(
-                            model['name'],
-                            style: TextStyle(
-                              fontWeight: FontWeight.normal,
-                              color: Colors.black,
-                            ),
-                          ),
-                          trailing: isSelected
-                              ? const Icon(
-                            Icons.check,
-                            color: Colors.green,
-                          )
-                              : null,
+                          title: Text(model['name']),
+                          trailing: isSelected ? const Icon(Icons.check, color: Colors.green) : null,
                           onTap: () {
                             setState(() {
                               selectedModel = model;
                             });
-                            Navigator.of(context).pop();  // Close the dialog after selecting
+                            Navigator.of(context).pop();
                           },
                         ),
                       );
@@ -408,18 +269,11 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-// Dialog Header Widget
   Widget _buildDialogHeader(String title) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
@@ -428,10 +282,6 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-
-
-
-  // Dialog to show conversation history
   void _showConversationHistoryDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -448,7 +298,6 @@ class _ChatPageState extends State<ChatPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildDialogHeader('Conversation History'),
-                _buildSearchBarWithIcons(),
                 Expanded(
                   child: ListView.builder(
                     itemCount: threads.length,
@@ -459,7 +308,7 @@ class _ChatPageState extends State<ChatPage> {
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(_formatDate(thread.creationTime)),
+                            Text(DateFormat('hh:mm a').format(thread.creationTime)),
                             Text(thread.firstMessage),
                             Text(thread.source, style: TextStyle(color: Colors.grey.shade600)),
                           ],
@@ -474,61 +323,6 @@ class _ChatPageState extends State<ChatPage> {
           ),
         );
       },
-    );
-  }
-
-
-
-  // Search Bar with Icons Widget
-  Widget _buildSearchBarWithIcons() {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Icon(Icons.search, color: Colors.grey),
-                ),
-                const Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search',
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        _buildCircleIcon(Icons.star_border),
-        const SizedBox(width: 8),
-        _buildCircleIcon(Icons.work_outline),
-      ],
-    );
-  }
-
-  // Circle Icon Button Widget
-  Widget _buildCircleIcon(IconData icon) {
-    return Container(
-      height: 40,
-      width: 40,
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        shape: BoxShape.circle,
-      ),
-      child: IconButton(
-        icon: Icon(icon),
-        onPressed: () {},
-      ),
     );
   }
 }
