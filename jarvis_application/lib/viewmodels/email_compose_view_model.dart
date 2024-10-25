@@ -29,15 +29,20 @@ class EmailComposeViewModel extends ChangeNotifier {
 
       final newResponse = await _aiService.generateResponse(context);
 
+      // Update the responses list
+      List<String> responses = conversationHistory[index]['responses'] as List<String>? ?? [];
+      responses.add(newResponse);
+
       conversationHistory[index] = {
         'role': 'ai',
         'content': newResponse,
-        'responses': <String>[newResponse],
-        'currentResponseIndex': 0
+        'responses': responses,
+        'currentResponseIndex': responses.length - 1  // Set to the index of the new response
       };
 
       isLoading = false;
       notifyListeners();
+      _updateNavigationControls(index);  // Update navigation controls after refresh
     } catch (e) {
       isLoading = false;
       errorMessage = 'Failed to refresh response: ${e.toString()}';
@@ -65,6 +70,7 @@ class EmailComposeViewModel extends ChangeNotifier {
           'content': e['content'] as String
         }).toList();
         final aiResponse = await _aiService.generateResponse(context);
+        final newIndex = conversationHistory.length;
         conversationHistory.add({
           'role': 'ai',
           'content': aiResponse,
@@ -84,12 +90,13 @@ class EmailComposeViewModel extends ChangeNotifier {
   void navigateResponse(int index, bool forward) {
     if (index < 0 ||
         index >= conversationHistory.length ||
-        conversationHistory[index]['role'] != 'ai') {
+        conversationHistory[index]['role'] != 'ai' ||
+        !conversationHistory[index].containsKey('responses')) {
       return;
     }
 
     final responses = conversationHistory[index]['responses'] as List<String>;
-    var currentIndex = conversationHistory[index]['currentResponseIndex'] as int;
+    var currentIndex = conversationHistory[index]['currentResponseIndex'] as int? ?? 0;
 
     if (forward && currentIndex < responses.length - 1) {
       currentIndex++;
@@ -105,18 +112,26 @@ class EmailComposeViewModel extends ChangeNotifier {
   }
 
   bool canNavigateBack(int index) {
-    if (index < 0 || index >= conversationHistory.length || conversationHistory[index]['role'] != 'ai') {
+    if (index < 0 || 
+        index >= conversationHistory.length || 
+        conversationHistory[index]['role'] != 'ai' ||
+        !conversationHistory[index].containsKey('responses') ||
+        !conversationHistory[index].containsKey('currentResponseIndex')) {
       return false;
     }
-    return (conversationHistory[index]['currentResponseIndex'] as int) > 0;
+    return (conversationHistory[index]['currentResponseIndex'] as int? ?? 0) > 0;
   }
 
   bool canNavigateForward(int index) {
-    if (index < 0 || index >= conversationHistory.length || conversationHistory[index]['role'] != 'ai') {
+    if (index < 0 || 
+        index >= conversationHistory.length || 
+        conversationHistory[index]['role'] != 'ai' ||
+        !conversationHistory[index].containsKey('responses') ||
+        !conversationHistory[index].containsKey('currentResponseIndex')) {
       return false;
     }
     final responses = conversationHistory[index]['responses'] as List<String>;
-    final currentIndex = conversationHistory[index]['currentResponseIndex'] as int;
+    final currentIndex = conversationHistory[index]['currentResponseIndex'] as int? ?? 0;
     return currentIndex < responses.length - 1;
   }
 
@@ -139,6 +154,7 @@ class EmailComposeViewModel extends ChangeNotifier {
         {'role': 'user', 'content': lastMessage}
       ]);
 
+      final newIndex = conversationHistory.length;
       conversationHistory.add({
         'role': 'ai',
         'content': quickResponse,
@@ -152,5 +168,10 @@ class EmailComposeViewModel extends ChangeNotifier {
       errorMessage = 'Failed to generate quick response: ${e.toString()}';
       notifyListeners();
     }
+  }
+
+  void _updateNavigationControls(int index) {
+    // This method is called to trigger UI updates for navigation controls
+    notifyListeners();
   }
 }

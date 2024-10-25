@@ -27,7 +27,7 @@ class EmailComposeScreen extends StatelessWidget {
             ),
             actions: [
               IconButton(
-                icon: Icon(Icons.more_vert, color: Colors.black),
+                icon: const Icon(Icons.more_vert, color: Colors.black),
                 onPressed: () {},
               ),
             ],
@@ -36,7 +36,7 @@ class EmailComposeScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: ListView.builder(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   itemCount: emailViewModel.conversationHistory.length,
                   itemBuilder: (context, index) {
                     final message = emailViewModel.conversationHistory[index];
@@ -44,8 +44,6 @@ class EmailComposeScreen extends StatelessWidget {
                     return isUser
                         ? _UserMessage(content: message['content'])
                         : _AIResponse(
-                            message: message,
-                            emailViewModel: emailViewModel,
                             requestIndex: index,
                           );
                   },
@@ -69,55 +67,56 @@ class _UserMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16),
-      margin: EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(content, style: TextStyle(fontSize: 16)),
+      child: Text(content, style: const TextStyle(fontSize: 16)),
     );
   }
 }
 
 class _AIResponse extends StatelessWidget {
-  final Map<String, dynamic> message;
-  final EmailComposeViewModel emailViewModel;
   final int requestIndex;
 
   const _AIResponse({
-    required this.message,
-    required this.emailViewModel,
     required this.requestIndex,
   });
 
   @override
   Widget build(BuildContext context) {
-    final responses = message['responses'] as List<dynamic>;
-    final currentIndex = message['currentResponseIndex'] as int;
-    final content = responses[currentIndex] as String;
+    return Consumer<EmailComposeViewModel>(
+      builder: (context, emailViewModel, child) {
+        final message = emailViewModel.conversationHistory[requestIndex];
+        final responses = message['responses'] as List<dynamic>;
+        final currentIndex = message['currentResponseIndex'] as int;
+        final content = responses[currentIndex] as String;
 
-    return Container(
-      padding: EdgeInsets.all(16),
-      margin: EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Jarvis reply', style: TextStyle(fontWeight: FontWeight.bold)),
-          SizedBox(height: 8),
-          Text(content, style: TextStyle(fontSize: 16)),
-          SizedBox(height: 16),
-          Divider(),
-          _ResponseActions(
-            emailViewModel: emailViewModel,
-            requestIndex: requestIndex,
+        return Container(
+          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
           ),
-        ],
-      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Jarvis reply', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text(content, style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 16),
+              const Divider(),
+              _ResponseActions(
+                emailViewModel: emailViewModel,
+                requestIndex: requestIndex,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -137,20 +136,20 @@ class _ResponseActions extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         IconButton(
-          icon: Icon(Icons.add_circle_outline, color: Colors.grey),
+          icon: const Icon(Icons.add_circle_outline, color: Colors.grey),
           onPressed: () {},
         ),
         IconButton(
-          icon: Icon(Icons.content_copy, color: Colors.grey),
+          icon: const Icon(Icons.content_copy, color: Colors.grey),
           onPressed: () {
             Clipboard.setData(ClipboardData(
                 text: emailViewModel.conversationHistory[requestIndex]['content']));
             ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Response copied to clipboard')));
+                const SnackBar(content: Text('Response copied to clipboard')));
           },
         ),
         IconButton(
-          icon: Icon(Icons.refresh, color: Colors.grey),
+          icon: const Icon(Icons.refresh, color: Colors.grey),
           onPressed: () => emailViewModel.refreshResponse(requestIndex),
         ),
         IconButton(
@@ -181,7 +180,7 @@ class _QuickActionButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
@@ -206,9 +205,9 @@ class _QuickActionButtons extends StatelessWidget {
         backgroundColor: color,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
-      child: Text(label, style: TextStyle(fontSize: 12)),
+      child: Text(label, style: const TextStyle(fontSize: 12)),
     );
   }
 }
@@ -222,7 +221,7 @@ class _ChatInputWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      padding: EdgeInsets.all(8),
+      padding: const EdgeInsets.all(8),
       child: Row(
         children: [
           Expanded(
@@ -237,7 +236,7 @@ class _ChatInputWidget extends StatelessWidget {
                 filled: true,
                 fillColor: Colors.grey[200],
                 contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               ),
             ),
           ),
@@ -246,7 +245,7 @@ class _ChatInputWidget extends StatelessWidget {
             onPressed: () => emailViewModel.sendMessage(),
           ),
           IconButton(
-            icon: Icon(Icons.mic, color: Colors.grey),
+            icon: const Icon(Icons.mic, color: Colors.grey),
             onPressed: () {},
           ),
         ],
