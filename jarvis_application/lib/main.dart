@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jarvis_application/services/mock_ai_service.dart';
-import 'package:jarvis_application/ui/bot_list_page.dart';
+import 'package:jarvis_application/screens/aiBots/publish_screen.dart';
+import 'package:jarvis_application/screens/aiBots/bot_list_page.dart';
 import 'package:jarvis_application/ui/chat_page.dart';
 import 'package:jarvis_application/viewmodels/email_compose_view_model.dart';
 import 'package:jarvis_application/viewmodels/image_handler_view_model.dart';
@@ -9,9 +10,11 @@ import 'package:jarvis_application/views/email/email_compose_page.dart';
 import 'package:provider/provider.dart';
 import 'package:jarvis_application/providers/ai_bot_provider.dart';
 import 'package:jarvis_application/providers/auth_provider.dart';
+import 'package:jarvis_application/providers/platform_provider.dart'; // Import PlatformProvider
 import 'package:jarvis_application/screens/knowledgeBase/knowledge_base_screen.dart';
 import 'package:jarvis_application/screens/prompts/prompt_library_screen.dart';
 import 'package:flutter/gestures.dart';
+import 'package:jarvis_application/screens/aiBots/bot_list_page.dart';
 import 'dart:math' as math;
 
 void main() {
@@ -67,7 +70,7 @@ class _MainScreenState extends State<MainScreen> {
 
   static final List<Widget> _pages = <Widget>[
     const ChatPage(),
-    const BotListPage(),
+    BotListPage(),
     const KnowledgeBase(),
     const PromptLibrary(),
     ChangeNotifierProvider(
@@ -101,11 +104,11 @@ class _MainScreenState extends State<MainScreen> {
                       selectedIcon: Icon(Icons.chat_bubble),
                       label: Text('Chat'),
                     ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.list),
-                      selectedIcon: Icon(Icons.list_alt),
-                      label: Text('Bot List'),
-                    ),
+                    // NavigationRailDestination(
+                    //   icon: Icon(Icons.list),
+                    //   selectedIcon: Icon(Icons.list_alt),
+                    //   label: Text('Bot List'),
+                    // ),
                     NavigationRailDestination(
                       icon: Icon(Icons.book),
                       selectedIcon: Icon(Icons.bookmark),
