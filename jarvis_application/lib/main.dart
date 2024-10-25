@@ -3,6 +3,7 @@ import 'package:jarvis_application/services/mock_ai_service.dart';
 import 'package:jarvis_application/ui/bot_list_page.dart';
 import 'package:jarvis_application/ui/chat_page.dart';
 import 'package:jarvis_application/viewmodels/email_compose_view_model.dart';
+import 'package:jarvis_application/viewmodels/image_handler_view_model.dart';
 import 'package:jarvis_application/views/auth/signin_page.dart';
 import 'package:jarvis_application/views/email/email_compose_page.dart';
 import 'package:provider/provider.dart';
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (context) => AIBotProvider()),
         ChangeNotifierProvider(create: (context) => AuthProvider()),
+         ChangeNotifierProvider(create: (_) => ImageHandlerViewModel()),
       ],
       child: MaterialApp(
         title: 'Chat Bot',
