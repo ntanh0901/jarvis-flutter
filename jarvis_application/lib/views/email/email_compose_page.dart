@@ -136,10 +136,6 @@ class _ResponseActions extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         IconButton(
-          icon: const Icon(Icons.add_circle_outline, color: Colors.grey),
-          onPressed: () {},
-        ),
-        IconButton(
           icon: const Icon(Icons.content_copy, color: Colors.grey),
           onPressed: () {
             Clipboard.setData(ClipboardData(
@@ -153,14 +149,14 @@ class _ResponseActions extends StatelessWidget {
           onPressed: () => emailViewModel.refreshResponse(requestIndex),
         ),
         IconButton(
-          icon: Icon(CupertinoIcons.arrow_turn_up_left, 
+          icon: Icon(CupertinoIcons.arrowshape_turn_up_left, 
             color: emailViewModel.canNavigateBack(requestIndex) ? Colors.grey : Colors.grey.withOpacity(0.3)),
           onPressed: emailViewModel.canNavigateBack(requestIndex) 
             ? () => emailViewModel.navigateResponse(requestIndex, false) 
             : null,
         ),
         IconButton(
-          icon: Icon(CupertinoIcons.arrow_turn_up_right, 
+          icon: Icon(CupertinoIcons.arrowshape_turn_up_right, 
             color: emailViewModel.canNavigateForward(requestIndex) ? Colors.grey : Colors.grey.withOpacity(0.3)),
           onPressed: emailViewModel.canNavigateForward(requestIndex) 
             ? () => emailViewModel.navigateResponse(requestIndex, true) 

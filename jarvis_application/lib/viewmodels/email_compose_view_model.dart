@@ -154,13 +154,30 @@ class EmailComposeViewModel extends ChangeNotifier {
         {'role': 'user', 'content': lastMessage}
       ]);
 
-      final newIndex = conversationHistory.length;
-      conversationHistory.add({
-        'role': 'ai',
-        'content': quickResponse,
-        'responses': [quickResponse],
-        'currentResponseIndex': 0
-      });
+      // Find the last AI response in the conversation history
+      int lastAiIndex = conversationHistory.lastIndexWhere((message) => message['role'] == 'ai');
+
+      if (lastAiIndex != -1) {
+        // Update the existing AI response
+        List<String> responses = conversationHistory[lastAiIndex]['responses'] as List<String>;
+        responses.add(quickResponse);
+
+        conversationHistory[lastAiIndex] = {
+          'role': 'ai',
+          'content': quickResponse,
+          'responses': responses,
+          'currentResponseIndex': responses.length - 1
+        };
+      } else {
+        // If no AI response exists, add a new one
+        conversationHistory.add({
+          'role': 'ai',
+          'content': quickResponse,
+          'responses': [quickResponse],
+          'currentResponseIndex': 0
+        });
+      }
+
       isLoading = false;
       notifyListeners();
     } catch (e) {
