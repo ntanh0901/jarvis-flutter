@@ -94,6 +94,18 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
           backgroundColor: Colors.white,
           elevation: 0,
           centerTitle: true,
+          // Thêm nút "Publish" vào AppBar
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/publishing-platforms'); // Điều hướng tới trang Publishing Platform
+              },
+              child: const Text(
+                'Publish',
+                style: TextStyle(color: Colors.blue, fontSize: 16),
+              ),
+            ),
+          ],
         ),
         body: SafeArea(
           child: Column(
@@ -124,6 +136,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       ),
     );
   }
+
 
   Widget _buildLogo() {
     return Center(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jarvis_application/services/mock_ai_service.dart';
-import 'package:jarvis_application/screens/aiBots/publish_screen.dart';
+import 'package:jarvis_application/screens/aiBots/publish_screen.dart'; // Import PublishScreen
 import 'package:jarvis_application/screens/aiBots/bot_list_page.dart';
 import 'package:jarvis_application/ui/chat_page.dart';
 import 'package:jarvis_application/viewmodels/email_compose_view_model.dart';
@@ -10,7 +10,7 @@ import 'package:jarvis_application/views/email/email_compose_page.dart';
 import 'package:provider/provider.dart';
 import 'package:jarvis_application/providers/ai_bot_provider.dart';
 import 'package:jarvis_application/providers/auth_provider.dart';
-import 'package:jarvis_application/providers/platform_provider.dart'; // Import PlatformProvider
+import 'package:jarvis_application/providers/platform_provider.dart';
 import 'package:jarvis_application/screens/knowledgeBase/knowledge_base_screen.dart';
 import 'package:jarvis_application/screens/prompts/prompt_library_screen.dart';
 import 'package:flutter/gestures.dart';
@@ -30,7 +30,8 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (context) => AIBotProvider()),
         ChangeNotifierProvider(create: (context) => AuthProvider()),
-         ChangeNotifierProvider(create: (_) => ImageHandlerViewModel()),
+        ChangeNotifierProvider(create: (_) => ImageHandlerViewModel()),
+        ChangeNotifierProvider(create: (context) => PlatformProvider()),
       ],
       child: MaterialApp(
         title: 'Chat Bot',
@@ -38,7 +39,11 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
           useMaterial3: true,
         ),
-        home: const AuthWrapper(),
+        initialRoute: '/',
+        routes: {
+          '/': (context) => const AuthWrapper(),
+          '/publishing-platforms': (context) => PublishingPlatformPage(), // Route for PublishScreen
+        },
       ),
     );
   }
@@ -104,11 +109,6 @@ class _MainScreenState extends State<MainScreen> {
                       selectedIcon: Icon(Icons.chat_bubble),
                       label: Text('Chat'),
                     ),
-                    // NavigationRailDestination(
-                    //   icon: Icon(Icons.list),
-                    //   selectedIcon: Icon(Icons.list_alt),
-                    //   label: Text('Bot List'),
-                    // ),
                     NavigationRailDestination(
                       icon: Icon(Icons.book),
                       selectedIcon: Icon(Icons.bookmark),
