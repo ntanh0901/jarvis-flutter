@@ -151,22 +151,45 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildSuggestionButton(String text) {
+ Widget _buildSuggestionButton(String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 20),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           foregroundColor: Colors.black,
           backgroundColor: Colors.grey.shade200,
-          padding: const EdgeInsets.symmetric(vertical: 15),
+          padding: const EdgeInsets.symmetric(
+              vertical: 15, horizontal: 20), // Add horizontal padding
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30), // Rounded corners
+          ),
+          elevation: 5, // Shadow effect
         ),
         onPressed: () {
           // Handle suggestion button tap
         },
-        child: Text(text),
+        child: Row(
+          mainAxisAlignment:
+              MainAxisAlignment.spaceBetween, // Space between text and icon
+          children: [
+            Text(
+              text,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Colors.black54,
+            ),
+          ],
+        ),
       ),
     );
   }
+
 
   // Action Row Widget
 Widget _buildActionRow() {
@@ -272,32 +295,40 @@ Widget _buildAIModelDropdown() {
     );
   }
 
-    
-Widget _buildChatInput() {
+   Widget _buildChatInput() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline,
-                color: ChatScreenStyles.iconColor),
-            onPressed: () => _showImagePickerOptions(context),
-          ),
-          const Expanded(
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Type a message...',
-                border: InputBorder.none,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFEEEEEE), // Background color
+          borderRadius: BorderRadius.circular(20.0), // Rounded corners
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.add_circle_outline,
+                  color: ChatScreenStyles.iconColor),
+              onPressed: () => _showImagePickerOptions(context),
+            ),
+            const Expanded(
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Type a message...',
+                  border: InputBorder.none,
+                  isDense: true, // Reduces padding inside the TextField
+                  contentPadding: EdgeInsets.symmetric(vertical: 8.0),
+                ),
               ),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.send, color: ChatScreenStyles.iconColor),
-            onPressed: () {
-              // Handle send message
-            },
-          ),
-        ],
+            IconButton(
+              icon: const Icon(Icons.send, color: ChatScreenStyles.iconColor),
+              onPressed: () {
+                // Handle send message
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
