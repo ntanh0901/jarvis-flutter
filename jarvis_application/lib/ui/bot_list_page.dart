@@ -8,72 +8,25 @@ import 'package:intl/intl.dart';
 class BotListPage extends StatelessWidget {
   static const String routeName = '/bot-list';
 
+  const BotListPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Bots'),
+        title: const Text('Bot List'),
       ),
       body: Consumer<AIBotProvider>(
         builder: (context, botProvider, child) {
-          return ListView.builder(
-            itemCount: botProvider.aiBots.length,
-            itemBuilder: (context, index) {
-              final bot = botProvider.aiBots[index];
-              String formattedDate = DateFormat('MM/dd/yyyy').format(bot.createdAt);
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                child: Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage: AssetImage(bot.imageUrl), // Hiển thị ảnh từ imageUrl
-                      radius: 30,
-                    ),
-                    title: Text(
-                      bot.name,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(bot.description),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Icon(Icons.access_time, size: 16, color: Colors.grey),
-                            const SizedBox(width: 5),
-                            Text(formattedDate, style: const TextStyle(color: Colors.grey)),
-                          ],
-                        ),
-                      ],
-                    ),
-                    trailing: IntrinsicWidth(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end, // Đẩy các icon về bên phải
-                        children: <Widget>[
-                          IconButton(
-                            icon: const Icon(Icons.star_border, color: Colors.grey, size: 20),
-                            onPressed: () {
-                              // Xử lý hành động yêu thích bot
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                            onPressed: () {
-                              botProvider.deleteAIBot(bot.id); // Xóa bot
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth > 600) {
+                // Large screen layout
+                return _buildLargeScreenLayout(botProvider);
+              } else {
+                // Small screen layout
+                return _buildSmallScreenLayout(botProvider);
+              }
             },
           );
         },
@@ -87,17 +40,149 @@ class BotListPage extends StatelessWidget {
     );
   }
 
+  Widget _buildLargeScreenLayout(AIBotProvider botProvider) {
+    return ListView.builder(
+      itemCount: botProvider.aiBots.length,
+      itemBuilder: (context, index) {
+        final bot = botProvider.aiBots[index];
+        String formattedDate = DateFormat('MM/dd/yyyy').format(bot.createdAt);
+
+        return ListTile(
+          leading: CircleAvatar(
+            backgroundImage: AssetImage(bot.imageUrl),
+            radius: 25,
+          ),
+          title: Text(
+            bot.name,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                bot.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                formattedDate,
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.star_border, color: Colors.grey),
+                onPressed: () {
+                  // Handle favorite action
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () {
+                  botProvider.deleteAIBot(bot.id);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSmallScreenLayout(AIBotProvider botProvider) {
+    return ListView.builder(
+      itemCount: botProvider.aiBots.length,
+      itemBuilder: (context, index) {
+        final bot = botProvider.aiBots[index];
+        String formattedDate = DateFormat('MM/dd/yyyy').format(bot.createdAt);
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+          child: Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        backgroundImage: AssetImage(bot.imageUrl),
+                        radius: 25,
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              bot.name,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              formattedDate,
+                              style: const TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.star_border, color: Colors.grey, size: 20),
+                            padding: EdgeInsets.zero,
+                            constraints: BoxConstraints(),
+                            onPressed: () {
+                              // Handle favorite action
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                            padding: EdgeInsets.zero,
+                            constraints: BoxConstraints(),
+                            onPressed: () {
+                              botProvider.deleteAIBot(bot.id);
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    bot.description,
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   // Hàm hiển thị form để tạo bot mới
   void _showCreateBotDialog(BuildContext context) {
     final TextEditingController nameController = TextEditingController();
     final TextEditingController descriptionController = TextEditingController();
-    File? _imageFile; // Biến lưu trữ ảnh đã chọn
-    final ImagePicker _picker = ImagePicker(); // Tạo instance của ImagePicker
+    File? imageFile; // Biến lưu trữ ảnh đã chọn
+    final ImagePicker picker = ImagePicker(); // Tạo instance của ImagePicker
 
-    Future<void> _pickImage() async {
-      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    Future<void> pickImage() async {
+      final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
-        _imageFile = File(pickedFile.path); // Lưu trữ đường dẫn ảnh
+        imageFile = File(pickedFile.path); // Lưu trữ đường dẫn ảnh
       }
     }
 
@@ -134,11 +219,11 @@ class BotListPage extends StatelessWidget {
                     const SizedBox(height: 10),
                     GestureDetector(
                       onTap: () async {
-                        await _pickImage(); // Gọi hàm chọn ảnh
+                        await pickImage(); // Gọi hàm chọn ảnh
                         setState(() {}); // Cập nhật giao diện sau khi chọn ảnh
                       },
-                      child: _imageFile != null
-                          ? Image.file(_imageFile!, width: 100, height: 100) // Hiển thị ảnh đã chọn
+                      child: imageFile != null
+                          ? Image.file(imageFile!, width: 100, height: 100) // Hiển thị ảnh đã chọn
                           : Container(
                               width: 100,
                               height: 100,
@@ -171,7 +256,7 @@ class BotListPage extends StatelessWidget {
                       Provider.of<AIBotProvider>(context, listen: false).createAIBot(
                         nameController.text,
                         descriptionController.text,
-                        _imageFile?.path ?? '', // Đường dẫn ảnh hoặc rỗng nếu chưa có ảnh
+                        imageFile?.path ?? '', // Đường dẫn ảnh hoặc rỗng nếu chưa có ảnh
                       );
                       Navigator.of(context).pop(); // Đóng dialog sau khi tạo bot
                     }

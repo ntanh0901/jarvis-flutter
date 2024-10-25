@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:jarvis_application/viewmodels/email_compose_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:jarvis_application/services/ai_service.dart';
 
 class EmailComposeScreen extends StatelessWidget {
   const EmailComposeScreen({super.key});

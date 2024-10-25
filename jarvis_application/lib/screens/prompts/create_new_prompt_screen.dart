@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class CreateNewPrompt extends StatefulWidget {
-  const CreateNewPrompt({Key? key}) : super(key: key);
+  const CreateNewPrompt({super.key});
 
   @override
   _CreateNewPromptState createState() => _CreateNewPromptState();

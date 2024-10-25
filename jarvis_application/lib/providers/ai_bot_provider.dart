@@ -12,7 +12,7 @@ class AIBotProvider with ChangeNotifier {
       promptTemplate: 'Help me organize my tasks for today.',
       knowledgeBaseIds: [],
       isPublished: true,
-      createdAt: DateTime.now().subtract(Duration(days: 5)),
+      createdAt: DateTime.now().subtract(const Duration(days: 5)),
     ),
     AIBot(
       id: '2',
@@ -22,7 +22,7 @@ class AIBotProvider with ChangeNotifier {
       promptTemplate: 'Provide detailed answers for tech-related queries.',
       knowledgeBaseIds: [],
       isPublished: false,
-      createdAt: DateTime.now().subtract(Duration(days: 3)),
+      createdAt: DateTime.now().subtract(const Duration(days: 3)),
     ),
   ];
 

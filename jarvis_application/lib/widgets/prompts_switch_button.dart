@@ -6,11 +6,11 @@ class PromptsSwitchButton extends StatelessWidget {
   final VoidCallback onPublicPromptSelected;
 
   const PromptsSwitchButton({
-    Key? key,
+    super.key,
     required this.isMyPromptSelected,
     required this.onMyPromptSelected,
     required this.onPublicPromptSelected,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

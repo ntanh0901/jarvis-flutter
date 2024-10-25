@@ -36,17 +36,17 @@ class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
   @override
-  _MainScreenState createState() => _MainScreenState();
+  State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  static List<Widget> _pages = <Widget>[
-    ChatPage(),
+  static final List<Widget> _pages = <Widget>[
+    const ChatPage(),
     BotListPage(),
-    KnowledgeBase(),
-    PromptLibrary(),
+    const KnowledgeBase(),
+    const PromptLibrary(),
   ];
 
   void _onItemTapped(int index) {

@@ -7,13 +7,15 @@ import 'package:file_picker/file_picker.dart';
 class ChatPage extends StatefulWidget {
   static const String routeName = '/chat';
 
-  const ChatPage({Key? key}) : super(key: key);
+  const ChatPage({super.key});
 
   @override
   _ChatPageState createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> {
+class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
+  int _selectedIndex = 0;
+
   // List of AI Models
   final List<Map<String, dynamic>> aiModels = [
     {"name": "GPT-3.5 Turbo", "icon": 'assets/images/gpt-3.5.png'},
@@ -24,26 +26,26 @@ class _ChatPageState extends State<ChatPage> {
     {"name": "Gemini Pro", "icon": 'assets/images/gemini.png'}
   ];
 
-  // Selected AI Model
+  // Change the type of selectedModel
   Map<String, dynamic>? selectedModel;
 
   // List of Threads
   final List<Thread> threads = [
     Thread(
       title: "Assistance Offered",
-      creationTime: DateTime.now().subtract(Duration(minutes: 28)),
+      creationTime: DateTime.now().subtract(const Duration(minutes: 28)),
       firstMessage: "Hello! How can I assist you today?",
       source: "en.wikipedia.org",
     ),
     Thread(
       title: "New Flutter Update",
-      creationTime: DateTime.now().subtract(Duration(hours: 1)),
+      creationTime: DateTime.now().subtract(const Duration(hours: 1)),
       firstMessage: "Flutter just got a new update. Here are the highlights...",
       source: "flutter.dev",
     ),
     Thread(
       title: "React Native vs Flutter",
-      creationTime: DateTime.now().subtract(Duration(hours: 4)),
+      creationTime: DateTime.now().subtract(const Duration(hours: 4)),
       firstMessage: "Which is better, React Native or Flutter? Let's dive in.",
       source: "reactnative.dev",
     ),
@@ -52,13 +54,19 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     selectedModel = aiModels.isNotEmpty ? aiModels.first : null;
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this as WidgetsBindingObserver);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Handle app lifecycle changes if needed
   }
 
   // Helper function to format date
@@ -81,21 +89,29 @@ class _ChatPageState extends State<ChatPage> {
         elevation: 0,
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 20),
-          _buildLogo(),
-          const SizedBox(height: 20),
-          _buildGreetingText(),
-          const SizedBox(height: 20),
-          _buildSuggestionButton("Tell me something about the Big Bang..."),
-          _buildSuggestionButton("Please provide 10 gift ideas..."),
-          _buildSuggestionButton("Generate five catchy titles..."),
-          const Spacer(),
-          // floatting _buildActionRow(), _buildChatInput() when keyboard is open mak
-          _buildActionRow(),
-          _buildChatInput(),
-        ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    _buildLogo(),
+                    const SizedBox(height: 20),
+                    _buildGreetingText(),
+                    const SizedBox(height: 20),
+                    _buildSuggestionButton("Tell me something about the Big Bang..."),
+                    _buildSuggestionButton("Please provide 10 gift ideas..."),
+                    _buildSuggestionButton("Generate five catchy titles..."),
+                  ],
+                ),
+              ),
+            ),
+            _buildActionRow(),
+            _buildChatInput(),
+          ],
+        ),
       ),
     );
   }
@@ -161,79 +177,90 @@ class _ChatPageState extends State<ChatPage> {
 
   // Action Row Widget
   Widget _buildActionRow() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-        SizedBox(
-          width: 120, // Fixed width for _buildAIModelDropdown
-          child: _buildAIModelDropdown(),
-        ),
-        Expanded(
-          child: _buildIconButtons(),
-        )
-        ],
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth > 600) {
+          // Large screen layout
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Row(
+              children: [
+                _buildAIModelDropdown(),
+                const Spacer(),
+                ..._buildIconButtons(),
+              ],
+            ),
+          );
+        } else {
+          // Small screen layout
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildAIModelDropdown(),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: _buildIconButtons(),
+                ),
+              ],
+            ),
+          );
+        }
+      },
     );
   }
 
   // AI Model Dropdown Button
   Widget _buildAIModelDropdown() {
-    return Expanded(
-      child: SizedBox(
-        width: 300,
-        height: 40,
-        child: ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            foregroundColor: Colors.black,
-            backgroundColor: Colors.grey.shade200,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: InkWell(
+        onTap: () => _showModelSelectionDialog(context),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              selectedModel?['icon'] ?? '',
+              width: 24,
+              height: 24,
             ),
-          ),
-          icon: Image.asset(
-            selectedModel?['icon'],  // Đường dẫn đến ảnh từ danh sách `aiModels`
-            width: 18,  // Kích thước tương ứng với icon
-            height: 18,
-            fit: BoxFit.cover,  // Đảm bảo hình ảnh không bị méo
-          ),
-          label: Text(
-            selectedModel?['name'],
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 13),
-          ),
-          onPressed: () => _showModelSelectionDialog(context),
+            const SizedBox(width: 8),
+            Text(
+              selectedModel?['name'] ?? 'Select Model',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.arrow_drop_down, size: 20),
+          ],
         ),
-      )
+      ),
     );
   }
 
   // Icon Buttons Row
-  Widget _buildIconButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildIconButton(Icons.content_cut),
-        _buildIconButton(Icons.add_box_outlined, onPressed: () => _showUploadDialog(context)),
-        _buildIconButton(Icons.menu_book_outlined),
-        _buildIconButton(Icons.access_time, onPressed: () => _showConversationHistoryDialog(context)),
-        _buildIconButton(Icons.add_comment, onPressed: () => _showConversationHistoryDialog(context)),
-      ],
-    );
+  List<Widget> _buildIconButtons() {
+    return [
+      _buildIconButton(Icons.content_cut),
+      _buildIconButton(Icons.add_box_outlined, onPressed: () => _showUploadDialog(context)),
+      _buildIconButton(Icons.menu_book_outlined),
+      _buildIconButton(Icons.access_time, onPressed: () => _showConversationHistoryDialog(context)),
+      _buildIconButton(Icons.add_comment, onPressed: () => _showConversationHistoryDialog(context)),
+    ];
   }
 
   // Reusable Icon Button Widget
-  Widget _buildIconButton(IconData icon, {void Function()? onPressed}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 1.0), // Adjust the padding as needed
-      child: IconButton(
-        icon: Icon(icon),
-        iconSize: 18,
-        onPressed: onPressed ?? () {},
-      ),
+  Widget _buildIconButton(IconData icon, {VoidCallback? onPressed}) {
+    return IconButton(
+      icon: Icon(icon),
+      onPressed: onPressed ?? () {},
+      constraints: BoxConstraints(minWidth: 40, minHeight: 40),
+      padding: EdgeInsets.zero,
     );
   }
 
@@ -247,9 +274,9 @@ class _ChatPageState extends State<ChatPage> {
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Upload PDF'),
+              const Text('Upload PDF'),
               IconButton(
-                icon: Icon(Icons.close),
+                icon: const Icon(Icons.close),
                 onPressed: () {
                   Navigator.of(context).pop(); // Đóng hộp thoại khi nhấn vào nút "X"
                 },
@@ -259,8 +286,8 @@ class _ChatPageState extends State<ChatPage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Use Chat with PDF to easily get intelligent summaries and answers for your documents.'),
-              SizedBox(height: 20),
+              const Text('Use Chat with PDF to easily get intelligent summaries and answers for your documents.'),
+              const SizedBox(height: 20),
               GestureDetector(
                 onTap: () => _pickPdfFile(context), // Hàm chọn file PDF
                 child: Container(
@@ -273,10 +300,10 @@ class _ChatPageState extends State<ChatPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.picture_as_pdf, size: 50),
-                      SizedBox(height: 10),
-                      Text('Click or drag and drop here to upload'),
-                      SizedBox(height: 5),
+                      const Icon(Icons.picture_as_pdf, size: 50),
+                      const SizedBox(height: 10),
+                      const Text('Click or drag and drop here to upload'),
+                      const SizedBox(height: 5),
                       Text('File types supported: PDF  |  Max file size: 50MB',
                       style: TextStyle(fontSize: 10, color: Colors.grey.shade600)
                       ),
@@ -315,9 +342,10 @@ class _ChatPageState extends State<ChatPage> {
 
   // Chat Input Widget
   Widget _buildChatInput() {
-    return Padding(
+    return Container(
       padding: const EdgeInsets.all(10.0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Expanded(
             child: TextField(
@@ -329,9 +357,14 @@ class _ChatPageState extends State<ChatPage> {
                   borderRadius: BorderRadius.circular(30),
                   borderSide: BorderSide.none,
                 ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               ),
+              maxLines: null,
+              textInputAction: TextInputAction.newline,
+              keyboardType: TextInputType.multiline,
             ),
           ),
+          const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.send),
             onPressed: () {},
@@ -351,7 +384,7 @@ class _ChatPageState extends State<ChatPage> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: Container(
-            height: 400,  // Adjust height as necessary
+            height: 400,
             padding: const EdgeInsets.all(10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,7 +403,7 @@ class _ChatPageState extends State<ChatPage> {
                           leading: CircleAvatar(
                             backgroundColor: Colors.purpleAccent.withOpacity(0.1),
                             child: Image.asset(
-                              aiModels[index]['icon'],  // Hiển thị hình ảnh từ đường dẫn trong assets
+                              model['icon'],
                               fit: BoxFit.cover,
                               width: 40,
                               height: 40,
@@ -378,22 +411,22 @@ class _ChatPageState extends State<ChatPage> {
                           ),
                           title: Text(
                             model['name'],
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontWeight: FontWeight.normal,
                               color: Colors.black,
                             ),
                           ),
                           trailing: isSelected
                               ? const Icon(
-                            Icons.check,
-                            color: Colors.green,
-                          )
+                                  Icons.check,
+                                  color: Colors.green,
+                                )
                               : null,
                           onTap: () {
                             setState(() {
                               selectedModel = model;
                             });
-                            Navigator.of(context).pop();  // Close the dialog after selecting
+                            Navigator.of(context).pop();
                           },
                         ),
                       );
@@ -490,13 +523,13 @@ class _ChatPageState extends State<ChatPage> {
               color: Colors.grey[200],
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Row(
+            child: const Row(
               children: [
-                const Padding(
+                Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8.0),
                   child: Icon(Icons.search, color: Colors.grey),
                 ),
-                const Expanded(
+                Expanded(
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: 'Search',
@@ -547,3 +580,9 @@ class Thread {
     required this.source,
   });
 }
+
+
+
+
+
+

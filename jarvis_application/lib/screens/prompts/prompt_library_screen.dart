@@ -4,7 +4,7 @@ import 'package:jarvis_application/widgets/prompts_switch_button.dart';
 import 'package:jarvis_application/widgets/search_text_field.dart';
 
 class PromptLibrary extends StatefulWidget {
-  const PromptLibrary({Key? key}) : super(key: key);
+  const PromptLibrary({super.key});
 
   @override
   _PromptLibraryState createState() => _PromptLibraryState();
