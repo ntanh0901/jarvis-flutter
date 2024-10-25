@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_application/ui/bot_list_page.dart';
+import 'package:jarvis_application/screens/aiBots/publish_screen.dart';
+import 'package:jarvis_application/screens/aiBots/bot_list_page.dart';
 import 'package:jarvis_application/ui/chat_page.dart';
 import 'package:provider/provider.dart'; // Import provider package
 import 'package:jarvis_application/providers/ai_bot_provider.dart'; // Import AIBotProvider
+import 'package:jarvis_application/providers/platform_provider.dart'; // Import PlatformProvider
 import 'package:jarvis_application/screens/knowledgeBase/knowledge_base_screen.dart';
 import 'package:jarvis_application/screens/prompts/prompt_library_screen.dart';
 
@@ -17,8 +19,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-            create: (context) => AIBotProvider()), // Cung cấp AIBotProvider
+        ChangeNotifierProvider(create: (context) => AIBotProvider()), // Cung cấp AIBotProvider
+        ChangeNotifierProvider(create: (context) => PlatformProvider()), // Cung cấp PlatformProvider
       ],
       child: MaterialApp(
         title: 'Chat Bot',
@@ -27,6 +29,9 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
         ),
         home: const MainScreen(),
+        routes: {
+          '/publishing-platforms': (context) => PublishingPlatformPage(), // Định nghĩa route mới
+        },
       ),
     );
   }
