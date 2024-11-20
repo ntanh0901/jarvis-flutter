@@ -10,6 +10,7 @@ class ActionRow extends StatelessWidget {
   final Assistant? selectedAssistant;
   final ValueChanged<Assistant> onAssistantSelected;
   final void Function(String action) onActionSelected;
+  final int remainUsage;
 
   const ActionRow({
     Key? key,
@@ -17,6 +18,7 @@ class ActionRow extends StatelessWidget {
     required this.selectedAssistant,
     required this.onAssistantSelected,
     required this.onActionSelected,
+    required this.remainUsage,
   }) : super(key: key);
 
   @override
@@ -42,27 +44,29 @@ class ActionRow extends StatelessWidget {
               const SizedBox(height: 8.0),
               IconButtonsRow(
                 onIconPressed: onActionSelected, // Gửi lên ChatPage
+                remainUsage: remainUsage,
               ),
             ],
           )
               : Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SizedBox(
-                width: 120,
-                child: AIModelDropdown(
-                  assistants: assistants,
-                  selectedAssistant: selectedAssistant,
-                  onAssistantSelected: onAssistantSelected,
-                ),
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(
+                        width: 120,
+                        child: AIModelDropdown(
+                          assistants: assistants,
+                          selectedAssistant: selectedAssistant,
+                          onAssistantSelected: onAssistantSelected,
+                        ),
+                      ),
+                      Expanded(
+                        child: IconButtonsRow(
+                          onIconPressed: onActionSelected, // Gửi lên ChatPage
+                          remainUsage: remainUsage,
+                        ),
+                      ),
+                    ],
               ),
-              Expanded(
-                child: IconButtonsRow(
-                  onIconPressed: onActionSelected, // Gửi lên ChatPage
-                ),
-              ),
-            ],
-          ),
         );
       },
     );

@@ -37,6 +37,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
   final FocusNode messageFocusNode = FocusNode();
   final metadata = AiChatMetadata.empty();
+  late int remainUsage ;
 
   late ChatMessage currentMessageUser;
   late ChatMessage currentMessageAI;
@@ -85,6 +86,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     // initial Message  = empty
     currentMessageUser = ChatMessage.empty();
     currentMessageAI = ChatMessage.empty();
+    remainUsage= 29;
     requestAiChat = RequestAiChat(
       assistant: selectedAssistant!.dto,
       content: '',
@@ -156,22 +158,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     setState(() {
       isTyping = true;
     });
-    if(metadata.conversation.id == ""){
-      requestAiChat.setContent(content);
-      requestAiChat.setAssistant(currAssistant.dto);
 
-
-    }
-    else {
-      currentMessageUser.setValues(
-          newRole: 'user',
-          newContent: content,
-          newAssistant: currAssistant.dto);
-
-      requestAiChat.setContent(content);
-      requestAiChat.setAssistant(currAssistant.dto);
-      requestAiChat.setMessage(currentMessageUser);
-    }
 
 
     print("Request Body Before Sending: ${jsonEncode(requestAiChat.toJson())}");
@@ -179,7 +166,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     // Setup headers and URL
     var headers = {
       'x-jarvis-guid': '',
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjFiOTljYjAyLTFlNWQtNDU3Ni1hNTZmLWJkNGQ1MzM4YTQxYiIsImVtYWlsIjoicXVhbmd0aGllbkBnbWFpbC5jb20iLCJpYXQiOjE3MzIxMTI1NjEsImV4cCI6MTc2MzY0ODU2MX0.2zPVg9KRkHkTdH4KWA5O_Xw_a8Zi_g6hx2OOGo24sfA',
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImYzYTg4YjNhLWQxZDUtNGM0ZC04OWNlLTcxOTNjY2I3ZWQyYyIsImVtYWlsIjoicXVhbmd0aGllbjEyQGdtYWlsLmNvbSIsImlhdCI6MTczMjExNzg5MSwiZXhwIjoxNzYzNjUzODkxfQ.fwoNzY-jOZCtaypq-yB6-suwrJ7UO7ms5iFUNWpDyf8',
       'Content-Type': 'application/json',
     };
     var url = Uri.parse('https://api.dev.jarvis.cx/api/v1/ai-chat');
@@ -187,7 +174,23 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     // Send request to the API
     try {
       var request = http.Request('POST', url);
-      request.body = jsonEncode(requestAiChat.toJsonFirstTime());
+
+      if(metadata.conversation.id == ""){
+        requestAiChat.setContent(content);
+        requestAiChat.setAssistant(currAssistant.dto);
+        request.body = jsonEncode(requestAiChat.toJsonFirstTime());
+      }
+      else {
+        currentMessageUser.setValues(
+            newRole: 'user',
+            newContent: content,
+            newAssistant: currAssistant.dto);
+
+        requestAiChat.setContent(content);
+        requestAiChat.setAssistant(currAssistant.dto);
+        request.body = jsonEncode(requestAiChat.toJson());
+      }
+
       request.headers.addAll(headers);
 
       http.StreamedResponse response = await request.send();
@@ -199,35 +202,81 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
         // Extract values from the response
         String conversationId = responseAIChat['conversationId'];
-        String message = responseAIChat['message'];
+        String messageAI = responseAIChat['message'];
         int remainingUsage = responseAIChat['remainingUsage'];
-
+        print("requestttttttt111111111111111: ${jsonEncode(requestAiChat.toJson())}");
         print("Response JSON: $responseJson");
         print("Conversation ID: $conversationId");
-        print("Message: $message");
+        print("Message: $messageAI");
         print("Remaining Usage: $remainingUsage");
 
         messages.add(ChatMessage(
           role: 'model',
-          content: message,
+          content: messageAI,
+
         ));
 
-        setState(() {}); // Đảm bảo UI được cập nhật
+        setState(() {
+          remainUsage = remainingUsage;
+        }); // Đảm bảo UI được cập nhật
         _scrollToBottom();
+
+        currentMessageAI.setValues(
+            newRole: 'model',
+            newContent: messageAI,
+            newAssistant: currAssistant.dto);
+        requestAiChat.setConversationID(conversationId);
+        requestAiChat.addMessage(currentMessageUser);
+        requestAiChat.addMessage(currentMessageAI);
+
 
         // Optionally update local state or UI
       } else {
-        print("Request failed with status: ${response.statusCode}");
-        print("Reason: ${response.reasonPhrase}");
+        String errorMessage =
+            "Request failed with status: ${response.statusCode}\nReason: ${response.reasonPhrase}";
+        _showErrorDialog(context, "Error", errorMessage);
       }
     } catch (e) {
-      print("An error occurred: $e");
-    } finally{
+      _showErrorDialog(context, "Error", "An error occurred: $e");    } finally{
       setState(() {
         isTyping = false;
       });
     }
   }
+
+
+  void _showErrorDialog(BuildContext context, String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(title),
+              IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
 
 
   void _scrollToBottom() {
@@ -313,9 +362,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         break;
       case 'view_history':
         _showConversationHistoryDialog(context);
-        break;
-      case 'edit_content':
-        print("Edit content pressed");
         break;
       default:
         print("Unknown action: $action");
@@ -446,6 +492,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                 onActionSelected: (action) {
                   _handleAction(action, context);
                 },
+                remainUsage: remainUsage,
               ),
               _buildChatInput(),
             ],

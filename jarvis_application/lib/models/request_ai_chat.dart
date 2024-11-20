@@ -23,7 +23,7 @@ class RequestAiChat {
   void setAssistant(AssistantDto assistant) {
     this.assistant = assistant;
   }
-  void setMessage(ChatMessage message) {
+  void addMessage(ChatMessage message) {
     this.metadata.addMessageToConversation(message);
   }
 
