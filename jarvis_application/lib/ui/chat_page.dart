@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
 import 'package:jarvis_application/models/ai_chat_metadata.dart';
 import 'package:jarvis_application/models/request_ai_chat.dart';
@@ -41,6 +42,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   late ChatMessage currentMessageAI;
 
   late RequestAiChat requestAiChat;
+  bool isTyping = false;
 
 
   String conversationId = '';
@@ -151,6 +153,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       role: 'user',
       content: content,
     ));
+    setState(() {
+      isTyping = true;
+    });
     if(metadata.conversation.id == ""){
       requestAiChat.setContent(content);
       requestAiChat.setAssistant(currAssistant.dto);
@@ -217,6 +222,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       }
     } catch (e) {
       print("An error occurred: $e");
+    } finally{
+      setState(() {
+        isTyping = false;
+      });
     }
   }
 
@@ -389,8 +398,23 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
               Expanded(
                 child: ListView.builder(
                   controller: _scrollController,
-                  itemCount: messages.length,
+                  itemCount: messages.length +(isTyping ? 1:0),
                   itemBuilder: (context, index) {
+
+                    if (index == messages.length && isTyping) {
+                      // Hiển thị hiệu ứng "jumping dots" khi đang chờ phản hồi
+                      return Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SpinKitThreeBounce(
+                            color: Colors.grey,
+                            size: 20.0,
+                          ),
+                        ),
+                      );
+                    }
+
                     final message = messages[index];
                     return Align(
                       alignment: message.role == 'user'
