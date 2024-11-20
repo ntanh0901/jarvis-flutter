@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_application/widgets/create_unit_button.dart';
-import 'package:jarvis_application/widgets/units_list_view.dart';
 import 'package:jarvis_application/screens/knowledgeBase/edit_kb_screen.dart';
+
+import '../../ui/widgets/create_unit_button.dart';
+import '../../ui/widgets/units_list_view.dart';
 
 class KnowledgeBaseConfiguration extends StatelessWidget {
   final Map<String, dynamic> knowledgeBase;

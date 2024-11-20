@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/platform_provider.dart';
 
 class PublishingPlatformPage extends StatefulWidget {
+  const PublishingPlatformPage({super.key});
+
   @override
   _PublishingPlatformPageState createState() => _PublishingPlatformPageState();
 }

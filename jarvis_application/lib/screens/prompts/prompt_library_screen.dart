@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_application/widgets/create_prompt_button.dart';
-import 'package:jarvis_application/widgets/prompts_switch_button.dart';
-import 'package:jarvis_application/widgets/search_text_field.dart';
+
+import '../../ui/widgets/create_prompt_button.dart';
+import '../../ui/widgets/prompts_switch_button.dart';
+import '../../ui/widgets/search_text_field.dart';
 
 class PromptLibrary extends StatefulWidget {
   const PromptLibrary({super.key});
@@ -24,7 +25,8 @@ class _PromptLibraryState extends State<PromptLibrary> {
   final List<Map<String, String>> publicPrompts = [
     {
       'name': 'Learn code FAST!',
-      'description': 'Teach you the code with the most understandable knowledge.'
+      'description':
+          'Teach you the code with the most understandable knowledge.'
     },
     {
       'name': 'Story generator',
@@ -119,9 +121,8 @@ class _PromptLibraryState extends State<PromptLibrary> {
                     : publicPrompts[index];
                 return ListTile(
                   title: Text(prompt['name']!),
-                  subtitle: isMyPromptSelected
-                      ? null
-                      : Text(prompt['description']!),
+                  subtitle:
+                      isMyPromptSelected ? null : Text(prompt['description']!),
                   trailing: isMyPromptSelected
                       ? IconButton(
                           icon: const Icon(Icons.edit),

@@ -5,7 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:jarvis_application/styles/chat_screen_styles.dart';
-import 'package:jarvis_application/viewmodels/image_handler_view_model.dart';
+import 'package:jarvis_application/ui/viewmodels/image_handler_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 
@@ -19,7 +19,6 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
-  final int _selectedIconIndex = -1;
   late ScreenshotController screenshotController;
 
   final List<Map<String, dynamic>> aiModels = [
@@ -98,7 +97,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pushNamed(context, '/publishing-platforms'); // Điều hướng tới trang Publishing Platform
+                Navigator.pushNamed(context,
+                    '/publishing-platforms'); // Điều hướng tới trang Publishing Platform
               },
               child: const Text(
                 'Publish',
@@ -137,7 +137,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     );
   }
 
-
   Widget _buildLogo() {
     return Center(
       child: CircleAvatar(
@@ -172,10 +171,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         style: ElevatedButton.styleFrom(
           foregroundColor: Colors.black,
           backgroundColor: Colors.grey.shade200,
-          padding: const EdgeInsets.symmetric(
-              vertical: 15, horizontal: 20), 
+          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30), 
+            borderRadius: BorderRadius.circular(30),
           ),
           elevation: 5, // Shadow effect
         ),
@@ -183,11 +181,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
           // Handle suggestion button tap
         },
         child: Row(
-          mainAxisSize: MainAxisSize.min, 
+          mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Text(
                 text,
                 textAlign: TextAlign.center,
