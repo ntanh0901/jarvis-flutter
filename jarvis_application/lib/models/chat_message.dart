@@ -14,6 +14,27 @@ class ChatMessage {
     required this.role,
   });
 
+  ChatMessage.empty()
+      : assistant = null, content = "",
+        files = null, role = "";
+
+
+  void setValues({AssistantDto? newAssistant, String? newContent,
+    List<String>? newFiles, String? newRole,
+  }) {
+    if (newAssistant != null) {
+      assistant = newAssistant;
+    }
+      content = newContent!=null?newContent:"";
+      files = newFiles!=null?newFiles:List.empty();
+
+    if (newRole != null) {
+      role = newRole;
+    }
+  }
+
+
+
   factory ChatMessage.fromJson(Map<String, dynamic> json) => ChatMessage(
     assistant: AssistantDto.fromJson(json["assistant"]),
     content: json["content"],

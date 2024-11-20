@@ -23,7 +23,7 @@ class ChatConversation {
 
   // method khởi tạo rỗng
   factory ChatConversation.empty() => ChatConversation(
-    id: null, // Không có ID
+    id: "", // Không có ID
     messages: [], // Danh sách tin nhắn rỗng
   );
 

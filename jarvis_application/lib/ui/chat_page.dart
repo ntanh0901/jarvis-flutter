@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:jarvis_application/models/ai_chat_metadata.dart';
+import 'package:jarvis_application/models/request_ai_chat.dart';
 import 'package:jarvis_application/widgets/chat/greeting_text.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
@@ -17,7 +18,7 @@ import '../widgets/chat/image_picker_helper.dart';
 import '../widgets/chat/logo_widget.dart';
 import '../widgets/chat/upload_dialog.dart';
 import '../models/assistant.dart';
-
+import 'dart:convert';
 
 class ChatPage extends StatefulWidget {
   static const String routeName = '/chat';
@@ -33,6 +34,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   final ScreenshotController screenshotController = ScreenshotController();
   final FocusNode messageFocusNode = FocusNode();
   final metadata = AiChatMetadata.empty();
+
+  late ChatMessage currentMessage;
+  late RequestAiChat requestAiChat;
+
 
   String conversationId = '';
   final List<Assistant> assistants = [
@@ -71,6 +76,14 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     selectedAssistant = assistants.isNotEmpty ? assistants.first : null;
+    currentMessage = ChatMessage.empty();
+    requestAiChat = RequestAiChat(
+      assistant: selectedAssistant!.dto,
+      content: '',
+      metadata: metadata,
+    );
+
+
   }
 
   @override
@@ -81,15 +94,114 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  Future<void> _sendMessage(String content) async {
+  // Future<void> _sendMessage(String content, Assistant currAssistant) async {
+  //   messages.add(ChatMessage(
+  //     role: 'user',
+  //     content: content,));
+  //
+  //   // send request to API
+  //     currentMessage.setValues(
+  //       newRole: 'user',
+  //       newContent: content,
+  //       newAssistant: currAssistant.dto,
+  //       newFiles: null);
+  //   requestAiChat.addMessage(currentMessage);
+  //
+  //   print("requestttttttt111111111111111: ${jsonEncode(requestAiChat.toJson())}");
+  //
+  //   // get response from API
+  //   currentMessage.setValues(
+  //     newRole: 'model',
+  //     newContent: 'I am an AI assistant. How can I help you?',
+  //     newAssistant: currAssistant.dto,
+  //     newFiles: null);
+  //   requestAiChat.addConversationID("1234567890");
+  //   requestAiChat.addMessage(currentMessage);
+  //
+  //
+  //   print("requestttttttt2222222222222222222222: ${jsonEncode(requestAiChat.toJson())}");
+  //
+  //
+  //
+  //   String responseJson = '''
+  //   {
+  //     "conversationId": "f32a6751-9200-4357-9281-d22e5785434c",
+  //     "message": "Hello! It's nice to meet you. I'm Jarvis, an AI assistant created by Anthropic. I'm here to help with any questions or tasks you might have. How can I assist you today?",
+  //     "remainingUsage": 49
+  //   }
+  //   ''';
+  //   Map<String, dynamic> responseAIChat = jsonDecode(responseJson);
+  //
+  //   // Lấy giá trị từ Map và gán vào các biến
+  //   String conversationId = responseAIChat['conversationId'];
+  //   String message = responseAIChat['message'];
+  //   int remainingUsage = responseAIChat['remainingUsage'];
+  //
+  //
+  // }
+
+  Future<void> _sendMessage(String content, Assistant currAssistant) async {
+    // Add message to the local list
     messages.add(ChatMessage(
       role: 'user',
-      content: content,));
+      content: content,
+    ));
 
-    print("Sending message: $content");
+    // Set up currentMessage and requestAiChat
+    currentMessage.setValues(
+      newRole: 'user',
+      newContent: content,
+      newAssistant: currAssistant.dto,
+      newFiles: null,
+    );
+    requestAiChat.addMessage(currentMessage);
+
+    print("Request Body Before Sending: ${jsonEncode(requestAiChat.toJson())}");
+
+    // Setup headers and URL
+    var headers = {
+      'x-jarvis-guid': '',
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImIwNTM3MzlmLTI3MzktNDE0Ni1iYjU2LWQ0OTFkZjZmNzVkZSIsImVtYWlsIjoibGVlbmdvODA4NzlAZ21haWwuY29tIiwiaWF0IjoxNzMyMTAyNDY0LCJleHAiOjE3MzIxMDQyNjR9.OxBJVulWvY9WRWTpNRlQHK8WkIxYfs_qfhUJd0gxCU0',
+      'Content-Type': 'application/json',
+    };
+    var url = Uri.parse('https://api.jarvis.cx/api/v1/ai-chat');
+
+    // Send request to the API
+    try {
+      var request = http.Request('POST', url);
+      request.body = jsonEncode(requestAiChat.toJson());
+      request.headers.addAll(headers);
+
+      http.StreamedResponse response = await request.send();
+
+      // Read response
+      if (response.statusCode == 200) {
+        String responseJson = await response.stream.bytesToString();
+        Map<String, dynamic> responseAIChat = jsonDecode(responseJson);
+
+        // Extract values from the response
+        String conversationId = responseAIChat['conversationId'];
+        String message = responseAIChat['message'];
+        int remainingUsage = responseAIChat['remainingUsage'];
+
+        print("Response JSON: $responseJson");
+        print("Conversation ID: $conversationId");
+        print("Message: $message");
+        print("Remaining Usage: $remainingUsage");
+
+        messages.add(ChatMessage(
+          role: 'model',
+          content: message,
+        ));
+        // Optionally update local state or UI
+      } else {
+        print("Request failed with status: ${response.statusCode}");
+        print("Reason: ${response.reasonPhrase}");
+      }
+    } catch (e) {
+      print("An error occurred: $e");
+    }
   }
-
-
 
     Widget _buildChatInput() {
     return GestureDetector(
@@ -133,7 +245,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                 onPressed: () {
                   final text = messageController.text.trim();
                   if (text.isNotEmpty) {
-                    _sendMessage(text);
+                    _sendMessage(text, selectedAssistant!);
                     messageController.clear();
                     FocusScope.of(context).unfocus(); // Dismiss keyboard after sending
                   }
