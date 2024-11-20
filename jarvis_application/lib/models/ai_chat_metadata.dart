@@ -1,17 +1,28 @@
 import 'chat_conversation.dart';
+import 'chat_message.dart';
 
+///AiChatMetadata
 class AiChatMetadata {
-  final ChatConversation conversation;
+  ChatConversation conversation;
 
-  AiChatMetadata({required this.conversation});
+  AiChatMetadata({
+    required this.conversation,
+  });
+
+  factory AiChatMetadata.fromJson(Map<String, dynamic> json) => AiChatMetadata(
+    conversation: ChatConversation.fromJson(json["conversation"]),
+  );
 
   Map<String, dynamic> toJson() => {
-    'conversation': conversation.toJson(),
+    "conversation": conversation.toJson(),
   };
 
-  factory AiChatMetadata.fromJson(Map<String, dynamic> json) {
-    return AiChatMetadata(
-      conversation: ChatConversation.fromJson(json['conversation']),
-    );
+  factory AiChatMetadata.empty() => AiChatMetadata(
+    conversation: ChatConversation.empty(),
+  );
+
+  // method thêm message vào conversation
+  void addMessageToConversation(ChatMessage message) {
+    conversation.addMessage(message);
   }
 }

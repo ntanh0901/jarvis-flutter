@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'ai_model_dropdown.dart';
 import 'icon_buttons_row.dart';
+import '../../models/assistant.dart';
+
+
 
 class ActionRow extends StatelessWidget {
-  final List<Map<String, dynamic>> aiModels;
-  final Map<String, dynamic>? selectedModel;
-  final ValueChanged<Map<String, dynamic>> onModelSelected;
+  final List<Assistant> assistants;
+  final Assistant? selectedAssistant;
+  final ValueChanged<Assistant> onAssistantSelected;
   final void Function(String action) onActionSelected;
 
   const ActionRow({
     Key? key,
-    required this.aiModels,
-    required this.selectedModel,
-    required this.onModelSelected,
+    required this.assistants,
+    required this.selectedAssistant,
+    required this.onAssistantSelected,
     required this.onActionSelected,
   }) : super(key: key);
 
@@ -31,9 +34,9 @@ class ActionRow extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: AIModelDropdown(
-                  aiModels: aiModels,
-                  selectedModel: selectedModel,
-                  onModelSelected: onModelSelected,
+                  assistants: assistants,
+                  selectedAssistant: selectedAssistant,
+                  onAssistantSelected: onAssistantSelected,
                 ),
               ),
               const SizedBox(height: 8.0),
@@ -48,9 +51,9 @@ class ActionRow extends StatelessWidget {
               SizedBox(
                 width: 120,
                 child: AIModelDropdown(
-                  aiModels: aiModels,
-                  selectedModel: selectedModel,
-                  onModelSelected: onModelSelected,
+                  assistants: assistants,
+                  selectedAssistant: selectedAssistant,
+                  onAssistantSelected: onAssistantSelected,
                 ),
               ),
               Expanded(

@@ -1,38 +1,42 @@
 import 'package:flutter/material.dart';
 
+import '../../models/assistant.dart';
+
 class AIModelDropdown extends StatelessWidget {
-  final List<Map<String, dynamic>> aiModels;
-  final Map<String, dynamic>? selectedModel;
-  final ValueChanged<Map<String, dynamic>> onModelSelected;
+  final List<Assistant> assistants;
+  final Assistant? selectedAssistant;
+  final ValueChanged<Assistant> onAssistantSelected;
 
   const AIModelDropdown({
     Key? key,
-    required this.aiModels,
-    required this.selectedModel,
-    required this.onModelSelected,
+    required this.assistants,
+    required this.selectedAssistant,
+    required this.onAssistantSelected,
   }) : super(key: key);
 
-  void _showModelSelectionDialog(BuildContext context) {
+  void _showAssistantSelectionDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Select AI Model'),
+          title: const Text('Select Assistant'),
           content: SizedBox(
             width: double.maxFinite,
             child: ListView.builder(
               shrinkWrap: true,
-              itemCount: aiModels.length,
+              itemCount: assistants.length,
               itemBuilder: (BuildContext context, int index) {
+                final assistant = assistants[index];
                 return ListTile(
                   leading: Image.asset(
-                    aiModels[index]['icon'],
+                    assistant.imagePath,
                     width: 24,
                     height: 24,
                   ),
-                  title: Text(aiModels[index]['name']),
+                  title: Text(assistant.dto.name),
+                  subtitle: Text(assistant.dto.model.toString()),
                   onTap: () {
-                    onModelSelected(aiModels[index]); // Gửi dữ liệu về ChatPage
+                    onAssistantSelected(assistant); // Truyền Assistant đã chọn
                     Navigator.of(context).pop();
                   },
                 );
@@ -55,19 +59,19 @@ class AIModelDropdown extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
         ),
         child: InkWell(
-          onTap: () => _showModelSelectionDialog(context),
+          onTap: () => _showAssistantSelectionDialog(context),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (selectedModel?['icon'] != null)
+              if (selectedAssistant != null)
                 Image.asset(
-                  selectedModel?['icon'] ?? '',
+                  selectedAssistant!.imagePath,
                   width: 24,
                   height: 24,
                 ),
               const SizedBox(width: 8),
               Text(
-                selectedModel?['name'] ?? 'Select Model',
+                selectedAssistant?.dto.name ?? 'Select Assistant',
                 style: const TextStyle(fontSize: 14),
               ),
               const SizedBox(width: 4),

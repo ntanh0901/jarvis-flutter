@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:jarvis_application/models/ai_chat_metadata.dart';
 import 'package:jarvis_application/widgets/chat/greeting_text.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 
+import '../models/assistant.dart';
 import '../models/assistant_dto.dart';
 import '../models/chat_message.dart';
 import '../widgets/chat/action_row.dart';
@@ -14,6 +16,7 @@ import '../widgets/chat/conversation_history_dialog.dart';
 import '../widgets/chat/image_picker_helper.dart';
 import '../widgets/chat/logo_widget.dart';
 import '../widgets/chat/upload_dialog.dart';
+import '../models/assistant.dart';
 
 
 class ChatPage extends StatefulWidget {
@@ -29,8 +32,19 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   final TextEditingController messageController = TextEditingController();
   final ScreenshotController screenshotController = ScreenshotController();
   final FocusNode messageFocusNode = FocusNode();
+  final metadata = AiChatMetadata.empty();
+
   String conversationId = '';
-  List<ChatMessage> messages = [];
+  final List<Assistant> assistants = [
+    Assistant(
+      dto: AssistantDto(id: Id.GPT_4_O, model: Model.DIFY),
+      imagePath: 'assets/images/gpt-4.jpg',
+    ),
+    Assistant(
+      dto: AssistantDto(id: Id.CLAUDE_3_HAIKU_20240307, model: Model.DIFY),
+      imagePath: 'assets/images/claude-3-sonnet.png',
+    ),
+  ];
 
   List<Map<String, dynamic>> items = [
     {
@@ -44,31 +58,19 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       'createdAt': 1730470205,
     },
   ];
+  final List<ChatMessage> messages = [];
   String? cursor = 'f32a6751-9200-4357-9281-d22e5785434c'; // Cursor for pagination
 
-  final List<Map<String, dynamic>> aiModels = [
-    {
-      "id": "GPT_4_O",
-      "name": "GPT-4 Turbo",
-      "model": "dify",
-      "icon": 'assets/images/gpt-4.jpg'
-    },
-    {
-      "id": "CLAUDE_3_HAIKU_20240307",
-      "name": "Claude 3 Haiku",
-      "model": "dify",
-      "icon": 'assets/images/claude-3-sonnet.png'
-    },
-    // Add more models
-  ];
 
-  Map<String, dynamic>? selectedModel;
+
+
+  Assistant? selectedAssistant;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    selectedModel = aiModels.isNotEmpty ? aiModels.first : null;
+    selectedAssistant = assistants.isNotEmpty ? assistants.first : null;
   }
 
   @override
@@ -80,72 +82,16 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   }
 
   Future<void> _sendMessage(String content) async {
-    if (selectedModel == null || content.isEmpty) return;
+    messages.add(ChatMessage(
+      role: 'user',
+      content: content,));
 
-    setState(() {
-      messages.add(ChatMessage(
-        role: 'user',
-        content: content,
-        assistant: AssistantDto(
-          id: selectedModel!['id'],
-          model: selectedModel!['model'],
-        ),
-        files: [],
-      ));
-    });
-
-    final headers = {
-      'Authorization': 'Bearer your_token', // Replace with actual token
-      'Content-Type': 'application/json',
-    };
-
-    final body = json.encode({
-      'assistant': {
-        'id': selectedModel!['id'],
-        'model': selectedModel!['model'],
-      },
-      'content': content,
-      'metadata': {
-        'conversation': {
-          'id': conversationId.isNotEmpty ? conversationId : null,
-          'messages': messages.map((message) => message.toJson()).toList(),
-        },
-      },
-    });
-
-    try {
-      final response = await http.post(
-        Uri.parse('/api/v1/ai-chat'),
-        headers: headers,
-        body: body,
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-
-        setState(() {
-          conversationId = responseData['conversationId'];
-          messages.add(ChatMessage(
-            role: 'model',
-            content: responseData['message'],
-            assistant: AssistantDto(
-              id: selectedModel!['id'],
-              model: selectedModel!['model'],
-            ),
-            files: [],
-          ));
-        });
-      } else {
-        print('Error: ${response.reasonPhrase}');
-      }
-    } catch (e) {
-      print('Error: $e');
-    }
+    print("Sending message: $content");
   }
 
 
 
-  Widget _buildChatInput() {
+    Widget _buildChatInput() {
     return GestureDetector(
         onTap: () {
       FocusScope.of(context).unfocus(); // Dismiss keyboard when tapping outside the input
@@ -204,7 +150,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   void _handleAction(String action, BuildContext context) {
     switch (action) {
       case 'add_comment':
-      // Xử lý logic cho "add_comment"
         print("Add comment pressed");
         break;
       case 'upload_pdf':
@@ -322,11 +267,11 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                 ),
               ),
               ActionRow(
-                aiModels: aiModels,
-                selectedModel: selectedModel,
-                onModelSelected: (model) {
+                assistants: assistants,
+                selectedAssistant: selectedAssistant,
+                onAssistantSelected: (assistant){
                   setState(() {
-                    selectedModel = model;
+                    selectedAssistant = assistant;
                   });
                 },
                 onActionSelected: (action) {
