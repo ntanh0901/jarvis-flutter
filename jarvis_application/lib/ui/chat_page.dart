@@ -86,7 +86,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     // initial Message  = empty
     currentMessageUser = ChatMessage.empty();
     currentMessageAI = ChatMessage.empty();
-    remainUsage= 29;
+    remainUsage= 0;
     requestAiChat = RequestAiChat(
       assistant: selectedAssistant!.dto,
       content: '',
@@ -105,49 +105,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  // Future<void> _sendMessage(String content, Assistant currAssistant) async {
-  //   messages.add(ChatMessage(
-  //     role: 'user',
-  //     content: content,));
-  //
-  //   // send request to API
-  //     currentMessage.setValues(
-  //       newRole: 'user',
-  //       newContent: content,
-  //       newAssistant: currAssistant.dto);
-  //   requestAiChat.addMessage(currentMessage);
-  //
-  //   print("requestttttttt111111111111111: ${jsonEncode(requestAiChat.toJson())}");
-  //
-  //   // get response from API
-  //   currentMessage.setValues(
-  //     newRole: 'model',
-  //     newContent: 'I am an AI assistant. How can I help you?',
-  //     newAssistant: currAssistant.dto);
-  //   requestAiChat.addConversationID("1234567890");
-  //   requestAiChat.addMessage(currentMessage);
-  //
-  //
-  //   print("requestttttttt2222222222222222222222: ${jsonEncode(requestAiChat.toJson())}");
-  //
-  //
-  //
-  //   String responseJson = '''
-  //   {
-  //     "conversationId": "f32a6751-9200-4357-9281-d22e5785434c",
-  //     "message": "Hello! It's nice to meet you. I'm Jarvis, an AI assistant created by Anthropic. I'm here to help with any questions or tasks you might have. How can I assist you today?",
-  //     "remainingUsage": 49
-  //   }
-  //   ''';
-  //   Map<String, dynamic> responseAIChat = jsonDecode(responseJson);
-  //
-  //   // Lấy giá trị từ Map và gán vào các biến
-  //   String conversationId = responseAIChat['conversationId'];
-  //   String message = responseAIChat['message'];
-  //   int remainingUsage = responseAIChat['remainingUsage'];
-  //
-  //
-  // }
 
   Future<void> _sendMessage(String content, Assistant currAssistant) async {
     // Add message to the local list
@@ -166,21 +123,27 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     // Setup headers and URL
     var headers = {
       'x-jarvis-guid': '',
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImYzYTg4YjNhLWQxZDUtNGM0ZC04OWNlLTcxOTNjY2I3ZWQyYyIsImVtYWlsIjoicXVhbmd0aGllbjEyQGdtYWlsLmNvbSIsImlhdCI6MTczMjExNzg5MSwiZXhwIjoxNzYzNjUzODkxfQ.fwoNzY-jOZCtaypq-yB6-suwrJ7UO7ms5iFUNWpDyf8',
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA3YjU2OGVkLTc1YTItNGFmMS05ZTBiLTdmYzg0NDBlNDZjZiIsImVtYWlsIjoicXVhbmd0aGllbjEyM0BnbWFpbC5jb20iLCJpYXQiOjE3MzIxMjMwMjYsImV4cCI6MTc2MzY1OTAyNn0.rWURsgNyRlaIlWxzWYqnJCBtAOJJLi7fEi1jOQTLOZk',
       'Content-Type': 'application/json',
     };
-    var url = Uri.parse('https://api.dev.jarvis.cx/api/v1/ai-chat');
 
     // Send request to the API
     try {
-      var request = http.Request('POST', url);
+      var url;
+      var request;
 
+      // For first time
       if(metadata.conversation.id == ""){
+        url=  Uri.parse('https://api.dev.jarvis.cx/api/v1/ai-chat');
+        request = http.Request('POST', url);
         requestAiChat.setContent(content);
         requestAiChat.setAssistant(currAssistant.dto);
         request.body = jsonEncode(requestAiChat.toJsonFirstTime());
       }
+      // For next messages
       else {
+        url=  Uri.parse('https://api.dev.jarvis.cx/api/v1/ai-chat/messages');
+        request = http.Request('POST', url);
         currentMessageUser.setValues(
             newRole: 'user',
             newContent: content,
