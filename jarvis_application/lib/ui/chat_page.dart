@@ -32,6 +32,8 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   final TextEditingController messageController = TextEditingController();
   final ScreenshotController screenshotController = ScreenshotController();
+  final ScrollController _scrollController = ScrollController();
+
   final FocusNode messageFocusNode = FocusNode();
   final metadata = AiChatMetadata.empty();
 
@@ -93,6 +95,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _scrollController.dispose();
     messageController.dispose();
     messageFocusNode.dispose(); // Dispose the focus node
     super.dispose();
@@ -171,10 +174,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     // Setup headers and URL
     var headers = {
       'x-jarvis-guid': '',
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImIwNTM3MzlmLTI3MzktNDE0Ni1iYjU2LWQ0OTFkZjZmNzVkZSIsImVtYWlsIjoibGVlbmdvODA4NzlAZ21haWwuY29tIiwiaWF0IjoxNzMyMTA3NjgxLCJleHAiOjE3MzIxMDk0ODF9.Z5SKmcHcLEl8s6Oj9JXoIeaxM5laX0h_LakTU2c6czI',
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjFiOTljYjAyLTFlNWQtNDU3Ni1hNTZmLWJkNGQ1MzM4YTQxYiIsImVtYWlsIjoicXVhbmd0aGllbkBnbWFpbC5jb20iLCJpYXQiOjE3MzIxMTI1NjEsImV4cCI6MTc2MzY0ODU2MX0.2zPVg9KRkHkTdH4KWA5O_Xw_a8Zi_g6hx2OOGo24sfA',
       'Content-Type': 'application/json',
     };
-    var url = Uri.parse('https://api.jarvis.cx/api/v1/ai-chat');
+    var url = Uri.parse('https://api.dev.jarvis.cx/api/v1/ai-chat');
 
     // Send request to the API
     try {
@@ -203,6 +206,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
           role: 'model',
           content: message,
         ));
+
+        setState(() {}); // Đảm bảo UI được cập nhật
+        _scrollToBottom();
+
         // Optionally update local state or UI
       } else {
         print("Request failed with status: ${response.statusCode}");
@@ -213,7 +220,22 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     }
   }
 
-    Widget _buildChatInput() {
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+
+
+  Widget _buildChatInput() {
     return GestureDetector(
         onTap: () {
       FocusScope.of(context).unfocus(); // Dismiss keyboard when tapping outside the input
@@ -366,6 +388,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
               const SizedBox(height: 10),
               Expanded(
                 child: ListView.builder(
+                  controller: _scrollController,
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[index];
