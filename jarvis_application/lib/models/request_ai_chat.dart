@@ -14,13 +14,16 @@ class RequestAiChat {
     required this.metadata,
   });
 
-  void addConversationID(String conversationID) {
+  void setConversationID(String conversationID) {
     metadata.conversation.id = conversationID;
   }
-
-  void addMessage(ChatMessage message) {
-    this.content = message.content;
-    this.assistant= message.assistant!;
+  void setContent(String content) {
+    this.content = content;
+  }
+  void setAssistant(AssistantDto assistant) {
+    this.assistant = assistant;
+  }
+  void setMessage(ChatMessage message) {
     this.metadata.addMessageToConversation(message);
   }
 
@@ -37,6 +40,13 @@ class RequestAiChat {
       'assistant': assistant.toJson(),
       'content': content,
       'metadata': metadata.toJson(),
+    };
+  }
+
+  Map<String, dynamic> toJsonFirstTime() {
+    return {
+      'assistant': assistant.toJson(),
+      'content': content,
     };
   }
 

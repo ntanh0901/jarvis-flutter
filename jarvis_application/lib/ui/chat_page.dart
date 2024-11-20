@@ -35,7 +35,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   final FocusNode messageFocusNode = FocusNode();
   final metadata = AiChatMetadata.empty();
 
-  late ChatMessage currentMessage;
+  late ChatMessage currentMessageUser;
+  late ChatMessage currentMessageAI;
+
   late RequestAiChat requestAiChat;
 
 
@@ -76,7 +78,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     selectedAssistant = assistants.isNotEmpty ? assistants.first : null;
-    currentMessage = ChatMessage.empty();
+    // initial Message  = empty
+    currentMessageUser = ChatMessage.empty();
+    currentMessageAI = ChatMessage.empty();
     requestAiChat = RequestAiChat(
       assistant: selectedAssistant!.dto,
       content: '',
@@ -103,8 +107,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   //     currentMessage.setValues(
   //       newRole: 'user',
   //       newContent: content,
-  //       newAssistant: currAssistant.dto,
-  //       newFiles: null);
+  //       newAssistant: currAssistant.dto);
   //   requestAiChat.addMessage(currentMessage);
   //
   //   print("requestttttttt111111111111111: ${jsonEncode(requestAiChat.toJson())}");
@@ -113,8 +116,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   //   currentMessage.setValues(
   //     newRole: 'model',
   //     newContent: 'I am an AI assistant. How can I help you?',
-  //     newAssistant: currAssistant.dto,
-  //     newFiles: null);
+  //     newAssistant: currAssistant.dto);
   //   requestAiChat.addConversationID("1234567890");
   //   requestAiChat.addMessage(currentMessage);
   //
@@ -146,22 +148,30 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       role: 'user',
       content: content,
     ));
+    if(metadata.conversation.id == ""){
+      requestAiChat.setContent(content);
+      requestAiChat.setAssistant(currAssistant.dto);
 
-    // Set up currentMessage and requestAiChat
-    currentMessage.setValues(
-      newRole: 'user',
-      newContent: content,
-      newAssistant: currAssistant.dto,
-      newFiles: null,
-    );
-    requestAiChat.addMessage(currentMessage);
+
+    }
+    else {
+      currentMessageUser.setValues(
+          newRole: 'user',
+          newContent: content,
+          newAssistant: currAssistant.dto);
+
+      requestAiChat.setContent(content);
+      requestAiChat.setAssistant(currAssistant.dto);
+      requestAiChat.setMessage(currentMessageUser);
+    }
+
 
     print("Request Body Before Sending: ${jsonEncode(requestAiChat.toJson())}");
 
     // Setup headers and URL
     var headers = {
       'x-jarvis-guid': '',
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImIwNTM3MzlmLTI3MzktNDE0Ni1iYjU2LWQ0OTFkZjZmNzVkZSIsImVtYWlsIjoibGVlbmdvODA4NzlAZ21haWwuY29tIiwiaWF0IjoxNzMyMTAyNDY0LCJleHAiOjE3MzIxMDQyNjR9.OxBJVulWvY9WRWTpNRlQHK8WkIxYfs_qfhUJd0gxCU0',
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImIwNTM3MzlmLTI3MzktNDE0Ni1iYjU2LWQ0OTFkZjZmNzVkZSIsImVtYWlsIjoibGVlbmdvODA4NzlAZ21haWwuY29tIiwiaWF0IjoxNzMyMTA3NjgxLCJleHAiOjE3MzIxMDk0ODF9.Z5SKmcHcLEl8s6Oj9JXoIeaxM5laX0h_LakTU2c6czI',
       'Content-Type': 'application/json',
     };
     var url = Uri.parse('https://api.jarvis.cx/api/v1/ai-chat');
@@ -169,7 +179,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     // Send request to the API
     try {
       var request = http.Request('POST', url);
-      request.body = jsonEncode(requestAiChat.toJson());
+      request.body = jsonEncode(requestAiChat.toJsonFirstTime());
       request.headers.addAll(headers);
 
       http.StreamedResponse response = await request.send();
