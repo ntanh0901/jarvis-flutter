@@ -25,17 +25,17 @@ class _ConversationHistoryDialogState extends State<ConversationHistoryDialog> {
   @override
   void initState() {
     super.initState();
-    items = List.from(widget.initialItems); // Copy dữ liệu ban đầu
-    filteredItems = List.from(items); // Sao chép cho bộ lọc
+    items = List.from(widget.initialItems); // copy list
+    filteredItems = List.from(items); // copy for filtering
     currentCursor = widget.cursor;
   }
 
   void _deleteItem(int index) {
     setState(() {
-      filteredItems.removeAt(index); // Xóa conversation
+      filteredItems.removeAt(index); // delete item
     });
 
-    // Cập nhật danh sách về ChatPage
+    // return updating for ChatPage
     widget.onItemsUpdated(filteredItems);
   }
 

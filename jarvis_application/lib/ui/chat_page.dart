@@ -12,6 +12,8 @@ import 'package:screenshot/screenshot.dart';
 import '../models/assistant.dart';
 import '../models/assistant_dto.dart';
 import '../models/chat_message.dart';
+import '../models/conversations_query_params.dart';
+import '../models/conversations_res.dart';
 import '../widgets/chat/action_row.dart';
 import '../widgets/chat/ai_model_dropdown.dart';
 import '../widgets/chat/conversation_history_dialog.dart';
@@ -49,6 +51,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   String conversationId = '';
   final List<Assistant> assistants = [
     Assistant(
+      dto: AssistantDto(id: Id.GPT_4_O_MINI, model: Model.DIFY),
+      imagePath: 'assets/images/gemini.png',
+    ),
+    Assistant(
       dto: AssistantDto(id: Id.GPT_4_O, model: Model.DIFY),
       imagePath: 'assets/images/gpt-4.jpg',
     ),
@@ -58,19 +64,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     ),
   ];
 
-  List<Map<String, dynamic>> items = [
-    {
-      'title': 'Hi',
-      'id': 'f32a6751-9200-4357-9281-d22e5785434c',
-      'createdAt': 1730480205,
-    },
-    {
-      'title': 'Hello',
-      'id': 'd34b6751-9234-4567-9281-df43c5e5486c',
-      'createdAt': 1730470205,
-    },
-  ];
+  List<Map<String, dynamic>> items = [];
   final List<ChatMessage> messages = [];
+
   String? cursor = 'f32a6751-9200-4357-9281-d22e5785434c'; // Cursor for pagination
 
 
@@ -204,6 +200,72 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       setState(() {
         isTyping = false;
       });
+    }
+  }
+
+
+  Future<void> _fetchConversations() async {
+    // Setup headers
+    var headers = {
+      'x-jarvis-guid': '',
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk2OWI2NGJiLTUzNjQtNGZkYy1hMTA5LTIyYzBmYzQ5NDAwZSIsImVtYWlsIjoibGVlbmdvODA4NzlAZ21haWwuY29tIiwiaWF0IjoxNzMyMTU3MTkwLCJleHAiOjE3NjM2OTMxOTB9.252o7hvJOALehGB2J5QVg1PcTtptwbVWYoI5764_ugI',
+      'Content-Type': 'application/json',
+    };
+
+    // Create query parameters
+    ConversationsQueryParams queryParams = ConversationsQueryParams(
+      cursor: '',
+      limit: 100,
+      assistantId: selectedAssistant?.dto.id,
+      assistantModel: selectedAssistant?.dto.model,
+    );
+
+    try {
+      // Build request URL
+      //var url = Uri.parse('https://api.dev.jarvis.cx/api/v1/ai-chat/conversations');
+      var url = Uri.https(
+        'api.dev.jarvis.cx',
+        '/api/v1/ai-chat/conversations', // Đường dẫn không chứa query string
+        {
+          'assistantId': idValues.reverse[queryParams.assistantId],
+          'assistantModel': 'dify',
+        },
+      );
+
+      // print(url.toString());
+      // print("URLLLLLLLLL: ${url}");
+
+      // Send request
+      var response = await http.get(
+        url,
+        headers: headers);
+
+      if (response.statusCode == 200) {
+        // Parse response
+        var responseData = jsonDecode(response.body);
+        // print(responseData['items']);
+        // print("successsssssssssssssssssssssssssssssssssssssssssss data: $responseData");
+
+        ConversationsRes conversations = ConversationsRes.fromJson(responseData);
+        // print("Response Dataaaaaaaaaaaaaaaa: $conversations");
+
+        setState(() {
+          items = List<Map<String, dynamic>>.from(
+            conversations.items.map((item) => {
+              'title': item.title ?? '',
+              'id': item.id ?? '',
+              'createdAt': item.createdAt ?? 0,
+            }),
+          );
+          cursor = conversations.cursor;
+        });
+      } else {
+        String errorMessage =
+            "Request failed with status: ${response.statusCode}\nReason: ${response.reasonPhrase}";
+        _showErrorDialog(context, "Error", errorMessage);
+      }
+    } catch (e) {
+      _showErrorDialog(context, "Error", "An error occurred: $e");
     }
   }
 
@@ -348,16 +410,20 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     );
   }
 
-  void _showConversationHistoryDialog(BuildContext context) {
+  void _showConversationHistoryDialog(BuildContext context) async {
+
+    // fetch conversations
+    await _fetchConversations();
+
     showDialog(
       context: context,
       builder: (context) {
         return ConversationHistoryDialog(
-          initialItems: items, // Truyền danh sách items
-          cursor: cursor, // Truyền cursor cho dialog
+          initialItems: items,
+          cursor: cursor,
           onItemsUpdated: (updatedItems) {
             setState(() {
-              items = updatedItems; // Cập nhật danh sách khi xóa
+              items = updatedItems; // Update the local list
             });
           },
         );
