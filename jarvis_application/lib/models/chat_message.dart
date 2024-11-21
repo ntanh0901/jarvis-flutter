@@ -3,7 +3,7 @@ import 'assistant_dto.dart';
 ///ChatMessage
 class ChatMessage {
   AssistantDto? assistant;
-  String content;
+  String? content;
   String role;
 
   ChatMessage({

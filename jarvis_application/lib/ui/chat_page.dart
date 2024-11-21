@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
 import 'package:jarvis_application/models/ai_chat_metadata.dart';
+import 'package:jarvis_application/models/conversation_history_res.dart';
 import 'package:jarvis_application/models/request_ai_chat.dart';
 import 'package:jarvis_application/widgets/chat/greeting_text.dart';
 import 'package:provider/provider.dart';
@@ -292,6 +293,78 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   }
 
 
+
+  Future<void> _fetchConversationHistory(String conversationID) async {
+    // Setup headers
+    var headers = {
+      'x-jarvis-guid': '',
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk2OWI2NGJiLTUzNjQtNGZkYy1hMTA5LTIyYzBmYzQ5NDAwZSIsImVtYWlsIjoibGVlbmdvODA4NzlAZ21haWwuY29tIiwiaWF0IjoxNzMyMTU3MTkwLCJleHAiOjE3NjM2OTMxOTB9.252o7hvJOALehGB2J5QVg1PcTtptwbVWYoI5764_ugI',
+      'Content-Type': 'application/json',
+    };
+
+    // Create query parameters
+    ConversationsQueryParams queryParams = ConversationsQueryParams(
+      cursor: '',
+      limit: 100,
+      assistantId: selectedAssistant?.dto.id,
+      assistantModel: selectedAssistant?.dto.model,
+    );
+
+    try {
+      // Build request URL
+      var url = Uri.https(
+        'api.dev.jarvis.cx',
+        '/api/v1/ai-chat/conversations/$conversationID/messages', // Đường dẫn không chứa query string
+        {
+          'assistantId': idValues.reverse[queryParams.assistantId],
+          'assistantModel': 'dify',
+        },
+      );
+
+      // print("URLLLLLLLLL: ${url}");
+
+      // Send request
+      var response = await http.get(
+          url,
+          headers: headers);
+
+      if (response.statusCode == 200) {
+        // Parse response
+        var responseData = jsonDecode(response.body);
+        // print(responseData['items']);
+        print("successsssssssssssssssssssssssssssssssssssssssssss data: $responseData");
+
+        ConversationHistoryRes conversationHistory = ConversationHistoryRes.fromJson(responseData);
+        print("Historyyyyyyyyyyyyyy: $conversationHistory");
+
+        setState(() {
+          cursor = conversationHistory.cursor;
+          messages.clear();
+          for(var i in conversationHistory.items!){
+            messages.add(ChatMessage(
+              role: 'user',
+              content: i.query,
+            ));
+            messages.add(ChatMessage(
+              role: 'model',
+              content: i.answer,
+            ));
+          }
+        });
+
+        metadata.conversation.id= conversationID;
+        metadata.conversation.messages = messages;
+      } else {
+        String errorMessage =
+            "Request failed with status: ${response.statusCode}\nReason: ${response.reasonPhrase}";
+        _showErrorDialog(context, "Error", errorMessage);
+      }
+    } catch (e) {
+      _showErrorDialog(context, "Error", "An error occurred: $e");
+    }
+  }
+
+
   void _showErrorDialog(BuildContext context, String title, String message) {
     showDialog(
       context: context,
@@ -405,7 +478,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         _showUploadDialog(context);
         break;
       case 'view_book':
-        print("View book pressed");
+        _fetchConversationHistory('9117d62c-e295-443b-8259-e3609ca3f74f');
         break;
       case 'view_history':
         _showConversationHistoryDialog(context);
@@ -526,7 +599,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                               : Colors.grey[300],
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Text(message.content),
+                        child: Text(message.content!),
                       ),
                     );
                   },
