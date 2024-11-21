@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../widgets/app_logo.dart';
@@ -9,12 +11,16 @@ import '../../widgets/google_auth_button.dart';
 import '../../widgets/hover_text_button.dart';
 import '../../widgets/text_form_field.dart';
 
-class SignInPage extends StatelessWidget {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
+class SignInPage extends StatefulWidget {
   SignInPage({super.key});
+
+  @override
+  _SignInPageState createState() => _SignInPageState();
+}
+
+class _SignInPageState extends State<SignInPage> {
+  final _formKey = GlobalKey<FormBuilderState>();
+  bool _submitted = false;
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +47,29 @@ class SignInPage extends StatelessWidget {
                     const AppLogo(size: 24),
                     const SizedBox(height: 70),
                     _buildSignInForm(context),
+                    const SizedBox(height: 30),
+                    const CustomDivider(middleText: 'or'),
+                    const SizedBox(height: 20),
+                    GoogleAuthButton(
+                      label: 'Sign in with Google',
+                      onPressed: () {
+                        // Handle Google sign in logic
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Don't have an account?",
+                          style: TextStyle(color: Colors.black),
+                        ),
+                        HoverTextButton(
+                          text: 'Sign Up',
+                          onPressed: () => context.go('/sign-up'),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -52,19 +81,28 @@ class SignInPage extends StatelessWidget {
   }
 
   Widget _buildSignInForm(BuildContext context) {
-    return Form(
+    return FormBuilder(
       key: _formKey,
+      autovalidateMode:
+          _submitted ? AutovalidateMode.always : AutovalidateMode.disabled,
       child: Column(
         children: [
-          TextFormFieldWidget(
+          CustomFormBuilderTextField(
+            name: 'email',
             label: 'Email',
-            controller: _emailController,
+            validators: [
+              FormBuilderValidators.required(),
+              FormBuilderValidators.email(),
+            ],
           ),
           const SizedBox(height: 20),
-          TextFormFieldWidget(
+          CustomFormBuilderTextField(
+            name: 'password',
             label: 'Password',
-            controller: _passwordController,
-            obscureText: true,
+            validators: [
+              FormBuilderValidators.required(),
+              FormBuilderValidators.minLength(6),
+            ],
           ),
           Align(
             alignment: Alignment.centerRight,
@@ -77,39 +115,28 @@ class SignInPage extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: GradientButton(
+              onPressed: _handleSubmit,
               child: const Text('Sign in'),
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  // Handle sign in logic
-                }
-              },
             ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                "Don't have an account?",
-                style: TextStyle(color: Colors.black),
-              ),
-              HoverTextButton(
-                text: 'Sign Up',
-                onPressed: () => context.go('/sign-up'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          const CustomDivider(middleText: 'or'),
-          const SizedBox(height: 20),
-          GoogleAuthButton(
-            label: 'Sign in with Google',
-            onPressed: () {
-              // Handle Google Sign In
-            },
           ),
         ],
       ),
     );
+  }
+
+  void _handleSubmit() {
+    setState(() {
+      _submitted = true;
+    });
+
+    if (_formKey.currentState?.saveAndValidate() ?? false) {
+      final formData = _formKey.currentState?.value;
+      final email = formData?['email'];
+      final password = formData?['password'];
+
+      // Handle the form submission logic here.
+      debugPrint('Email: $email');
+      debugPrint('Password: $password');
+    }
   }
 }

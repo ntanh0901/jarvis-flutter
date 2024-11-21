@@ -30,7 +30,7 @@ class AppRouter {
       ),
       GoRoute(
         path: '/sign-up',
-        builder: (context, state) => const SignupPage(),
+        builder: (context, state) => const SignUpPage(),
       ),
       GoRoute(
           path: '/forgot-password',

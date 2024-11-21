@@ -1,81 +1,58 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 
-class CustomTextFormFieldStyle {
-  final TextStyle labelStyle;
-  final TextStyle hintStyle;
-  final BorderRadius borderRadius;
-  final Color focusedBorderColor;
-  final Color fillColor;
-
-  const CustomTextFormFieldStyle({
-    this.labelStyle = const TextStyle(
-      color: Colors.black,
-      fontSize: 16,
-      fontWeight: FontWeight.w500,
-    ),
-    this.hintStyle = const TextStyle(
-      color: Color(0xFF908F95),
-    ),
-    this.borderRadius = const BorderRadius.all(Radius.circular(8)),
-    this.focusedBorderColor = Colors.blue,
-    this.fillColor = const Color(0xFFF5F4FA),
-  });
-}
-
-class TextFormFieldWidget extends StatelessWidget {
-  final String label;
-  final TextEditingController? controller;
+class CustomFormBuilderTextField extends StatelessWidget {
+  final String name;
+  final String? label;
   final String? hintText;
-  final bool obscureText;
-  final TextInputType? keyboardType;
-  final CustomTextFormFieldStyle style;
-  final FormFieldValidator<String>? validator;
+  final List<String? Function(String?)> validators;
+  final Function(String?)? onChanged;
+  final TextInputType keyboardType;
 
-  const TextFormFieldWidget({
+  const CustomFormBuilderTextField({
     super.key,
-    required this.label,
-    this.controller,
+    required this.name,
+    this.label,
     this.hintText,
-    this.obscureText = false,
-    this.keyboardType,
-    this.style = const CustomTextFormFieldStyle(),
-    this.validator,
+    this.validators = const [],
+    this.onChanged,
+    this.keyboardType = TextInputType.text, // Default to text input
   });
 
   @override
   Widget build(BuildContext context) {
-    final InputDecoration decoration = InputDecoration(
-      fillColor: style.fillColor,
-      filled: true,
-      hintText: hintText,
-      hintStyle: style.hintStyle,
-      border: OutlineInputBorder(
-        borderRadius: style.borderRadius,
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: style.borderRadius,
-        borderSide: BorderSide(
-          color: style.focusedBorderColor,
-          width: 2.0,
-        ),
-      ),
-    );
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: style.labelStyle,
-        ),
-        const SizedBox(height: 5),
-        TextFormField(
-          controller: controller,
-          obscureText: obscureText,
+        if (label != null) ...[
+          Text(
+            label!,
+            style: const TextStyle(color: Colors.black),
+          ),
+          const SizedBox(height: 8),
+        ],
+        FormBuilderTextField(
+          name: name,
+          onChanged: onChanged,
           keyboardType: keyboardType,
-          decoration: decoration,
-          validator: validator,
+          validator: FormBuilderValidators.compose(validators),
+          decoration: InputDecoration(
+            hintText: hintText,
+            filled: true,
+            fillColor: const Color(0xFFF5F4FA),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(
+                color: Colors.blue,
+                width: 2.0,
+              ),
+            ),
+          ),
         ),
       ],
     );

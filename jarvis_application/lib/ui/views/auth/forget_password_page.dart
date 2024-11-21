@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jarvis_application/ui/widgets/custom_gradient_button.dart';
 import 'package:jarvis_application/ui/widgets/hover_text_button.dart';
 
-import '../../../core/utils/form_validators.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/text_form_field.dart';
 
@@ -15,7 +16,7 @@ class ForgotPasswordPage extends StatefulWidget {
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
-  final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormBuilderState>();
   final TextEditingController _emailController = TextEditingController();
 
   @override
@@ -81,20 +82,18 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       ),
                       const SizedBox(height: 30),
                       // Forgot password form
-                      Form(
+                      FormBuilder(
                         key: _formKey,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            TextFormFieldWidget(
+                            CustomFormBuilderTextField(
+                              name: 'email',
                               label: 'Email',
-                              controller: _emailController,
-                              hintText: 'Enter your email to reset password',
-                              validator: (value) {
-                                return Validators.validateEmail(
-                                  value: value,
-                                );
-                              },
+                              validators: [
+                                FormBuilderValidators.required(),
+                                FormBuilderValidators.email(),
+                              ],
                             ),
                             const SizedBox(height: 30),
                             // Reset password button
@@ -104,7 +103,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                   child: GradientButton(
                                     child: const Text('Reset Password'),
                                     onPressed: () {
-                                      if (_formKey.currentState!.validate()) {
+                                      if (_formKey.currentState!
+                                          .saveAndValidate()) {
                                         // Implement password reset logic
                                       }
                                     },
