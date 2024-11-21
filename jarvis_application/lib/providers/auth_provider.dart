@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 
 import '../data/services/api_service.dart';
@@ -10,18 +12,19 @@ class AuthProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
 
   Future<void> signIn(String email, String password) async {
-    try {
-      final response = await _apiService.post('/auth/signin', {
-        'email': email,
-        'password': password,
-      });
+    final response = await _apiService.post('/signin', {
+      'email': email,
+      'password': password,
+    });
 
-      if (response['success']) {
-        _isAuthenticated = true;
-        notifyListeners();
-      }
-    } catch (e) {
-      throw Exception('Failed to sign in: $e');
+    if (response == 200) {
+      // Handle successful sign-in
+      final data = json.decode(response.body);
+      _isAuthenticated = true;
+      notifyListeners();
+    } else {
+      // Handle sign-in error
+      throw Exception('Failed to sign in: ${response.body}');
     }
   }
 

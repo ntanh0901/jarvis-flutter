@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../../../providers/auth_provider.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/containers.dart';
 import '../../widgets/custom_divider.dart';
@@ -12,7 +14,7 @@ import '../../widgets/hover_text_button.dart';
 import '../../widgets/text_form_field.dart';
 
 class SignInPage extends StatefulWidget {
-  SignInPage({super.key});
+  const SignInPage({super.key});
 
   @override
   _SignInPageState createState() => _SignInPageState();
@@ -123,7 +125,7 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-  void _handleSubmit() {
+  void _handleSubmit() async {
     setState(() {
       _submitted = true;
     });
@@ -133,9 +135,17 @@ class _SignInPageState extends State<SignInPage> {
       final email = formData?['email'];
       final password = formData?['password'];
 
-      // Handle the form submission logic here.
-      debugPrint('Email: $email');
-      debugPrint('Password: $password');
+      try {
+        await Provider.of<AuthProvider>(context, listen: false)
+            .signIn(email, password);
+        // Navigate to the home page or another page after successful sign-in
+        context.go('/home');
+      } catch (e) {
+        // Handle sign-in error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sign-in failed: $e')),
+        );
+      }
     }
   }
 }

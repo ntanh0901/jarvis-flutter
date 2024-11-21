@@ -26,7 +26,7 @@ class AppRouter {
       ),
       GoRoute(
         path: '/sign-in',
-        builder: (context, state) => SignInPage(),
+        builder: (context, state) => const SignInPage(),
       ),
       GoRoute(
         path: '/sign-up',

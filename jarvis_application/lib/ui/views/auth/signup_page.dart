@@ -51,8 +51,8 @@ class _SignUpPageState extends State<SignUpPage> {
                     SizedBox(
                       width: double.infinity,
                       child: GradientButton(
-                        child: const Text('Sign Up'),
                         onPressed: _onSubmit,
+                        child: const Text('Sign Up'),
                       ),
                     ),
                     const SizedBox(height: 20),

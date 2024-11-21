@@ -12,15 +12,10 @@ class ApiService {
     final response = await http.post(
       url,
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json, charset=UTF-8',
       },
       body: json.encode(data),
     );
-
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to post data');
-    }
+    return response;
   }
 }
