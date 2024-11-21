@@ -2,28 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
-import 'package:jarvis_application/ui/widgets/custom_gradient_button.dart';
-import 'package:jarvis_application/ui/widgets/hover_text_button.dart';
 
 import '../../widgets/app_logo.dart';
+import '../../widgets/containers.dart';
+import '../../widgets/custom_divider.dart';
+import '../../widgets/custom_gradient_button.dart';
+import '../../widgets/hover_text_button.dart';
 import '../../widgets/text_form_field.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
 
   @override
-  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
+  _ForgotPasswordPageState createState() => _ForgotPasswordPageState();
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormBuilderState>();
-  final TextEditingController _emailController = TextEditingController();
-
-  @override
-  void dispose() {
-    super.dispose();
-    _emailController.dispose();
-  }
+  bool _submitted = false;
 
   @override
   Widget build(BuildContext context) {
@@ -31,96 +27,45 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     final isLargeScreen = size.width > 600;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: isLargeScreen
-              ? const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFE0F7FA), Color(0xFFB2EBF2)],
-                )
-              : null,
-        ),
+      body: GradientContainer(
+        isLargeScreen: isLargeScreen,
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Scrollbar(
-              thumbVisibility: false,
-              child: SingleChildScrollView(
-                child: Container(
-                  width: isLargeScreen ? 600 : size.width,
-                  padding: const EdgeInsets.all(30.0),
-                  decoration: isLargeScreen
-                      ? BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.5),
-                              spreadRadius: 5,
-                              blurRadius: 7,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        )
-                      : null,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 50),
-                      const AppLogo(size: 24),
-                      const SizedBox(height: 50),
-                      Text(
-                        'Forgot Password',
-                        style: Theme.of(context).textTheme.headlineMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'Enter your email address and we\'ll send you a link to reset your password.',
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 30),
-                      // Forgot password form
-                      FormBuilder(
-                        key: _formKey,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CustomFormBuilderTextField(
-                              name: 'email',
-                              label: 'Email',
-                              validators: [
-                                FormBuilderValidators.required(),
-                                FormBuilderValidators.email(),
-                              ],
-                            ),
-                            const SizedBox(height: 30),
-                            // Reset password button
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: GradientButton(
-                                    child: const Text('Reset Password'),
-                                    onPressed: () {
-                                      if (_formKey.currentState!
-                                          .saveAndValidate()) {
-                                        // Implement password reset logic
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            HoverTextButton(
-                                text: 'Back to Sign In',
-                                onPressed: () => context.go('/sign-in')),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+          child: SingleChildScrollView(
+            child: Center(
+              child: CardContainer(
+                isLargeScreen: isLargeScreen,
+                width: isLargeScreen ? 600 : size.width,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 40.0,
+                  vertical: 40.0,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 50),
+                    const AppLogo(size: 24),
+                    const SizedBox(height: 70),
+                    const SizedBox(height: 50),
+                    Text(
+                      'Forgot Password?',
+                      style: Theme.of(context).textTheme.headlineMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Enter your email address and we\'ll send you a link to reset your password.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 30),
+                    _buildForgotPasswordForm(context),
+                    const SizedBox(height: 30),
+                    const CustomDivider(middleText: 'or'),
+                    const SizedBox(height: 20),
+                    HoverTextButton(
+                      text: 'Back to Sign In',
+                      onPressed: () => context.go('/sign-in'),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -128,5 +73,47 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildForgotPasswordForm(BuildContext context) {
+    return FormBuilder(
+      key: _formKey,
+      autovalidateMode:
+          _submitted ? AutovalidateMode.always : AutovalidateMode.disabled,
+      child: Column(
+        children: [
+          CustomFormBuilderTextField(
+            name: 'email',
+            label: 'Email',
+            validators: [
+              FormBuilderValidators.required(),
+              FormBuilderValidators.email(),
+            ],
+          ),
+          const SizedBox(height: 30),
+          SizedBox(
+            width: double.infinity,
+            child: GradientButton(
+              onPressed: _handleSubmit,
+              child: const Text('Reset Password'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleSubmit() {
+    setState(() {
+      _submitted = true;
+    });
+
+    if (_formKey.currentState?.saveAndValidate() ?? false) {
+      final formData = _formKey.currentState?.value;
+      final email = formData?['email'];
+
+      // Handle the password reset logic here.
+      debugPrint('Email: $email');
+    }
   }
 }

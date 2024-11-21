@@ -101,7 +101,6 @@ class _SignInPageState extends State<SignInPage> {
             label: 'Password',
             validators: [
               FormBuilderValidators.required(),
-              FormBuilderValidators.minLength(6),
             ],
           ),
           Align(
