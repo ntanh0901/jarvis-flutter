@@ -70,7 +70,7 @@ class SignInPage extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: HoverTextButton(
               text: 'Forgot Password?',
-              onPressed: () => context.go('/forget-password'),
+              onPressed: () => context.go('/forgot-password'),
             ),
           ),
           const SizedBox(height: 30),

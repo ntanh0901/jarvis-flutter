@@ -2,16 +2,17 @@
 
 import 'package:go_router/go_router.dart';
 import 'package:jarvis_application/data/services/mock_ai_service.dart';
-import 'package:jarvis_application/providers/auth_provider.dart';
 import 'package:jarvis_application/screens/aiBots/publish_screen.dart';
 import 'package:jarvis_application/screens/knowledgeBase/knowledge_base_screen.dart';
 import 'package:jarvis_application/screens/prompts/prompt_library_screen.dart';
 import 'package:jarvis_application/ui/viewmodels/email_compose_view_model.dart';
+import 'package:jarvis_application/ui/views/auth/forget_password_page.dart';
 import 'package:jarvis_application/ui/views/auth/signin_page.dart';
 import 'package:jarvis_application/ui/views/email/email_compose_page.dart';
 import 'package:jarvis_application/ui/views/splash/splash_screen.dart';
 import 'package:provider/provider.dart';
 
+import '../providers/auth_provider.dart';
 import '../screens/aiBots/bot_list_page.dart';
 import '../ui/chat_page.dart';
 import '../ui/views/auth/signup_page.dart';
@@ -31,6 +32,9 @@ class AppRouter {
         path: '/sign-up',
         builder: (context, state) => const SignupPage(),
       ),
+      GoRoute(
+          path: '/forgot-password',
+          builder: (context, state) => const ForgotPasswordPage()),
       GoRoute(
         path: '/chat',
         builder: (context, state) => const ChatPage(),
@@ -62,14 +66,14 @@ class AppRouter {
     redirect: (context, state) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final isAuthenticated = authProvider.isAuthenticated;
-      final isLoggingIn = state.matchedLocation == '/sign-in';
+      final isAuthPage = state.matchedLocation == '/sign-in' ||
+          state.matchedLocation == '/sign-up' ||
+          state.matchedLocation == '/forgot-password';
 
-      if (!isAuthenticated && !isLoggingIn) {
+      if (!isAuthenticated && !isAuthPage) {
         return '/sign-in';
       }
-      if (isAuthenticated &&
-          (state.matchedLocation == '/' ||
-              state.matchedLocation == '/sign-in')) {
+      if (isAuthenticated && (state.matchedLocation == '/' || isAuthPage)) {
         return '/chat';
       }
       return null;

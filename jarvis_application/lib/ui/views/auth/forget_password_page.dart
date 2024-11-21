@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jarvis_application/ui/widgets/custom_gradient_button.dart';
+import 'package:jarvis_application/ui/widgets/hover_text_button.dart';
 
 import '../../../core/utils/form_validators.dart';
 import '../../widgets/app_logo.dart';
@@ -112,19 +113,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                               ],
                             ),
                             const SizedBox(height: 20),
-                            TextButton(
-                              onPressed: () {
-                                GoRouter.of(context).go('/sign-in');
-                              },
-                              child: const Text(
-                                'Back to Sign in',
-                                style: TextStyle(
-                                  color: Colors.blue,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: Colors.blue,
-                                ),
-                              ),
-                            ),
+                            HoverTextButton(
+                                text: 'Back to Sign In',
+                                onPressed: () => context.go('/sign-in')),
                           ],
                         ),
                       ),

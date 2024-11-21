@@ -16,8 +16,8 @@ class HoverTextButton extends StatelessWidget {
       onPressed: onPressed,
       style: TextButton.styleFrom(
         foregroundColor: Colors.blue,
-        padding: EdgeInsets.zero, // Removes default padding
-        splashFactory: NoSplash.splashFactory, // Removes click effect
+        padding: EdgeInsets.zero,
+        splashFactory: NoSplash.splashFactory,
         textStyle: const TextStyle(
           decoration: TextDecoration.underline,
           decorationColor: Colors.blue,
