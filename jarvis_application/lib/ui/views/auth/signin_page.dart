@@ -103,6 +103,7 @@ class _SignInPageState extends State<SignInPage> {
           CustomFormBuilderTextField(
             name: 'password',
             label: 'Password',
+            isPasswordField: true,
             validators: [
               FormBuilderValidators.required(),
             ],

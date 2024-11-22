@@ -8,7 +8,7 @@ class CustomFormBuilderTextField extends StatelessWidget {
   final String? hintText;
   final List<String? Function(String?)> validators;
   final Function(String?)? onChanged;
-  final TextInputType keyboardType;
+  final bool isPasswordField;
 
   const CustomFormBuilderTextField({
     super.key,
@@ -17,11 +17,13 @@ class CustomFormBuilderTextField extends StatelessWidget {
     this.hintText,
     this.validators = const [],
     this.onChanged,
-    this.keyboardType = TextInputType.text, // Default to text input
+    this.isPasswordField = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final obscureTextNotifier = ValueNotifier<bool>(isPasswordField);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -32,27 +34,44 @@ class CustomFormBuilderTextField extends StatelessWidget {
           ),
           const SizedBox(height: 8),
         ],
-        FormBuilderTextField(
-          name: name,
-          onChanged: onChanged,
-          keyboardType: keyboardType,
-          validator: FormBuilderValidators.compose(validators),
-          decoration: InputDecoration(
-            hintText: hintText,
-            filled: true,
-            fillColor: const Color(0xFFF5F4FA),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(
-                color: Colors.blue,
-                width: 2.0,
+        ValueListenableBuilder<bool>(
+          valueListenable: obscureTextNotifier,
+          builder: (context, obscureText, child) {
+            return FormBuilderTextField(
+              name: name,
+              onChanged: onChanged,
+              obscureText: obscureText,
+              validator: FormBuilderValidators.compose(validators),
+              decoration: InputDecoration(
+                hintText: hintText,
+                filled: true,
+                fillColor: const Color(0xFFF5F4FA),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(
+                    color: Colors.blue,
+                    width: 2.0,
+                  ),
+                ),
+                suffixIcon: isPasswordField
+                    ? IconButton(
+                        icon: Icon(
+                          obscureText ? Icons.visibility : Icons.visibility_off,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          obscureTextNotifier.value =
+                              !obscureTextNotifier.value;
+                        },
+                      )
+                    : null,
               ),
-            ),
-          ),
+            );
+          },
         ),
       ],
     );

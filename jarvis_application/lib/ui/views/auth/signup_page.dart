@@ -27,7 +27,7 @@ class _SignUpPageState extends State<SignUpPage> {
   bool _isLoading = false;
 
   @override
-  Widget build(BuildContext context) {
+  build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isLargeScreen = size.width > 600;
 
@@ -88,44 +88,62 @@ class _SignUpPageState extends State<SignUpPage> {
           _submitted ? AutovalidateMode.always : AutovalidateMode.disabled,
       child: Column(
         children: [
-          _buildTextField('username', 'Username', [
-            FormBuilderValidators.required(),
-            FormBuilderValidators.minLength(3),
-            FormBuilderValidators.maxLength(20),
-            FormBuilderValidators.match(RegExp(r'^[a-zA-Z0-9]+$'),
-                errorText: 'No special characters allowed'),
-          ]),
+          CustomFormBuilderTextField(
+              name: 'username',
+              label: 'Username',
+              validators: [
+                FormBuilderValidators.required(
+                    errorText: 'Please enter a username'),
+                FormBuilderValidators.minLength(3),
+                FormBuilderValidators.maxLength(20),
+                FormBuilderValidators.match(RegExp(r'^[a-zA-Z0-9]+$'),
+                    errorText: 'No special characters allowed'),
+              ]),
           const SizedBox(height: 20),
-          _buildTextField('email', 'Email', [
-            FormBuilderValidators.required(),
-            FormBuilderValidators.email(),
-          ]),
+          CustomFormBuilderTextField(
+              name: 'email',
+              label: 'Email',
+              validators: [
+                FormBuilderValidators.required(
+                    errorText: 'Please enter an email'),
+                FormBuilderValidators.email(),
+              ]),
           const SizedBox(height: 20),
-          _buildTextField('password', 'Password', [
-            FormBuilderValidators.required(),
-            FormBuilderValidators.minLength(8),
-            FormBuilderValidators.match(RegExp(r'(?=.*[A-Z])'),
-                errorText:
-                    'Password must contain at least one uppercase letter'),
-            FormBuilderValidators.match(RegExp(r'(?=.*[a-z])'),
-                errorText:
-                    'Password must contain at least one lowercase letter'),
-            FormBuilderValidators.match(RegExp(r'(?=.*\d)'),
-                errorText: 'Password must contain at least one number'),
-            FormBuilderValidators.match(RegExp(r'(?=.*[@$!%*?&])'),
-                errorText:
-                    'Password must contain at least one special character'),
-          ]),
+          CustomFormBuilderTextField(
+              name: 'password',
+              label: 'Password',
+              isPasswordField: true,
+              validators: [
+                FormBuilderValidators.required(
+                    errorText: 'Please enter a password'),
+                FormBuilderValidators.minLength(8),
+                FormBuilderValidators.match(RegExp(r'(?=.*[A-Z])'),
+                    errorText:
+                        'Password must contain at least one uppercase letter'),
+                FormBuilderValidators.match(RegExp(r'(?=.*[a-z])'),
+                    errorText:
+                        'Password must contain at least one lowercase letter'),
+                FormBuilderValidators.match(RegExp(r'(?=.*\d)'),
+                    errorText: 'Password must contain at least one number'),
+                FormBuilderValidators.match(RegExp(r'(?=.*[@$!%*?&])'),
+                    errorText:
+                        'Password must contain at least one special character'),
+              ]),
           const SizedBox(height: 20),
-          _buildTextField('confirm_password', 'Confirm Password', [
-            FormBuilderValidators.required(),
-            (value) {
-              if (value != _formKey.currentState?.fields['password']?.value) {
-                return 'Passwords do not match';
-              }
-              return null;
-            },
-          ]),
+          CustomFormBuilderTextField(
+              name: 're-password',
+              label: 'Confirm password',
+              isPasswordField: true,
+              validators: [
+                FormBuilderValidators.required(),
+                (value) {
+                  if (value !=
+                      _formKey.currentState?.fields['password']?.value) {
+                    return 'Passwords do not match';
+                  }
+                  return null;
+                },
+              ]),
           const SizedBox(height: 30),
           SizedBox(
             width: double.infinity,
