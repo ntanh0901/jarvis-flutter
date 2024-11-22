@@ -4,12 +4,13 @@ class ConversationHistoryDialog extends StatefulWidget {
   final List<Map<String, dynamic>> initialItems;
   final String? cursor;
   final ValueChanged<List<Map<String, dynamic>>> onItemsUpdated;
-
+  final ValueChanged<String>  onItemSelected;
   const ConversationHistoryDialog({
     Key? key,
     required this.initialItems,
     required this.cursor,
     required this.onItemsUpdated,
+    required this.onItemSelected,
   }) : super(key: key);
 
   @override
@@ -138,6 +139,12 @@ class _ConversationHistoryDialogState extends State<ConversationHistoryDialog> {
                       icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () => _deleteItem(index), // Xóa conversation
                     ),
+                    onTap: (){
+                      widget.onItemSelected(
+                        item['id'] as String,
+                      );
+                      Navigator.of(context).pop();
+                    }
                   );
                 },
               ),

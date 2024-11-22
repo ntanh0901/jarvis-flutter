@@ -47,6 +47,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
   late RequestAiChat requestAiChat;
   bool isTyping = false;
+  String conversationID = '';
 
   final idValues = EnumValues({
     "claude-3-haiku-20240307": Id.CLAUDE_3_HAIKU_20240307,
@@ -58,7 +59,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   });
 
 
-  String conversationId = '';
   final List<Assistant> assistants = [
     Assistant(
       dto: AssistantDto(id: Id.GPT_4_O_MINI, model: Model.DIFY),
@@ -128,6 +128,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   Future<void> _sendMessage(String content, Assistant currAssistant) async {
     // Add message to the local list
     messages.add(ChatMessage(
+      assistant: currAssistant.dto,
       role: 'user',
       content: content,
     ));
@@ -137,7 +138,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
 
 
-    print("Request Body Before Sending: ${jsonEncode(requestAiChat.toJson())}");
+    // print("Request Body Before Sendingssssss: ${jsonEncode(requestAiChat.toJson())}");
 
     // Setup headers and URL
     var headers = {
@@ -158,18 +159,19 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         requestAiChat.setContent(content);
         requestAiChat.setAssistant(currAssistant.dto);
         request.body = jsonEncode(requestAiChat.toJsonFirstTime());
+        print("Meta Req First Timeeeeeee: ${jsonEncode(metadata.toJson())}");
       }
       // For next messages
       else {
         url=  Uri.parse('https://api.dev.jarvis.cx/api/v1/ai-chat/messages');
         request = http.Request('POST', url);
-        currentMessageUser.setValues(
-            newRole: 'user',
-            newContent: content,
-            newAssistant: currAssistant.dto);
+
 
         requestAiChat.setContent(content);
         requestAiChat.setAssistant(currAssistant.dto);
+        requestAiChat.setMetadata(metadata);
+        print("Meta Req Next Timeeeeeee: ${jsonEncode(metadata.toJson())}");
+
         request.body = jsonEncode(requestAiChat.toJson());
       }
 
@@ -183,16 +185,14 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         Map<String, dynamic> responseAIChat = jsonDecode(responseJson);
 
         // Extract values from the response
-        String conversationId = responseAIChat['conversationId'];
+        conversationID = responseAIChat['conversationId'];
         String messageAI = responseAIChat['message'];
         int remainingUsage = responseAIChat['remainingUsage'];
-        print("requestttttttt111111111111111: ${jsonEncode(requestAiChat.toJson())}");
-        print("Response JSON: $responseJson");
-        print("Conversation ID: $conversationId");
-        print("Message: $messageAI");
-        print("Remaining Usage: $remainingUsage");
+        // print("requestttttttt111111111111111: ${jsonEncode(requestAiChat.toJson())}");
+        // print("Response JSON: $responseJson");
 
         messages.add(ChatMessage(
+          assistant: currAssistant.dto,
           role: 'model',
           content: messageAI,
 
@@ -203,13 +203,19 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         }); // Đảm bảo UI được cập nhật
         _scrollToBottom();
 
+        currentMessageUser.setValues(
+            newRole: 'user',
+            newContent: content,
+            newAssistant: currAssistant.dto);
+
         currentMessageAI.setValues(
             newRole: 'model',
             newContent: messageAI,
             newAssistant: currAssistant.dto);
-        requestAiChat.setConversationID(conversationId);
-        requestAiChat.addMessage(currentMessageUser);
-        requestAiChat.addMessage(currentMessageAI);
+        metadata.setConversationID(conversationID);
+        metadata.addMessage(currentMessageUser);
+        metadata.addMessage(currentMessageAI);
+        print("Meta Resultttttttttt: ${jsonEncode(metadata.toJson())}");
 
 
         // Optionally update local state or UI
@@ -294,7 +300,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
 
 
-  Future<void> _fetchConversationHistory(String conversationID) async {
+  Future<void> _fetchConversationHistory(String newConversationID) async {
     // Setup headers
     var headers = {
       'x-jarvis-guid': '',
@@ -314,7 +320,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       // Build request URL
       var url = Uri.https(
         'api.dev.jarvis.cx',
-        '/api/v1/ai-chat/conversations/$conversationID/messages', // Đường dẫn không chứa query string
+        '/api/v1/ai-chat/conversations/$newConversationID/messages', // Đường dẫn không chứa query string
         {
           'assistantId': idValues.reverse[queryParams.assistantId],
           'assistantModel': 'dify',
@@ -342,18 +348,36 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
           messages.clear();
           for(var i in conversationHistory.items!){
             messages.add(ChatMessage(
+              assistant: selectedAssistant?.dto,
               role: 'user',
               content: i.query,
             ));
             messages.add(ChatMessage(
+              assistant: selectedAssistant?.dto,
               role: 'model',
               content: i.answer,
             ));
+            currentMessageUser.setValues(
+                newRole: 'user',
+                newContent: i.query,
+                newAssistant: selectedAssistant?.dto);
+
+            currentMessageAI.setValues(
+                newRole: 'model',
+                newContent: i.answer,
+                newAssistant: selectedAssistant?.dto);
+
+            metadata.setConversationID(conversationID);
+            metadata.addMessage(currentMessageUser);
+            metadata.addMessage(currentMessageAI);
+            conversationID = newConversationID;
+            print("Meta Historyyyyyyyy: ${jsonEncode(metadata.toJson())}");
+
           }
         });
 
-        metadata.conversation.id= conversationID;
-        metadata.conversation.messages = messages;
+        // metadata.conversation.id= newConversationID;
+        // metadata.conversation.messages = messages;
       } else {
         String errorMessage =
             "Request failed with status: ${response.statusCode}\nReason: ${response.reasonPhrase}";
@@ -468,11 +492,33 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     );
   }
 
+  Future<void> resetConversation() async {
+    setState(() {
+      messages.clear();
+      remainUsage = 0;
+    });
 
-  void _handleAction(String action, BuildContext context) {
+    await Future.delayed(Duration(milliseconds: 200));
+
+    // Reset các giá trị khác
+    metadata.conversation.id = "";
+    metadata.conversation.messages.clear();
+    conversationID = "";
+    currentMessageUser = ChatMessage.empty();
+    currentMessageAI = ChatMessage.empty();
+
+    requestAiChat = RequestAiChat(
+      assistant: selectedAssistant!.dto,
+      content: '',
+      metadata: metadata,
+    );
+
+    print("Conversation reset successfully.");
+  }
+  Future<void> _handleAction(String action, BuildContext context) async {
     switch (action) {
       case 'add_comment':
-        print("Add comment pressed");
+        await resetConversation();
         break;
       case 'upload_pdf':
         _showUploadDialog(context);
@@ -520,6 +566,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
             setState(() {
               items = updatedItems; // Update the local list
             });
+          },
+          onItemSelected: (conversationID) {
+            _fetchConversationHistory(conversationID);
           },
         );
       },

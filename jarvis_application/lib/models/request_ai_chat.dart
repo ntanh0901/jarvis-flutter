@@ -26,6 +26,9 @@ class RequestAiChat {
   void addMessage(ChatMessage message) {
     this.metadata.addMessageToConversation(message);
   }
+  void setMetadata(AiChatMetadata metadata) {
+    this.metadata = metadata;
+  }
 
   factory RequestAiChat.fromJson(Map<String, dynamic> json) {
     return RequestAiChat(

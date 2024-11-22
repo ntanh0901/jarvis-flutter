@@ -25,4 +25,12 @@ class AiChatMetadata {
   void addMessageToConversation(ChatMessage message) {
     conversation.addMessage(message);
   }
+
+  void setConversationID(String conversationID) {
+    conversation.id = conversationID;
+  }
+
+  void addMessage(ChatMessage currentMessage) {
+    conversation.addMessage(currentMessage);
+  }
 }
