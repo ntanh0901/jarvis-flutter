@@ -136,6 +136,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       isTyping = true;
     });
 
+    // reduce Token for each message
+    content= cleanContent(content);
 
 
     // print("Request Body Before Sendingssssss: ${jsonEncode(requestAiChat.toJson())}");
@@ -230,6 +232,14 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         isTyping = false;
       });
     }
+  }
+
+
+  String cleanContent(String content) {
+    content = content.length > 100
+        ? '${content.substring(0, 100)}...'
+        : content;
+    return content.replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 
 
