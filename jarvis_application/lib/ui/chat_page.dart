@@ -287,6 +287,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
             }),
           );
           cursor = conversations.cursor;
+
+
+
         });
       } else {
         String errorMessage =
@@ -640,7 +643,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                           ? Alignment.centerRight
                           : Alignment.centerLeft,
                       child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 5),
+                        margin: message.role == 'user'
+                            ? const EdgeInsets.only(left: 50, right: 10, top: 5, bottom: 5)
+                            : const EdgeInsets.only(left: 10, right: 50, top: 5, bottom: 5),
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: message.role == 'user'
