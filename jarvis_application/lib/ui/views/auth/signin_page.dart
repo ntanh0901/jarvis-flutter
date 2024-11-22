@@ -28,18 +28,23 @@ class _SignInPageState extends State<SignInPage> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isLargeScreen = size.width > 600;
     final authProvider = Provider.of<AuthProvider>(context);
+
     return Scaffold(
       body: GradientContainer(
-        isLargeScreen: true,
+        isLargeScreen: isLargeScreen,
         child: SafeArea(
           child: SingleChildScrollView(
             child: Center(
               child: CardContainer(
-                isLargeScreen: true,
-                width: 600,
+                isLargeScreen: isLargeScreen,
+                width: isLargeScreen ? 600 : size.width,
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 40.0, vertical: 40.0),
+                  horizontal: 40.0,
+                  vertical: 40.0,
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -114,7 +119,7 @@ class _SignInPageState extends State<SignInPage> {
           SizedBox(
             width: double.infinity,
             child: GradientButton(
-              onPressed: _isLoading ? null : () => _handleSubmit(authProvider),
+              onPressed: _isLoading ? null : () => _handleSubmit(context),
               child: _isLoading
                   ? const CircularProgressIndicator()
                   : const Text('Sign in'),
@@ -125,20 +130,29 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-  void _handleSubmit(AuthProvider authProvider) async {
+  void _handleSubmit(BuildContext context) async {
     setState(() {
       _submitted = true;
       _isLoading = true;
     });
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    // Check if the form is valid
     if (_formKey.currentState?.saveAndValidate() ?? false) {
       final formData = _formKey.currentState?.value;
       final email = formData?['email'];
       final password = formData?['password'];
-      await authProvider.signIn(email, password);
-      if (authProvider.isAuthenticated) {
-        context.go('/chat');
+
+      // Use AuthProvider's signIn method to log in the user
+      final signInSuccess = await authProvider.signIn(email, password);
+
+      // Handle the response from the AuthProvider
+      if (signInSuccess) {
+        _showMessage('Sign in successful', Colors.green);
+        context.go('/chat'); // Redirect to chat page
       } else {
-        _showErrorMessage(authProvider.errorMessage);
+        _showMessage(authProvider.errorMessage ?? 'Sign in failed', Colors.red);
       }
     }
     setState(() {
@@ -146,16 +160,14 @@ class _SignInPageState extends State<SignInPage> {
     });
   }
 
-  void _showErrorMessage(String? message) {
-    if (message != null) {
-      Fluttertoast.showToast(
-          msg: message,
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0,
-          33);
-    }
+  void _showMessage(String message, Color backgroundColor) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: backgroundColor,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
   }
 }

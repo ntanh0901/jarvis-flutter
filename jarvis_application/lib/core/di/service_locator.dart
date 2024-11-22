@@ -2,10 +2,10 @@
 
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:jarvis_application/data/services/auth_service.dart';
 
 import '../../config/config.dart';
 import '../../data/repositories/auth_repository.dart';
-import '../../data/services/api_service.dart';
 import '../../providers/auth_provider.dart';
 
 // GetIt instance for dependency injection
@@ -14,16 +14,17 @@ final GetIt getIt = GetIt.instance;
 void setupLocator() {
   getIt.registerLazySingleton<Dio>(() {
     return Dio(BaseOptions(
-      baseUrl: Config.apiUrl, // Fetch the base URL from the Config class
+      baseUrl: Config.apiUrl,
       headers: {
         'Content-Type': 'application/json',
       },
     ));
   });
 
-  getIt.registerLazySingleton<ApiService>(() => ApiService(getIt<Dio>()));
+  getIt.registerLazySingleton<AuthService>(() => AuthService(getIt<Dio>()));
+
   getIt.registerLazySingleton<AuthRepository>(
-      () => AuthRepository(getIt<ApiService>()));
+      () => AuthRepository(getIt<AuthService>()));
   getIt.registerFactory<AuthProvider>(
       () => AuthProvider(getIt<AuthRepository>()));
 }

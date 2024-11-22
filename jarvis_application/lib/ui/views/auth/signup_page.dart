@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -23,6 +24,7 @@ class SignUpPage extends StatefulWidget {
 class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormBuilderState>();
   bool _submitted = false;
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -50,14 +52,6 @@ class _SignUpPageState extends State<SignUpPage> {
                     const SizedBox(height: 70),
                     _buildSignUpForm(),
                     const SizedBox(height: 30),
-                    SizedBox(
-                      width: double.infinity,
-                      child: GradientButton(
-                        onPressed: _onSubmit,
-                        child: const Text('Sign Up'),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
                     const CustomDivider(middleText: 'or'),
                     const SizedBox(height: 20),
                     GoogleAuthButton(
@@ -131,6 +125,16 @@ class _SignUpPageState extends State<SignUpPage> {
               return null;
             },
           ]),
+          const SizedBox(height: 30),
+          SizedBox(
+            width: double.infinity,
+            child: GradientButton(
+              onPressed: _isLoading ? null : () => _handleSubmit(),
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text('Sign up'),
+            ),
+          ),
         ],
       ),
     );
@@ -145,31 +149,43 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  void _onSubmit() async {
+  void _handleSubmit() async {
     setState(() {
       _submitted = true;
+      _isLoading = true;
     });
-    if (_formKey.currentState?.saveAndValidate() ?? false) {
+
+    final authProvider = Provider.of<AuthProvider>(context);
+
+    if (_formKey.currentState?.validate() ?? false) {
       final formData = _formKey.currentState?.value;
       final username = formData?['username'];
       final email = formData?['email'];
       final password = formData?['password'];
 
-      try {
-        await Provider.of<AuthProvider>(context, listen: false)
-            .signUp(username, email, password);
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sign-up successful!')),
-        );
-        // Navigate to the home page or another page after successful sign-up
-        context.go('/sign-in');
-      } catch (e) {
-        // Show error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign-up failed: $e')),
-        );
+      final success = await authProvider.signUp(username, email, password);
+
+      if (success) {
+        _showMessage('Sign-up successful and logged in', Colors.green);
+        context.go('/chat');
+      } else {
+        _showMessage(authProvider.errorMessage ?? 'Sign-up failed', Colors.red);
       }
     }
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  void _showMessage(String message, Color backgroundColor) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: backgroundColor,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
   }
 }

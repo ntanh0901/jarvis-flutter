@@ -1,34 +1,26 @@
 // lib/repositories/auth_repository.dart
+/*The AuthRepository provides an abstraction over the AuthService and handles the logic of interacting with the service.*/
 
-import 'package:dio/dio.dart';
-
-import '../services/api_service.dart';
+import '../services/auth_service.dart';
 
 class AuthRepository {
-  final ApiService _apiService;
+  final AuthService _authService;
 
-  AuthRepository(this._apiService);
+  AuthRepository(this._authService);
 
-  Future<Response> signIn(String email, String password) async {
-    return await _apiService.post(
-      '/api/v1/auth/sign-in',
-      data: {'email': email, 'password': password},
-    );
+  // Method to handle user sign-in
+  Future<Map<String, dynamic>?> signIn(String email, String password) {
+    return _authService.signIn(email, password);
   }
 
-  Future<Response> signUp(
-      String username, String email, String password) async {
-    return await _apiService.post(
-      '/api/v1/auth/sign-up',
-      data: {'username': username, 'email': email, 'password': password},
-    );
+  // Method to handle user sign-up
+  Future<Map<String, dynamic>?> signUp(
+      String username, String email, String password) {
+    return _authService.signUp(username, email, password);
   }
 
-  Future<Response> signOut() async {
-    return await _apiService.post('/api/v1/auth/sign-out');
-  }
-
-  Future<Response> getUserProfile() async {
-    return await _apiService.get('/api/v1/auth/me');
+  // Method to refresh the access token using the refresh token
+  Future<Map<String, dynamic>?> refreshTokens(String refreshToken) {
+    return _authService.refreshTokens(refreshToken);
   }
 }
