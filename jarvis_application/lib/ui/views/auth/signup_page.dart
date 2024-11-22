@@ -118,6 +118,7 @@ class _SignUpPageState extends State<SignUpPage> {
           ]),
           const SizedBox(height: 20),
           _buildTextField('confirm_password', 'Confirm Password', [
+            FormBuilderValidators.required(),
             (value) {
               if (value != _formKey.currentState?.fields['password']?.value) {
                 return 'Passwords do not match';
@@ -152,12 +153,14 @@ class _SignUpPageState extends State<SignUpPage> {
   void _handleSubmit() async {
     setState(() {
       _submitted = true;
-      _isLoading = true;
     });
 
-    final authProvider = Provider.of<AuthProvider>(context);
-
     if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final formData = _formKey.currentState?.value;
       final username = formData?['username'];
       final email = formData?['email'];
@@ -171,11 +174,11 @@ class _SignUpPageState extends State<SignUpPage> {
       } else {
         _showMessage(authProvider.errorMessage ?? 'Sign-up failed', Colors.red);
       }
-    }
 
-    setState(() {
-      _isLoading = false;
-    });
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void _showMessage(String message, Color backgroundColor) {

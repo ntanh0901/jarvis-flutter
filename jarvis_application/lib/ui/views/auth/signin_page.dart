@@ -30,7 +30,6 @@ class _SignInPageState extends State<SignInPage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isLargeScreen = size.width > 600;
-    final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
       body: GradientContainer(
@@ -51,7 +50,7 @@ class _SignInPageState extends State<SignInPage> {
                     const SizedBox(height: 50),
                     const AppLogo(size: 24),
                     const SizedBox(height: 70),
-                    _buildSignInForm(authProvider),
+                    _buildSignInForm(),
                     const SizedBox(height: 30),
                     const CustomDivider(middleText: 'or'),
                     const SizedBox(height: 20),
@@ -85,7 +84,7 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-  Widget _buildSignInForm(AuthProvider authProvider) {
+  Widget _buildSignInForm() {
     return FormBuilder(
       key: _formKey,
       autovalidateMode:
@@ -119,7 +118,7 @@ class _SignInPageState extends State<SignInPage> {
           SizedBox(
             width: double.infinity,
             child: GradientButton(
-              onPressed: _isLoading ? null : () => _handleSubmit(context),
+              onPressed: _isLoading ? null : () => _handleSubmit(),
               child: _isLoading
                   ? const CircularProgressIndicator()
                   : const Text('Sign in'),
@@ -130,7 +129,7 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-  void _handleSubmit(BuildContext context) async {
+  void _handleSubmit() async {
     setState(() {
       _submitted = true;
       _isLoading = true;
