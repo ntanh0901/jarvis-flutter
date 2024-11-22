@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -23,39 +24,36 @@ class SignInPage extends StatefulWidget {
 class _SignInPageState extends State<SignInPage> {
   final _formKey = GlobalKey<FormBuilderState>();
   bool _submitted = false;
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final isLargeScreen = size.width > 600;
-
+    final authProvider = Provider.of<AuthProvider>(context);
     return Scaffold(
       body: GradientContainer(
-        isLargeScreen: isLargeScreen,
+        isLargeScreen: true,
         child: SafeArea(
           child: SingleChildScrollView(
             child: Center(
               child: CardContainer(
-                isLargeScreen: isLargeScreen,
-                width: isLargeScreen ? 600 : size.width,
+                isLargeScreen: true,
+                width: 600,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 40.0,
-                  vertical: 40.0,
-                ),
+                    horizontal: 40.0, vertical: 40.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 50),
                     const AppLogo(size: 24),
                     const SizedBox(height: 70),
-                    _buildSignInForm(context),
+                    _buildSignInForm(authProvider),
                     const SizedBox(height: 30),
                     const CustomDivider(middleText: 'or'),
                     const SizedBox(height: 20),
                     GoogleAuthButton(
                       label: 'Sign in with Google',
                       onPressed: () {
-                        // Handle Google sign in logic
+                        // Handle Google sign-in logic
                       },
                     ),
                     const SizedBox(height: 20),
@@ -82,7 +80,7 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-  Widget _buildSignInForm(BuildContext context) {
+  Widget _buildSignInForm(AuthProvider authProvider) {
     return FormBuilder(
       key: _formKey,
       autovalidateMode:
@@ -116,8 +114,10 @@ class _SignInPageState extends State<SignInPage> {
           SizedBox(
             width: double.infinity,
             child: GradientButton(
-              onPressed: _handleSubmit,
-              child: const Text('Sign in'),
+              onPressed: _isLoading ? null : () => _handleSubmit(authProvider),
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text('Sign in'),
             ),
           ),
         ],
@@ -125,27 +125,37 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-  void _handleSubmit() async {
+  void _handleSubmit(AuthProvider authProvider) async {
     setState(() {
       _submitted = true;
+      _isLoading = true;
     });
-
     if (_formKey.currentState?.saveAndValidate() ?? false) {
       final formData = _formKey.currentState?.value;
       final email = formData?['email'];
       final password = formData?['password'];
-
-      try {
-        await Provider.of<AuthProvider>(context, listen: false)
-            .signIn(email, password);
-        // Navigate to the home page or another page after successful sign-in
-        context.go('/home');
-      } catch (e) {
-        // Handle sign-in error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign-in failed: $e')),
-        );
+      await authProvider.signIn(email, password);
+      if (authProvider.isAuthenticated) {
+        context.go('/chat');
+      } else {
+        _showErrorMessage(authProvider.errorMessage);
       }
+    }
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  void _showErrorMessage(String? message) {
+    if (message != null) {
+      Fluttertoast.showToast(
+          msg: message,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0,
+          33);
     }
   }
 }

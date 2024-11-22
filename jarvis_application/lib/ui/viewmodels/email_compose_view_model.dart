@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-
-import '../../data/services/ai_service.dart';
+import 'package:jarvis_application/data/services/mock_ai_service.dart';
 
 class EmailComposeViewModel extends ChangeNotifier {
-  final AIService _aiService;
+  final MockAIService _aiService;
   List<Map<String, dynamic>> conversationHistory = [];
   TextEditingController inputController = TextEditingController();
   bool isLoading = false;

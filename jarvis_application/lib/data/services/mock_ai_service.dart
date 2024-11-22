@@ -1,11 +1,8 @@
 import 'dart:math';
 
-import 'ai_service.dart';
-
-class MockAIService implements AIService {
+class MockAIService {
   final Random _random = Random();
 
-  @override
   Future<String> generateResponse(
       List<Map<String, String>> conversationHistory) async {
     await Future.delayed(const Duration(seconds: 2)); // Simulate network delay

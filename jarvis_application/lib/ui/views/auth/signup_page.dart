@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../../../providers/auth_provider.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/containers.dart';
 import '../../widgets/custom_divider.dart';
@@ -143,16 +145,31 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  void _onSubmit() {
+  void _onSubmit() async {
     setState(() {
       _submitted = true;
     });
-    if (_formKey.currentState!.saveAndValidate()) {
-      // Handle sign-up logic
-      final formData = _formKey.currentState!.value;
-      debugPrint('Form Data: $formData');
-    } else {
-      _formKey.currentState!.validate();
+    if (_formKey.currentState?.saveAndValidate() ?? false) {
+      final formData = _formKey.currentState?.value;
+      final username = formData?['username'];
+      final email = formData?['email'];
+      final password = formData?['password'];
+
+      try {
+        await Provider.of<AuthProvider>(context, listen: false)
+            .signUp(username, email, password);
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign-up successful!')),
+        );
+        // Navigate to the home page or another page after successful sign-up
+        context.go('/sign-in');
+      } catch (e) {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sign-up failed: $e')),
+        );
+      }
     }
   }
 }

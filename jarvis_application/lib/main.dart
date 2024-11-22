@@ -6,6 +6,7 @@ import 'package:jarvis_application/app/app.dart';
 import 'package:jarvis_application/core/di/service_locator.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
   setupLocator();
   runApp(const MyApp());

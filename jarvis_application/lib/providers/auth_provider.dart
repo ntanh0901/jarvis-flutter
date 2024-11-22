@@ -1,43 +1,88 @@
-import 'dart:convert';
+// lib/providers/auth_provider.dart
 
-import 'package:flutter/foundation.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 
-import '../data/services/api_service.dart';
+import '../data/repositories/auth_repository.dart';
 
 class AuthProvider with ChangeNotifier {
+  final AuthRepository _authRepository;
   bool _isAuthenticated = false;
+  String? _errorMessage;
+
+  AuthProvider(this._authRepository);
 
   bool get isAuthenticated => _isAuthenticated;
 
-  final ApiService _apiService = ApiService();
+  String? get errorMessage => _errorMessage;
 
   Future<void> signIn(String email, String password) async {
-    final response = await _apiService.post('/signin', {
-      'email': email,
-      'password': password,
-    });
-
-    if (response == 200) {
-      // Handle successful sign-in
-      final data = json.decode(response.body);
-      _isAuthenticated = true;
-      notifyListeners();
-    } else {
-      // Handle sign-in error
-      throw Exception('Failed to sign in: ${response.body}');
+    try {
+      final response = await _authRepository.signIn(email, password);
+      if (response.statusCode == 200) {
+        _isAuthenticated = true;
+        _errorMessage = null;
+      } else {
+        _isAuthenticated = false;
+        _errorMessage = 'Sign-in failed: Email or password incorrect';
+      }
+    } on DioException catch (e) {
+      final errorResponse = e.response?.data;
+      if (errorResponse != null && errorResponse['details'] != null) {
+        _errorMessage = errorResponse['details'][0]['issue'];
+      } else {
+        _errorMessage = 'Sign-in failed: An unknown error occurred';
+      }
+      _isAuthenticated = false;
     }
-  }
-
-  Future<void> checkAuthentication() async {
-    // Check if the user is authenticated (e.g., check token validity)
-    // For now, we'll just simulate a delay
-    await Future.delayed(const Duration(seconds: 2));
-    _isAuthenticated = false; // Set this based on actual authentication check
     notifyListeners();
   }
 
-  void signOut() {
-    _isAuthenticated = false;
+  Future<void> signUp(String username, String email, String password) async {
+    try {
+      final response = await _authRepository.signUp(username, email, password);
+      if (response.statusCode == 200) {
+        _isAuthenticated = true;
+        _errorMessage = null;
+      } else {
+        _isAuthenticated = false;
+        _errorMessage = 'Sign-up failed: Email or password incorrect';
+      }
+    } on DioException catch (e) {
+      final errorResponse = e.response?.data;
+      if (errorResponse != null && errorResponse['details'] != null) {
+        _errorMessage = errorResponse['details'][0]['issue'];
+      } else {
+        _errorMessage = 'Sign-up failed: An unknown error occurred';
+      }
+      _isAuthenticated = false;
+    }
+    notifyListeners();
+  }
+
+  Future<void> signOut() async {
+    try {
+      await _authRepository.signOut();
+      _isAuthenticated = false;
+      _errorMessage = null;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Sign-out failed: An unknown error occurred';
+      notifyListeners();
+    }
+  }
+
+  Future<void> getUserProfile() async {
+    try {
+      final response = await _authRepository.getUserProfile();
+      if (response.statusCode == 200) {
+        // Handle user profile data
+      } else {
+        _errorMessage = 'Failed to fetch user profile';
+      }
+    } catch (e) {
+      _errorMessage = 'Failed to fetch user profile: An unknown error occurred';
+    }
     notifyListeners();
   }
 }

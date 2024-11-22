@@ -1,21 +1,46 @@
-import 'dart:convert';
+// lib/data/services/api_service.dart
 
-import 'package:http/http.dart' as http;
-import 'package:jarvis_application/config/config.dart';
+import 'package:dio/dio.dart';
 
 class ApiService {
-  final String baseUrl = Config.apiUrl;
+  final Dio _dio;
 
-  Future<Map<String, dynamic>> post(
-      String endpoint, Map<String, dynamic> data) async {
-    final url = Uri.parse('$baseUrl$endpoint');
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json, charset=UTF-8',
-      },
-      body: json.encode(data),
-    );
-    return response;
+  ApiService(this._dio);
+
+  Future<Response> get(String path,
+      {Map<String, dynamic>? queryParameters}) async {
+    try {
+      final response = await _dio.get(path, queryParameters: queryParameters);
+      return response;
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  Future<Response> post(String path, {dynamic data}) async {
+    try {
+      final response = await _dio.post(path, data: data);
+      return response;
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  Future<Response> put(String path, {dynamic data}) async {
+    try {
+      final response = await _dio.put(path, data: data);
+      return response;
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  Future<Response> delete(String path, {dynamic data}) async {
+    try {
+      final response = await _dio.delete(path, data: data);
+      return response;
+    } on DioException {
+      rethrow;
+    }
   }
 }

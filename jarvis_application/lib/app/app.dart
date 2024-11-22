@@ -9,6 +9,7 @@ import 'package:jarvis_application/ui/viewmodels/email_compose_view_model.dart';
 import 'package:jarvis_application/ui/viewmodels/image_handler_view_model.dart';
 import 'package:provider/provider.dart';
 
+import '../core/di/service_locator.dart';
 import '../data/services/mock_ai_service.dart';
 
 class MyApp extends StatelessWidget {
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => AIBotProvider()),
-        ChangeNotifierProvider(create: (context) => AuthProvider()),
+        ChangeNotifierProvider(create: (context) => getIt<AuthProvider>()),
         ChangeNotifierProvider(
             create: (context) => EmailComposeViewModel(MockAIService())),
         ChangeNotifierProvider(create: (context) => ImageHandlerViewModel()),
