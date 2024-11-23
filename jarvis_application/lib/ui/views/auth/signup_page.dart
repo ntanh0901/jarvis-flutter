@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
-import '../../../providers/auth_provider.dart';
+import '../../viewmodels/auth_viewmodel.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/containers.dart';
 import '../../widgets/custom_divider.dart';
@@ -14,22 +14,22 @@ import '../../widgets/google_auth_button.dart';
 import '../../widgets/hover_text_button.dart';
 import '../../widgets/text_form_field.dart';
 
-class SignUpPage extends StatefulWidget {
+class SignUpPage extends ConsumerStatefulWidget {
   const SignUpPage({super.key});
 
   @override
-  State<SignUpPage> createState() => _SignUpPageState();
+  _SignUpPageState createState() => _SignUpPageState();
 }
 
-class _SignUpPageState extends State<SignUpPage> {
+class _SignUpPageState extends ConsumerState<SignUpPage> {
   final _formKey = GlobalKey<FormBuilderState>();
   bool _submitted = false;
-  bool _isLoading = false;
 
   @override
-  build(BuildContext context) {
+  Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isLargeScreen = size.width > 600;
+    final authViewModel = ref.watch(authViewModelProvider.notifier);
 
     return Scaffold(
       body: GradientContainer(
@@ -51,20 +51,14 @@ class _SignUpPageState extends State<SignUpPage> {
                     const AppLogo(size: 24),
                     const SizedBox(height: 70),
                     _buildSignUpForm(),
-                    const SizedBox(height: 30),
-                    const CustomDivider(middleText: 'or'),
-                    const SizedBox(height: 20),
-                    GoogleAuthButton(
-                      label: 'Sign up with Google',
-                      onPressed: () {
-                        // Handle Google sign-up logic
-                      },
-                    ),
                     const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text('Already have an account?'),
+                        const Text(
+                          "Already have an account?",
+                          style: TextStyle(color: Colors.black),
+                        ),
                         HoverTextButton(
                           text: 'Sign In',
                           onPressed: () => context.go('/sign-in'),
@@ -82,6 +76,9 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Widget _buildSignUpForm() {
+    final authViewModel = ref.watch(authViewModelProvider.notifier);
+    final authState = ref.watch(authViewModelProvider);
+
     return FormBuilder(
       key: _formKey,
       autovalidateMode:
@@ -89,113 +86,109 @@ class _SignUpPageState extends State<SignUpPage> {
       child: Column(
         children: [
           CustomFormBuilderTextField(
-              name: 'username',
-              label: 'Username',
-              validators: [
-                FormBuilderValidators.required(
-                    errorText: 'Please enter a username'),
-                FormBuilderValidators.minLength(3),
-                FormBuilderValidators.maxLength(20),
-                FormBuilderValidators.match(RegExp(r'^[a-zA-Z0-9]+$'),
-                    errorText: 'No special characters allowed'),
-              ]),
+            name: 'username',
+            label: 'Username',
+            validators: [
+              FormBuilderValidators.required(),
+            ],
+          ),
           const SizedBox(height: 20),
           CustomFormBuilderTextField(
-              name: 'email',
-              label: 'Email',
-              validators: [
-                FormBuilderValidators.required(
-                    errorText: 'Please enter an email'),
-                FormBuilderValidators.email(),
-              ]),
+            name: 'email',
+            label: 'Email',
+            validators: [
+              FormBuilderValidators.required(),
+              FormBuilderValidators.email(),
+            ],
+          ),
           const SizedBox(height: 20),
           CustomFormBuilderTextField(
-              name: 'password',
-              label: 'Password',
-              isPasswordField: true,
-              validators: [
-                FormBuilderValidators.required(
-                    errorText: 'Please enter a password'),
-                FormBuilderValidators.minLength(8),
-                FormBuilderValidators.match(RegExp(r'(?=.*[A-Z])'),
-                    errorText:
-                        'Password must contain at least one uppercase letter'),
-                FormBuilderValidators.match(RegExp(r'(?=.*[a-z])'),
-                    errorText:
-                        'Password must contain at least one lowercase letter'),
-                FormBuilderValidators.match(RegExp(r'(?=.*\d)'),
-                    errorText: 'Password must contain at least one number'),
-                FormBuilderValidators.match(RegExp(r'(?=.*[@$!%*?&])'),
-                    errorText:
-                        'Password must contain at least one special character'),
-              ]),
-          const SizedBox(height: 20),
-          CustomFormBuilderTextField(
-              name: 're-password',
-              label: 'Confirm password',
-              isPasswordField: true,
-              validators: [
-                FormBuilderValidators.required(),
-                (value) {
-                  if (value !=
-                      _formKey.currentState?.fields['password']?.value) {
-                    return 'Passwords do not match';
-                  }
-                  return null;
-                },
-              ]),
+            name: 'password',
+            label: 'Password',
+            isPasswordField: true,
+            validators: [
+              FormBuilderValidators.required(),
+            ],
+          ),
           const SizedBox(height: 30),
+          CustomFormBuilderTextField(
+            name: 're-password',
+            label: 'Confirm password',
+            isPasswordField: true,
+            validators: [
+              FormBuilderValidators.required(),
+              (val) {
+                if (val != null &&
+                    val != _formKey.currentState?.fields['password']?.value) {
+                  return 'Passwords do not match';
+                }
+                return null;
+              },
+            ],
+          ),
+          const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
             child: GradientButton(
-              onPressed: _isLoading ? null : () => _handleSubmit(),
-              child: _isLoading
+              onPressed: authState is AsyncLoading
+                  ? null
+                  : () => _handleSubmit(authViewModel),
+              child: authState is AsyncLoading
                   ? const CircularProgressIndicator()
                   : const Text('Sign up'),
             ),
           ),
+          const SizedBox(height: 30),
+          const CustomDivider(middleText: 'or'),
+          const SizedBox(height: 20),
+          _buildGoogleSignInButton(authViewModel),
         ],
       ),
     );
   }
 
-  Widget _buildTextField(
-      String name, String label, List<String? Function(String?)> validators) {
-    return CustomFormBuilderTextField(
-      name: name,
-      label: label,
-      validators: validators,
+  Widget _buildGoogleSignInButton(AuthViewModel authViewModel) {
+    return GoogleAuthButton(
+      label: 'Sign up with Google',
+      onPressed: () async {
+        try {
+          await authViewModel.googleSignIn();
+          _showMessage('Sign up with Google successful', Colors.green);
+          context.go('/chat');
+        } catch (e) {
+          _showMessage('Sign up with Google failed', Colors.red);
+        }
+      },
     );
   }
 
-  void _handleSubmit() async {
+  void _handleSubmit(AuthViewModel authViewModel) async {
     setState(() {
       _submitted = true;
     });
 
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        _isLoading = true;
-      });
-
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (_formKey.currentState?.saveAndValidate() ?? false) {
       final formData = _formKey.currentState?.value;
       final username = formData?['username'];
       final email = formData?['email'];
       final password = formData?['password'];
 
-      final success = await authProvider.signUp(username, email, password);
-
-      if (success) {
-        _showMessage('Sign-up successful and logged in', Colors.green);
-        context.go('/chat');
-      } else {
-        _showMessage(authProvider.errorMessage ?? 'Sign-up failed', Colors.red);
+      try {
+        await authViewModel.signUp(username, email, password);
+        final errorMessage = authViewModel.errorMessage;
+        if (errorMessage != null) {
+          _showMessage(errorMessage, Colors.red);
+        } else {
+          _showMessage('Sign up successful', Colors.green);
+          context.go('/chat');
+        }
+      } catch (e) {
+        _showMessage('Sign up failed', Colors.red);
+      } finally {
+        setState(() {
+          _submitted = false;
+        });
       }
-
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 

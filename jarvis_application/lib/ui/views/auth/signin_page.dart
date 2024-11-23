@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
-import '../../../providers/auth_provider.dart';
+import '../../viewmodels/auth_viewmodel.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/containers.dart';
 import '../../widgets/custom_divider.dart';
@@ -14,22 +14,24 @@ import '../../widgets/google_auth_button.dart';
 import '../../widgets/hover_text_button.dart';
 import '../../widgets/text_form_field.dart';
 
-class SignInPage extends StatefulWidget {
+class SignInPage extends ConsumerStatefulWidget {
   const SignInPage({super.key});
 
   @override
   _SignInPageState createState() => _SignInPageState();
 }
 
-class _SignInPageState extends State<SignInPage> {
+class _SignInPageState extends ConsumerState<SignInPage> {
   final _formKey = GlobalKey<FormBuilderState>();
   bool _submitted = false;
-  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isLargeScreen = size.width > 600;
+    final authViewModel = ref.watch(authViewModelProvider.notifier);
+    final authState = ref.watch(authViewModelProvider);
+    final errorMessage = authViewModel.errorMessage;
 
     return Scaffold(
       body: GradientContainer(
@@ -51,15 +53,6 @@ class _SignInPageState extends State<SignInPage> {
                     const AppLogo(size: 24),
                     const SizedBox(height: 70),
                     _buildSignInForm(),
-                    const SizedBox(height: 30),
-                    const CustomDivider(middleText: 'or'),
-                    const SizedBox(height: 20),
-                    GoogleAuthButton(
-                      label: 'Sign in with Google',
-                      onPressed: () {
-                        // Handle Google sign-in logic
-                      },
-                    ),
                     const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -85,6 +78,9 @@ class _SignInPageState extends State<SignInPage> {
   }
 
   Widget _buildSignInForm() {
+    final authViewModel = ref.watch(authViewModelProvider.notifier);
+    final authState = ref.watch(authViewModelProvider);
+
     return FormBuilder(
       key: _formKey,
       autovalidateMode:
@@ -119,45 +115,61 @@ class _SignInPageState extends State<SignInPage> {
           SizedBox(
             width: double.infinity,
             child: GradientButton(
-              onPressed: _isLoading ? null : () => _handleSubmit(),
-              child: _isLoading
+              onPressed: authState is AsyncLoading
+                  ? null
+                  : () => _handleSubmit(authViewModel),
+              child: authState is AsyncLoading
                   ? const CircularProgressIndicator()
                   : const Text('Sign in'),
             ),
           ),
+          const SizedBox(height: 30),
+          const CustomDivider(middleText: 'or'),
+          const SizedBox(height: 20),
+          _buildGoogleSignInButton(authViewModel),
         ],
       ),
     );
   }
 
-  void _handleSubmit() async {
+  Widget _buildGoogleSignInButton(AuthViewModel authViewModel) {
+    return GoogleAuthButton(
+      label: 'Sign in with Google',
+      onPressed: () async {
+        try {
+          await authViewModel.googleSignIn();
+          _showMessage('Sign in with Google successful', Colors.green);
+          context.go('/chat');
+        } catch (e) {
+          _showMessage('Sign in with Google failed', Colors.red);
+        }
+      },
+    );
+  }
+
+  void _handleSubmit(AuthViewModel authViewModel) async {
     setState(() {
       _submitted = true;
-      _isLoading = true;
     });
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
-    // Check if the form is valid
     if (_formKey.currentState?.saveAndValidate() ?? false) {
       final formData = _formKey.currentState?.value;
       final email = formData?['email'];
       final password = formData?['password'];
 
-      // Use AuthProvider's signIn method to log in the user
-      final signInSuccess = await authProvider.signIn(email, password);
-
-      // Handle the response from the AuthProvider
-      if (signInSuccess) {
-        _showMessage('Sign in successful', Colors.green);
-        context.go('/chat'); // Redirect to chat page
-      } else {
-        _showMessage(authProvider.errorMessage ?? 'Sign in failed', Colors.red);
+      try {
+        await authViewModel.signIn(email, password);
+        final errorMessage = authViewModel.errorMessage;
+        if (errorMessage != null) {
+          _showMessage(errorMessage, Colors.red);
+        } else {
+          _showMessage('Sign in successful', Colors.green);
+          context.go('/chat');
+        }
+      } catch (e) {
+        _showMessage('Sign in failed', Colors.red);
       }
     }
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   void _showMessage(String message, Color backgroundColor) {
