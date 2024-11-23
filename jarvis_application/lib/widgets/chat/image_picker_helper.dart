@@ -4,13 +4,13 @@ import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 
 import '../../styles/chat_screen_styles.dart';
-import '../../viewmodels/image_handler_view_model.dart';
+import 'package:jarvis_application/ui/viewmodels/image_handler_view_model.dart';
 
 class ImagePickerHelper {
   static void showImagePickerOptions(
-      BuildContext context, {
-        required ScreenshotController screenshotController,
-      }) {
+    BuildContext context, {
+    required ScreenshotController screenshotController,
+  }) {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -22,8 +22,9 @@ class ImagePickerHelper {
                 title: const Text('Choose from gallery'),
                 onTap: () => _handleImageOptionTap(
                   context,
-                      () => Provider.of<ImageHandlerViewModel>(context, listen: false)
-                      .pickImages(),
+                  () =>
+                      Provider.of<ImageHandlerViewModel>(context, listen: false)
+                          .pickImages(),
                 ),
               ),
               ListTile(
@@ -31,8 +32,9 @@ class ImagePickerHelper {
                 title: const Text('Take a photo'),
                 onTap: () => _handleImageOptionTap(
                   context,
-                      () => Provider.of<ImageHandlerViewModel>(context, listen: false)
-                      .takePhoto(),
+                  () =>
+                      Provider.of<ImageHandlerViewModel>(context, listen: false)
+                          .takePhoto(),
                 ),
               ),
               ListTile(
@@ -40,8 +42,9 @@ class ImagePickerHelper {
                 title: const Text('Take a screenshot'),
                 onTap: () => _handleImageOptionTap(
                   context,
-                      () => Provider.of<ImageHandlerViewModel>(context, listen: false)
-                      .takeScreenshot(screenshotController),
+                  () =>
+                      Provider.of<ImageHandlerViewModel>(context, listen: false)
+                          .takeScreenshot(screenshotController),
                 ),
               ),
             ],
@@ -52,11 +55,11 @@ class ImagePickerHelper {
   }
 
   static void _handleImageOptionTap(
-      BuildContext context,
-      Future<Map<String, dynamic>> Function() action,
-      ) async {
+    BuildContext context,
+    Future<Map<String, dynamic>> Function() action,
+  ) async {
     final imageHandler =
-    Provider.of<ImageHandlerViewModel>(context, listen: false);
+        Provider.of<ImageHandlerViewModel>(context, listen: false);
 
     if (!imageHandler.canAddMoreImages) {
       _showImageAddedFeedback(context, {
@@ -88,21 +91,21 @@ class ImagePickerHelper {
   }
 
   static void _showImageAddedFeedback(
-      BuildContext context,
-      Map<String, dynamic> result,
-      ) {
+    BuildContext context,
+    Map<String, dynamic> result,
+  ) {
     String message;
     IconData icon;
     Color backgroundColor;
 
     if (result['added'] > 0) {
       message =
-      'Added ${result['added']} image(s). Total: ${result['totalSelected']}/${ImageHandlerViewModel.maxImages}';
+          'Added ${result['added']} image(s). Total: ${result['totalSelected']}/${ImageHandlerViewModel.maxImages}';
       icon = Icons.check_circle_outline;
       backgroundColor = Colors.green;
     } else if (result['limitReached']) {
       message =
-      'Max image limit reached (${result['totalSelected']}/${ImageHandlerViewModel.maxImages})';
+          'Max image limit reached (${result['totalSelected']}/${ImageHandlerViewModel.maxImages})';
       icon = Icons.warning_amber_rounded;
       backgroundColor = Theme.of(context).colorScheme.error;
     } else {

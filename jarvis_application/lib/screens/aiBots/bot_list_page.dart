@@ -1,12 +1,15 @@
 import 'dart:io'; // Để xử lý File
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart'; // Import image_picker
-import 'package:provider/provider.dart';
-import 'package:jarvis_application/providers/ai_bot_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:jarvis_application/providers/ai_bot_provider.dart';
+import 'package:provider/provider.dart';
 
 class BotListPage extends StatefulWidget {
   static const String routeName = '/bot-list';
+
+  const BotListPage({super.key});
 
   @override
   _BotListPageState createState() => _BotListPageState();
@@ -125,13 +128,13 @@ class _BotListPageState extends State<BotListPage> {
   void _showCreateBotDialog(BuildContext context) {
     final TextEditingController nameController = TextEditingController();
     final TextEditingController descriptionController = TextEditingController();
-    File? _imageFile; // Biến lưu trữ ảnh đã chọn
-    final ImagePicker _picker = ImagePicker(); // Tạo instance của ImagePicker
+    File? imageFile; // Biến lưu trữ ảnh đã chọn
+    final ImagePicker picker = ImagePicker(); // Tạo instance của ImagePicker
 
-    Future<void> _pickImage() async {
-      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    Future<void> pickImage() async {
+      final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
-        _imageFile = File(pickedFile.path); // Lưu trữ đường dẫn ảnh
+        imageFile = File(pickedFile.path); // Lưu trữ đường dẫn ảnh
       }
     }
 
@@ -168,11 +171,11 @@ class _BotListPageState extends State<BotListPage> {
                     const SizedBox(height: 10),
                     GestureDetector(
                       onTap: () async {
-                        await _pickImage(); // Gọi hàm chọn ảnh
+                        await pickImage(); // Gọi hàm chọn ảnh
                         setState(() {}); // Cập nhật giao diện sau khi chọn ảnh
                       },
-                      child: _imageFile != null
-                          ? Image.file(_imageFile!, width: 100, height: 100) // Hiển thị ảnh đã chọn
+                      child: imageFile != null
+                          ? Image.file(imageFile!, width: 100, height: 100) // Hiển thị ảnh đã chọn
                           : Container(
                         width: 100,
                         height: 100,
@@ -205,7 +208,7 @@ class _BotListPageState extends State<BotListPage> {
                       Provider.of<AIBotProvider>(context, listen: false).createAIBot(
                         nameController.text,
                         descriptionController.text,
-                        _imageFile?.path ?? '', // Đường dẫn ảnh hoặc rỗng nếu chưa có ảnh
+                        imageFile?.path ?? '', // Đường dẫn ảnh hoặc rỗng nếu chưa có ảnh
                       );
                       Navigator.of(context).pop(); // Đóng dialog sau khi tạo bot
                     }

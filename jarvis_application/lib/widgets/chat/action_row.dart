@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'ai_model_dropdown.dart';
 import 'icon_buttons_row.dart';
-import '../../models/assistant.dart';
-
-
+import 'package:jarvis_application/data/models/assistant.dart';
 
 class ActionRow extends StatelessWidget {
   final List<Assistant> assistants;
@@ -31,42 +29,42 @@ class ActionRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
           child: isSmallScreen
               ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: double.infinity,
-                child: AIModelDropdown(
-                  assistants: assistants,
-                  selectedAssistant: selectedAssistant,
-                  onAssistantSelected: onAssistantSelected,
-                ),
-              ),
-              const SizedBox(height: 8.0),
-              IconButtonsRow(
-                onIconPressed: onActionSelected, // Gửi lên ChatPage
-                remainUsage: remainUsage,
-              ),
-            ],
-          )
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: AIModelDropdown(
+                        assistants: assistants,
+                        selectedAssistant: selectedAssistant,
+                        onAssistantSelected: onAssistantSelected,
+                      ),
+                    ),
+                    const SizedBox(height: 8.0),
+                    IconButtonsRow(
+                      onIconPressed: onActionSelected, // Gửi lên ChatPage
+                      remainUsage: remainUsage,
+                    ),
+                  ],
+                )
               : Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      SizedBox(
-                        width: 120,
-                        child: AIModelDropdown(
-                          assistants: assistants,
-                          selectedAssistant: selectedAssistant,
-                          onAssistantSelected: onAssistantSelected,
-                        ),
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(
+                      width: 120,
+                      child: AIModelDropdown(
+                        assistants: assistants,
+                        selectedAssistant: selectedAssistant,
+                        onAssistantSelected: onAssistantSelected,
                       ),
-                      Expanded(
-                        child: IconButtonsRow(
-                          onIconPressed: onActionSelected, // Gửi lên ChatPage
-                          remainUsage: remainUsage,
-                        ),
+                    ),
+                    Expanded(
+                      child: IconButtonsRow(
+                        onIconPressed: onActionSelected, // Gửi lên ChatPage
+                        remainUsage: remainUsage,
                       ),
-                    ],
-              ),
+                    ),
+                  ],
+                ),
         );
       },
     );

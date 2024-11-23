@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jarvis_application/screens/prompts/api_prompts.dart';
 
 class CreateNewPrompt extends StatefulWidget {
   const CreateNewPrompt({super.key});
@@ -10,7 +11,10 @@ class CreateNewPrompt extends StatefulWidget {
 class _CreateNewPromptState extends State<CreateNewPrompt> {
   bool isPrivatePrompt = true;
   String selectedLanguage = 'English';
-  String selectedCategory = 'Other';
+  String selectedCategory = 'other';
+  final TextEditingController titleController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController contentController = TextEditingController();
 
   final List<String> languages = [
     'English',
@@ -22,13 +26,36 @@ class _CreateNewPromptState extends State<CreateNewPrompt> {
   ];
 
   final List<String> categories = [
-    'Other',
-    'Marketing',
-    'AI Painting',
-    'Chatbot',
-    'SEO',
-    'Writing',
+    'other',
+    'carrer',
+    'bussiness',
+    'writing',
+    'productivity',
+    'coding',
+    'marketing',
+    'seo',
+    'education',
+    'chatbot',
+    'fun'
   ];
+
+  Future<void> createPrompt() async {
+    try {
+      await ApiService.createPrompt(
+        category: isPrivatePrompt ? 'other' : selectedCategory,
+        content: contentController.text,
+        description: isPrivatePrompt ? 'nothing' : descriptionController.text,
+        isPublic: !isPrivatePrompt,
+        language: isPrivatePrompt ? 'English' : selectedLanguage,
+        title: titleController.text,
+      );
+      // Prompt created successfully
+      Navigator.pop(context, true);
+    } catch (e) {
+      // Handle error
+      print('Failed to create prompt: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,16 +98,18 @@ class _CreateNewPromptState extends State<CreateNewPrompt> {
             ),
             const SizedBox(height: 16.0),
             if (isPrivatePrompt) ...[
-              const TextField(
-                decoration: InputDecoration(
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Name',
+                  labelText: 'Title',
                 ),
               ),
               const SizedBox(height: 16.0),
-              const TextField(
+              TextField(
+                controller: contentController,
                 maxLines: 5,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Prompt',
                 ),
@@ -105,8 +134,9 @@ class _CreateNewPromptState extends State<CreateNewPrompt> {
                 },
               ),
               const SizedBox(height: 16.0),
-              const TextField(
-                decoration: InputDecoration(
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Name',
                 ),
@@ -131,17 +161,19 @@ class _CreateNewPromptState extends State<CreateNewPrompt> {
                 },
               ),
               const SizedBox(height: 16.0),
-              const TextField(
+              TextField(
+                controller: descriptionController,
                 maxLines: 3,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Description',
                 ),
               ),
               const SizedBox(height: 16.0),
-              const TextField(
+              TextField(
+                controller: contentController,
                 maxLines: 5,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Prompt',
                 ),
@@ -159,9 +191,7 @@ class _CreateNewPromptState extends State<CreateNewPrompt> {
                 ),
                 const SizedBox(width: 8.0),
                 ElevatedButton(
-                  onPressed: () {
-                    // Handle save action
-                  },
+                  onPressed: createPrompt,
                   child: const Text('Save'),
                 ),
               ],

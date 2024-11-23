@@ -3,25 +3,24 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
-import 'package:jarvis_application/models/ai_chat_metadata.dart';
-import 'package:jarvis_application/models/conversation_history_res.dart';
-import 'package:jarvis_application/models/request_ai_chat.dart';
+import 'package:jarvis_application/data/models/ai_chat_metadata.dart';
+import 'package:jarvis_application/data/models/conversation_history_res.dart';
+import 'package:jarvis_application/data/models/request_ai_chat.dart';
 import 'package:jarvis_application/widgets/chat/greeting_text.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 
-import '../models/assistant.dart';
-import '../models/assistant_dto.dart';
-import '../models/chat_message.dart';
-import '../models/conversations_query_params.dart';
-import '../models/conversations_res.dart';
+import 'package:jarvis_application/data/models/assistant.dart';
+import 'package:jarvis_application/data/models/assistant_dto.dart';
+import 'package:jarvis_application/data/models/chat_message.dart';
+import 'package:jarvis_application/data/models/conversations_query_params.dart';
+import 'package:jarvis_application/data/models/conversations_res.dart';
 import '../widgets/chat/action_row.dart';
 import '../widgets/chat/ai_model_dropdown.dart';
 import '../widgets/chat/conversation_history_dialog.dart';
 import '../widgets/chat/image_picker_helper.dart';
 import '../widgets/chat/logo_widget.dart';
 import '../widgets/chat/upload_dialog.dart';
-import '../models/assistant.dart';
 import 'dart:convert';
 
 class ChatPage extends StatefulWidget {
@@ -40,7 +39,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
   final FocusNode messageFocusNode = FocusNode();
   final metadata = AiChatMetadata.empty();
-  late int remainUsage ;
+  late int remainUsage;
 
   late ChatMessage currentMessageUser;
   late ChatMessage currentMessageAI;
@@ -57,7 +56,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     "gpt-4o": Id.GPT_4_O,
     "gpt-4o-mini": Id.GPT_4_O_MINI
   });
-
 
   final List<Assistant> assistants = [
     Assistant(
@@ -84,16 +82,13 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       dto: AssistantDto(id: Id.CLAUDE_3_SONNET_20240229, model: Model.DIFY),
       imagePath: 'assets/images/claude-3-sonnet.jpg',
     ),
-
   ];
 
   List<Map<String, dynamic>> items = [];
   final List<ChatMessage> messages = [];
 
-  String? cursor = 'f32a6751-9200-4357-9281-d22e5785434c'; // Cursor for pagination
-
-
-
+  String? cursor =
+      'f32a6751-9200-4357-9281-d22e5785434c'; // Cursor for pagination
 
   Assistant? selectedAssistant;
 
@@ -105,14 +100,12 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     // initial Message  = empty
     currentMessageUser = ChatMessage.empty();
     currentMessageAI = ChatMessage.empty();
-    remainUsage= 0;
+    remainUsage = 0;
     requestAiChat = RequestAiChat(
       assistant: selectedAssistant!.dto,
       content: '',
       metadata: metadata,
     );
-
-
   }
 
   @override
@@ -123,7 +116,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     messageFocusNode.dispose(); // Dispose the focus node
     super.dispose();
   }
-
 
   Future<void> _sendMessage(String content, Assistant currAssistant) async {
     // Add message to the local list
@@ -137,15 +129,15 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     });
 
     // reduce Token for each message
-    content= cleanContent(content);
-
+    content = cleanContent(content);
 
     // print("Request Body Before Sendingssssss: ${jsonEncode(requestAiChat.toJson())}");
 
     // Setup headers and URL
     var headers = {
       'x-jarvis-guid': '',
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA3YjU2OGVkLTc1YTItNGFmMS05ZTBiLTdmYzg0NDBlNDZjZiIsImVtYWlsIjoicXVhbmd0aGllbjEyM0BnbWFpbC5jb20iLCJpYXQiOjE3MzIxMjMwMjYsImV4cCI6MTc2MzY1OTAyNn0.rWURsgNyRlaIlWxzWYqnJCBtAOJJLi7fEi1jOQTLOZk',
+      'Authorization':
+          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA3YjU2OGVkLTc1YTItNGFmMS05ZTBiLTdmYzg0NDBlNDZjZiIsImVtYWlsIjoicXVhbmd0aGllbjEyM0BnbWFpbC5jb20iLCJpYXQiOjE3MzIxMjMwMjYsImV4cCI6MTc2MzY1OTAyNn0.rWURsgNyRlaIlWxzWYqnJCBtAOJJLi7fEi1jOQTLOZk',
       'Content-Type': 'application/json',
     };
 
@@ -155,8 +147,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       var request;
 
       // For first time
-      if(metadata.conversation.id == ""){
-        url=  Uri.parse('https://api.dev.jarvis.cx/api/v1/ai-chat');
+      if (metadata.conversation.id == "") {
+        url = Uri.parse('https://api.dev.jarvis.cx/api/v1/ai-chat');
         request = http.Request('POST', url);
         requestAiChat.setContent(content);
         requestAiChat.setAssistant(currAssistant.dto);
@@ -165,9 +157,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       }
       // For next messages
       else {
-        url=  Uri.parse('https://api.dev.jarvis.cx/api/v1/ai-chat/messages');
+        url = Uri.parse('https://api.dev.jarvis.cx/api/v1/ai-chat/messages');
         request = http.Request('POST', url);
-
 
         requestAiChat.setContent(content);
         requestAiChat.setAssistant(currAssistant.dto);
@@ -197,7 +188,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
           assistant: currAssistant.dto,
           role: 'model',
           content: messageAI,
-
         ));
 
         setState(() {
@@ -219,7 +209,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         metadata.addMessage(currentMessageAI);
         print("Meta Resultttttttttt: ${jsonEncode(metadata.toJson())}");
 
-
         // Optionally update local state or UI
       } else {
         String errorMessage =
@@ -227,27 +216,26 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         _showErrorDialog(context, "Error", errorMessage);
       }
     } catch (e) {
-      _showErrorDialog(context, "Error", "An error occurred: $e");    } finally{
+      _showErrorDialog(context, "Error", "An error occurred: $e");
+    } finally {
       setState(() {
         isTyping = false;
       });
     }
   }
 
-
   String cleanContent(String content) {
-    content = content.length > 100
-        ? '${content.substring(0, 100)}...'
-        : content;
+    content =
+        content.length > 100 ? '${content.substring(0, 100)}...' : content;
     return content.replaceAll(RegExp(r'\s+'), ' ').trim();
   }
-
 
   Future<void> _fetchConversations() async {
     // Setup headers
     var headers = {
       'x-jarvis-guid': '',
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk2OWI2NGJiLTUzNjQtNGZkYy1hMTA5LTIyYzBmYzQ5NDAwZSIsImVtYWlsIjoibGVlbmdvODA4NzlAZ21haWwuY29tIiwiaWF0IjoxNzMyMTU3MTkwLCJleHAiOjE3NjM2OTMxOTB9.252o7hvJOALehGB2J5QVg1PcTtptwbVWYoI5764_ugI',
+      'Authorization':
+          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk2OWI2NGJiLTUzNjQtNGZkYy1hMTA5LTIyYzBmYzQ5NDAwZSIsImVtYWlsIjoibGVlbmdvODA4NzlAZ21haWwuY29tIiwiaWF0IjoxNzMyMTU3MTkwLCJleHAiOjE3NjM2OTMxOTB9.252o7hvJOALehGB2J5QVg1PcTtptwbVWYoI5764_ugI',
       'Content-Type': 'application/json',
     };
 
@@ -275,9 +263,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       // print("URLLLLLLLLL: ${url}");
 
       // Send request
-      var response = await http.get(
-        url,
-        headers: headers);
+      var response = await http.get(url, headers: headers);
 
       if (response.statusCode == 200) {
         // Parse response
@@ -285,21 +271,19 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
         // print(responseData['items']);
         // print("successsssssssssssssssssssssssssssssssssssssssssss data: $responseData");
 
-        ConversationsRes conversations = ConversationsRes.fromJson(responseData);
+        ConversationsRes conversations =
+            ConversationsRes.fromJson(responseData);
         // print("Response Dataaaaaaaaaaaaaaaa: $conversations");
 
         setState(() {
           items = List<Map<String, dynamic>>.from(
             conversations.items.map((item) => {
-              'title': item.title ?? '',
-              'id': item.id ?? '',
-              'createdAt': item.createdAt ?? 0,
-            }),
+                  'title': item.title ?? '',
+                  'id': item.id ?? '',
+                  'createdAt': item.createdAt ?? 0,
+                }),
           );
           cursor = conversations.cursor;
-
-
-
         });
       } else {
         String errorMessage =
@@ -311,13 +295,12 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     }
   }
 
-
-
   Future<void> _fetchConversationHistory(String newConversationID) async {
     // Setup headers
     var headers = {
       'x-jarvis-guid': '',
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk2OWI2NGJiLTUzNjQtNGZkYy1hMTA5LTIyYzBmYzQ5NDAwZSIsImVtYWlsIjoibGVlbmdvODA4NzlAZ21haWwuY29tIiwiaWF0IjoxNzMyMTU3MTkwLCJleHAiOjE3NjM2OTMxOTB9.252o7hvJOALehGB2J5QVg1PcTtptwbVWYoI5764_ugI',
+      'Authorization':
+          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk2OWI2NGJiLTUzNjQtNGZkYy1hMTA5LTIyYzBmYzQ5NDAwZSIsImVtYWlsIjoibGVlbmdvODA4NzlAZ21haWwuY29tIiwiaWF0IjoxNzMyMTU3MTkwLCJleHAiOjE3NjM2OTMxOTB9.252o7hvJOALehGB2J5QVg1PcTtptwbVWYoI5764_ugI',
       'Content-Type': 'application/json',
     };
 
@@ -343,23 +326,23 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       // print("URLLLLLLLLL: ${url}");
 
       // Send request
-      var response = await http.get(
-          url,
-          headers: headers);
+      var response = await http.get(url, headers: headers);
 
       if (response.statusCode == 200) {
         // Parse response
         var responseData = jsonDecode(response.body);
         // print(responseData['items']);
-        print("successsssssssssssssssssssssssssssssssssssssssssss data: $responseData");
+        print(
+            "successsssssssssssssssssssssssssssssssssssssssssss data: $responseData");
 
-        ConversationHistoryRes conversationHistory = ConversationHistoryRes.fromJson(responseData);
+        ConversationHistoryRes conversationHistory =
+            ConversationHistoryRes.fromJson(responseData);
         print("Historyyyyyyyyyyyyyy: $conversationHistory");
 
         setState(() {
           cursor = conversationHistory.cursor;
           messages.clear();
-          for(var i in conversationHistory.items!){
+          for (var i in conversationHistory.items!) {
             messages.add(ChatMessage(
               assistant: selectedAssistant?.dto,
               role: 'user',
@@ -385,7 +368,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
             metadata.addMessage(currentMessageAI);
             conversationID = newConversationID;
             print("Meta Historyyyyyyyy: ${jsonEncode(metadata.toJson())}");
-
           }
         });
 
@@ -400,7 +382,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       _showErrorDialog(context, "Error", "An error occurred: $e");
     }
   }
-
 
   void _showErrorDialog(BuildContext context, String title, String message) {
     showDialog(
@@ -433,9 +414,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     );
   }
 
-
-
-
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -448,15 +426,14 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     });
   }
 
-
-
   Widget _buildChatInput() {
     return GestureDetector(
-        onTap: () {
-      FocusScope.of(context).unfocus(); // Dismiss keyboard when tapping outside the input
-                                        // but it doesn't work =((
-    },
-    child: Padding(
+      onTap: () {
+        FocusScope.of(context)
+            .unfocus(); // Dismiss keyboard when tapping outside the input
+        // but it doesn't work =((
+      },
+      child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
         child: Container(
           decoration: BoxDecoration(
@@ -494,14 +471,15 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                   if (text.isNotEmpty) {
                     _sendMessage(text, selectedAssistant!);
                     messageController.clear();
-                    FocusScope.of(context).unfocus(); // Dismiss keyboard after sending
+                    FocusScope.of(context)
+                        .unfocus(); // Dismiss keyboard after sending
                   }
                 },
               ),
             ],
           ),
         ),
-    ),
+      ),
     );
   }
 
@@ -528,6 +506,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
     print("Conversation reset successfully.");
   }
+
   Future<void> _handleAction(String action, BuildContext context) async {
     switch (action) {
       case 'add_comment':
@@ -565,7 +544,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   }
 
   void _showConversationHistoryDialog(BuildContext context) async {
-
     // fetch conversations
     await _fetchConversations();
 
@@ -587,9 +565,6 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       },
     );
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -630,9 +605,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
               Expanded(
                 child: ListView.builder(
                   controller: _scrollController,
-                  itemCount: messages.length +(isTyping ? 1:0),
+                  itemCount: messages.length + (isTyping ? 1 : 0),
                   itemBuilder: (context, index) {
-
                     if (index == messages.length && isTyping) {
                       // Hiển thị hiệu ứng "jumping dots" khi đang chờ phản hồi
                       return Align(
@@ -654,8 +628,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                           : Alignment.centerLeft,
                       child: Container(
                         margin: message.role == 'user'
-                            ? const EdgeInsets.only(left: 50, right: 10, top: 5, bottom: 5)
-                            : const EdgeInsets.only(left: 10, right: 50, top: 5, bottom: 5),
+                            ? const EdgeInsets.only(
+                                left: 50, right: 10, top: 5, bottom: 5)
+                            : const EdgeInsets.only(
+                                left: 10, right: 50, top: 5, bottom: 5),
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: message.role == 'user'
@@ -672,7 +648,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
               ActionRow(
                 assistants: assistants,
                 selectedAssistant: selectedAssistant,
-                onAssistantSelected: (assistant){
+                onAssistantSelected: (assistant) {
                   setState(() {
                     selectedAssistant = assistant;
                   });
@@ -690,7 +666,3 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     );
   }
 }
-
-
-
-

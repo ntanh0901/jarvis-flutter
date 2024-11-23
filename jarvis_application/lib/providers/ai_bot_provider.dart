@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_application/models/ai_bot_model.dart';
-import 'package:jarvis_application/services/ai_bot_service.dart';
+
+import '../data/models/ai_bot_model.dart';
 
 class AIBotProvider with ChangeNotifier {
   List<AIBot> aiBots = [
@@ -8,7 +8,8 @@ class AIBotProvider with ChangeNotifier {
       id: '1',
       name: 'Assistant Alpha',
       description: 'An AI assistant specialized in scheduling tasks.',
-      imageUrl: 'assets/images/bot_alpha.png', // Đường dẫn hình ảnh cho bot Alpha
+      imageUrl:
+          'assets/images/bot_alpha.png', // Đường dẫn hình ảnh cho bot Alpha
       promptTemplate: 'Help me organize my tasks for today.',
       knowledgeBaseIds: [],
       isPublished: true,
@@ -27,12 +28,15 @@ class AIBotProvider with ChangeNotifier {
   ];
 
   // Tạo AI Bot mới với hình ảnh
-  Future<void> createAIBot(String name, String description, String imageUrl) async {
+  Future<void> createAIBot(
+      String name, String description, String imageUrl) async {
     AIBot newBot = AIBot(
       id: DateTime.now().toString(),
       name: name,
       description: description,
-      imageUrl: imageUrl.isNotEmpty ? imageUrl : 'assets/images/bot_alpha.png', // Nếu không có hình ảnh thì sử dụng ảnh mặc định
+      imageUrl: imageUrl.isNotEmpty
+          ? imageUrl
+          : 'assets/images/bot_alpha.png', // Nếu không có hình ảnh thì sử dụng ảnh mặc định
       promptTemplate: '',
       knowledgeBaseIds: [],
       isPublished: false,

@@ -1,9 +1,10 @@
 import 'dart:io'; // Để xử lý File
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart'; // Import image_picker
-import 'package:provider/provider.dart';
-import 'package:jarvis_application/providers/ai_bot_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:jarvis_application/providers/ai_bot_provider.dart';
+import 'package:provider/provider.dart';
 
 class BotListPage extends StatelessWidget {
   static const String routeName = '/bot-list';
@@ -118,7 +119,7 @@ class BotListPage extends StatelessWidget {
                         backgroundImage: AssetImage(bot.imageUrl),
                         radius: 25,
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,7 +128,7 @@ class BotListPage extends StatelessWidget {
                               bot.name,
                               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
                               formattedDate,
                               style: const TextStyle(color: Colors.grey, fontSize: 12),
@@ -141,7 +142,7 @@ class BotListPage extends StatelessWidget {
                           IconButton(
                             icon: const Icon(Icons.star_border, color: Colors.grey, size: 20),
                             padding: EdgeInsets.zero,
-                            constraints: BoxConstraints(),
+                            constraints: const BoxConstraints(),
                             onPressed: () {
                               // Handle favorite action
                             },
@@ -149,7 +150,7 @@ class BotListPage extends StatelessWidget {
                           IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red, size: 20),
                             padding: EdgeInsets.zero,
-                            constraints: BoxConstraints(),
+                            constraints: const BoxConstraints(),
                             onPressed: () {
                               botProvider.deleteAIBot(bot.id);
                             },
@@ -158,10 +159,10 @@ class BotListPage extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
                     bot.description,
-                    style: TextStyle(fontSize: 14),
+                    style: const TextStyle(fontSize: 14),
                   ),
                 ],
               ),
