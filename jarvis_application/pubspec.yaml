@@ -54,6 +54,7 @@ dependencies:
   fluttertoast: ^8.2.8
   riverpod: ^2.6.1
   flutter_riverpod: ^2.6.1
+  flutter_spinkit: ^5.2.1
 
 dev_dependencies:
   flutter_test:
