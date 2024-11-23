@@ -1,14 +1,17 @@
-// base_service.dart
 import 'package:dio/dio.dart';
 
 import '../../providers/auth_notifier.dart';
+import '../services/auth_service.dart';
 
 class BaseService {
   final Dio _dio;
   final AuthNotifier _authNotifier;
+  final AuthService _authService;
 
-  BaseService(this._dio, this._authNotifier) {
+  BaseService(this._dio, this._authNotifier, this._authService) {
+    // Add an interceptor to the Dio instance
     _dio.interceptors.add(InterceptorsWrapper(
+      // Intercept requests to add the Authorization header if accessToken is available
       onRequest: (options, handler) async {
         if (_authNotifier.currentState.accessToken != null) {
           options.headers['Authorization'] =
@@ -16,6 +19,7 @@ class BaseService {
         }
         return handler.next(options);
       },
+      // Intercept errors to handle token refresh if a 401 error occurs
       onError: (error, handler) async {
         if (error.response?.statusCode == 401 &&
             _authNotifier.currentState.refreshToken != null) {
@@ -38,7 +42,7 @@ class BaseService {
               return handler.resolve(cloneReq);
             }
           } catch (e) {
-            // Handle token refresh failure
+            // Handle token refresh failure by signing out
             await _authNotifier.signOut();
           }
         }
@@ -47,22 +51,22 @@ class BaseService {
     ));
   }
 
+  // Method to refresh the access token using AuthService
   Future<String?> _refreshAccessToken() async {
-    // Implement the logic to refresh the access token using the refresh token
-    // This might involve calling an endpoint on your authentication server
-    // and updating the AuthNotifier state with the new access token
-    // For example:
     try {
-      final response = await _dio.post('/auth/refresh', data: {
-        'refreshToken': _authNotifier.currentState.refreshToken,
-      });
-      final newAccessToken = response.data['accessToken'];
-      _authNotifier.updateAccessToken(newAccessToken);
-      return newAccessToken;
+      final response = await _authService
+          .refreshTokens(_authNotifier.currentState.refreshToken!);
+      if (response != null && response.containsKey('accessToken')) {
+        final newAccessToken = response['accessToken'];
+        _authNotifier.updateAccessToken(newAccessToken);
+        return newAccessToken;
+      }
     } catch (e) {
       return null;
     }
+    return null;
   }
 
+  // Getter for the Dio instance
   Dio get dio => _dio;
 }

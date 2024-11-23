@@ -129,12 +129,19 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
+            height: 50,
             child: GradientButton(
               onPressed: authState is AsyncLoading
                   ? null
                   : () => _handleSubmit(authViewModel),
               child: authState is AsyncLoading
-                  ? const CircularProgressIndicator()
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                      ),
+                    )
                   : const Text('Sign up'),
             ),
           ),
@@ -179,8 +186,9 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         if (errorMessage != null) {
           _showMessage(errorMessage, Colors.red);
         } else {
-          _showMessage('Sign up successful', Colors.green);
-          context.go('/chat');
+          _showMessage(
+              'Sign up successful. Please sign in to continue.', Colors.green);
+          context.go('/sign-in');
         }
       } catch (e) {
         _showMessage('Sign up failed', Colors.red);

@@ -56,8 +56,8 @@ class AppRouter {
       ),
     ],
     redirect: (context, state) {
-      final authState =
-          ProviderScope.containerOf(context, listen: false).read(authProvider);
+      final ref = ProviderScope.containerOf(context, listen: false); //
+      final authState = ref.read(authProvider);
       final isAuthenticated = authState.isAuthenticated;
       final isAuthPage = state.matchedLocation == '/sign-in' ||
           state.matchedLocation == '/sign-up' ||

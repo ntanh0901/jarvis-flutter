@@ -12,7 +12,7 @@ class AuthViewModel extends StateNotifier<AsyncValue<void>> {
 
   Future<void> signIn(String email, String password) async {
     state = const AsyncLoading();
-    _authNotifier.state = _authNotifier.state.copyWith(errorMessage: null);
+    // _authNotifier.state = _authNotifier.state.copyWith(errorMessage: null);
     try {
       await _authNotifier.signIn(email, password);
       state = const AsyncData(null);

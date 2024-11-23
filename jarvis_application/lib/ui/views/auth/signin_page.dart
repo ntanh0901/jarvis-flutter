@@ -29,9 +29,6 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isLargeScreen = size.width > 600;
-    final authViewModel = ref.watch(authViewModelProvider.notifier);
-    final authState = ref.watch(authViewModelProvider);
-    final errorMessage = authViewModel.errorMessage;
 
     return Scaffold(
       body: GradientContainer(
@@ -114,12 +111,19 @@ class _SignInPageState extends ConsumerState<SignInPage> {
           const SizedBox(height: 30),
           SizedBox(
             width: double.infinity,
+            height: 50,
             child: GradientButton(
               onPressed: authState is AsyncLoading
                   ? null
                   : () => _handleSubmit(authViewModel),
               child: authState is AsyncLoading
-                  ? const CircularProgressIndicator()
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                      ),
+                    )
                   : const Text('Sign in'),
             ),
           ),

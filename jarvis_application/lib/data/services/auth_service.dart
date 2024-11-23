@@ -14,7 +14,7 @@ class AuthService {
         ApiPaths.signUp,
         data: {'username': username, 'email': email, 'password': password},
       );
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         return response.data;
       }
     } on DioException catch (e) {

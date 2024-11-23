@@ -18,7 +18,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final response = await _authService.signUp(username, email, password);
       if (response != null && response['user'] != null) {
-        await signIn(email, password);
+        state = AuthState();
       } else {
         state = state.copyWith(errorMessage: 'Sign-up failed.');
       }
