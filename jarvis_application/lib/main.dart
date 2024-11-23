@@ -16,9 +16,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const KnowledgeBase(),
-      //home: const PromptLibrary(),
+      //home: const KnowledgeBase(),
+      home: const PromptLibrary(),
     );
   }
 }
-
