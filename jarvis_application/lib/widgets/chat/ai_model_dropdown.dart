@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../models/assistant.dart';
+import 'package:jarvis_application/data/models/assistant.dart';
 
 class AIModelDropdown extends StatelessWidget {
   final List<Assistant> assistants;

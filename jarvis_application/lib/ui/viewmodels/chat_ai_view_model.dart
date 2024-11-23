@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/assistant.dart';
-import '../models/chat_message.dart';
-import '../models/assistant_dto.dart';
+import 'package:jarvis_application/data/models/assistant.dart';
+import 'package:jarvis_application/data/models/chat_message.dart';
+import 'package:jarvis_application/data/models/assistant_dto.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -10,10 +10,8 @@ class ChatViewModel extends ChangeNotifier {
   List<ChatMessage> messages = [];
   Assistant? selectedAssistant;
 
-
-
   ChatViewModel() {
-   // selectedAssistant = assistants.isNotEmpty ? assistants.first : null;
+    // selectedAssistant = assistants.isNotEmpty ? assistants.first : null;
   }
 
   void changeAssistant(Assistant newAssistant) {
@@ -28,7 +26,7 @@ class ChatViewModel extends ChangeNotifier {
       role: 'user',
       content: content,
       assistant: selectedAssistant!.dto,
-      files: [],
+      //files: [],
     ));
 
     notifyListeners();
@@ -64,7 +62,7 @@ class ChatViewModel extends ChangeNotifier {
           role: 'model',
           content: responseData['message'],
           assistant: selectedAssistant!.dto,
-          files: [],
+          //files: [],
         ));
         notifyListeners();
       } else {

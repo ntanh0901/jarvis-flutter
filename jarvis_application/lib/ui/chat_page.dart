@@ -3,25 +3,24 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
-import 'package:jarvis_application/models/ai_chat_metadata.dart';
-import 'package:jarvis_application/models/conversation_history_res.dart';
-import 'package:jarvis_application/models/request_ai_chat.dart';
+import 'package:jarvis_application/data/models/ai_chat_metadata.dart';
+import 'package:jarvis_application/data/models/conversation_history_res.dart';
+import 'package:jarvis_application/data/models/request_ai_chat.dart';
 import 'package:jarvis_application/widgets/chat/greeting_text.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 
-import '../models/assistant.dart';
-import '../models/assistant_dto.dart';
-import '../models/chat_message.dart';
-import '../models/conversations_query_params.dart';
-import '../models/conversations_res.dart';
+import 'package:jarvis_application/data/models/assistant.dart';
+import 'package:jarvis_application/data/models/assistant_dto.dart';
+import 'package:jarvis_application/data/models/chat_message.dart';
+import 'package:jarvis_application/data/models/conversations_query_params.dart';
+import 'package:jarvis_application/data/models/conversations_res.dart';
 import '../widgets/chat/action_row.dart';
 import '../widgets/chat/ai_model_dropdown.dart';
 import '../widgets/chat/conversation_history_dialog.dart';
 import '../widgets/chat/image_picker_helper.dart';
 import '../widgets/chat/logo_widget.dart';
 import '../widgets/chat/upload_dialog.dart';
-import '../models/assistant.dart';
 import 'dart:convert';
 
 class ChatPage extends StatefulWidget {
