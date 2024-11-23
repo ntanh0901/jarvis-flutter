@@ -17,14 +17,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = AuthState();
     try {
       final response = await _authService.signUp(username, email, password);
-      if (response != null) {
-        final accessToken = response['accessToken'];
-        final refreshToken = response['refreshToken'];
-        await _tokenManager.saveTokens(accessToken, refreshToken);
-        state = state.copyWith(isAuthenticated: true);
-      }
     } catch (e) {
-      state = state.copyWith(errorMessage: e.toString());
+      state = state.copyWith(
+          errorMessage: e.toString().replaceFirst('Exception: ', ''));
     }
   }
 
