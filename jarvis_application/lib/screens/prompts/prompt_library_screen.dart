@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_application/widgets/create_prompt_button.dart';
-import 'package:jarvis_application/widgets/prompts_switch_button.dart';
-import 'package:jarvis_application/widgets/search_text_field.dart';
+import 'package:jarvis_application/ui/widgets/create_prompt_button.dart';
+import 'package:jarvis_application/ui/widgets/prompts_switch_button.dart';
+import 'package:jarvis_application/ui/widgets/search_text_field.dart';
 import 'package:jarvis_application/screens/prompts/api_prompts.dart';
 
 class PromptLibrary extends StatefulWidget {
