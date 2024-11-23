@@ -52,6 +52,15 @@ class AuthViewModel extends StateNotifier<AsyncValue<void>> {
       state = AsyncError(e, stackTrace);
     }
   }
+
+  // sign out
+  Future<void> signOut() async {
+    try {
+      await _authNotifier.signOut();
+    } catch (e, stackTrace) {
+      state = AsyncError(e, stackTrace);
+    }
+  }
 }
 
 final authViewModelProvider =

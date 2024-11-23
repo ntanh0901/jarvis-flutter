@@ -69,6 +69,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> signOut() async {
     await _tokenManager.deleteTokens();
+    await _userManager.deleteUser();
     state = state.copyWith(isAuthenticated: false, user: null);
   }
 }
