@@ -5,6 +5,14 @@ import '../data/services/token_manager.dart';
 import '../data/services/user_manager.dart';
 import 'auth_state.dart';
 
+final authNotifierProvider =
+    StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  final authService = ref.read(authServiceProvider);
+  final tokenManager = ref.read(tokenManagerProvider);
+  final userManager = ref.read(userManagerProvider);
+  return AuthNotifier(authService, tokenManager, userManager);
+});
+
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthService _authService;
   final TokenManager _tokenManager;

@@ -11,7 +11,7 @@ import 'package:jarvis_application/ui/views/auth/signin_page.dart';
 import 'package:jarvis_application/ui/views/auth/signup_page.dart';
 import 'package:jarvis_application/ui/views/splash/splash_screen.dart';
 
-import '../providers/auth_notifier_provider.dart';
+import '../providers/auth_notifier.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(

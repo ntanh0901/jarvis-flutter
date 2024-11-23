@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
-import 'package:jarvis_application/providers/token_manager_provider.dart';
 import 'package:riverpod/riverpod.dart';
 
 import '../config/config.dart';
-import 'auth_service_provider.dart';
+import '../data/services/auth_service.dart';
+import '../data/services/token_manager.dart';
 
 // Raw Dio Provider without interceptors
 final rawDioProvider = Provider<Dio>((ref) {

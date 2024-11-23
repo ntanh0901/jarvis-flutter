@@ -1,7 +1,15 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/api_endpoints.dart';
-import 'token_manager.dart'; // Assuming you have a TokenManager file for handling tokens
+import '../../providers/dio_provider.dart';
+import 'token_manager.dart';
+
+final authServiceProvider = Provider<AuthService>((ref) {
+  final dio = ref.read(rawDioProvider);
+  final tokenManager = ref.read(tokenManagerProvider);
+  return AuthService(dio, tokenManager);
+});
 
 class AuthService {
   final Dio dio;

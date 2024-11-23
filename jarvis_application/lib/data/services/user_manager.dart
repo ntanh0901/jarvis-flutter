@@ -1,6 +1,13 @@
 // lib/data/services/user_manager.dart
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../models/user.dart';
 import 'auth_service.dart';
+
+final userManagerProvider = Provider<UserManager>((ref) {
+  final authService = ref.read(authServiceProvider);
+  return UserManager(authService);
+});
 
 class UserManager {
   final AuthService _authService;

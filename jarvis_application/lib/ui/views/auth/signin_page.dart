@@ -168,6 +168,8 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       } else {
         _showMessage('Sign in successful', Colors.green);
         context.go('/chat');
+        // get curren user
+        final user = await authViewModel.getCurrentUser();
       }
     }
   }

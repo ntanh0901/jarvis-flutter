@@ -1,4 +1,9 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+final tokenManagerProvider = Provider<TokenManager>((ref) {
+  return TokenManager();
+});
 
 class TokenManager {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();

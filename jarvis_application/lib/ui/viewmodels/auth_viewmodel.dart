@@ -2,7 +2,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/auth_notifier.dart';
-import '../../providers/auth_notifier_provider.dart';
 
 class AuthViewModel extends StateNotifier<AsyncValue<void>> {
   final AuthNotifier _authNotifier;
@@ -42,6 +41,16 @@ class AuthViewModel extends StateNotifier<AsyncValue<void>> {
 
   Future<void> googleSignUp() async {
     //   TODO: Implement sign up with Google
+  }
+
+  Future<void> getCurrentUser() async {
+    state = const AsyncLoading();
+    try {
+      await _authNotifier.getCurrentUser();
+      state = const AsyncData(null);
+    } catch (e, stackTrace) {
+      state = AsyncError(e, stackTrace);
+    }
   }
 }
 
