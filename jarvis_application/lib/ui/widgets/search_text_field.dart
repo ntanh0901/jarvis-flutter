@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 
 class SearchTextField extends StatelessWidget {
-  const SearchTextField({super.key});
+  final ValueChanged<String>? onSubmitted;
+
+  const SearchTextField({super.key, this.onSubmitted});
 
   @override
   Widget build(BuildContext context) {
-    return const TextField(
+    return TextField(
       obscureText: false,
-      decoration: InputDecoration(
+      decoration: const InputDecoration(
         border: OutlineInputBorder(),
         labelText: 'Search',
         prefixIcon: Icon(Icons.search), // Add search icon
       ),
+      onSubmitted: onSubmitted,
     );
   }
 }
