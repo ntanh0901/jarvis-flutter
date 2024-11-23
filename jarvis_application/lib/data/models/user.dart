@@ -22,4 +22,14 @@ class User {
       geo: json['geo'],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'username': username,
+      'roles': roles,
+      'geo': geo,
+    };
+  }
 }

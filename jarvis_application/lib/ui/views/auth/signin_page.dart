@@ -29,6 +29,8 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isLargeScreen = size.width > 600;
+    final authViewModel = ref.watch(authViewModelProvider.notifier);
+    final authState = ref.watch(authViewModelProvider);
 
     return Scaffold(
       body: GradientContainer(
@@ -49,7 +51,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                     const SizedBox(height: 50),
                     const AppLogo(size: 24),
                     const SizedBox(height: 70),
-                    _buildSignInForm(),
+                    _buildSignInForm(authViewModel, authState),
                     const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -74,10 +76,8 @@ class _SignInPageState extends ConsumerState<SignInPage> {
     );
   }
 
-  Widget _buildSignInForm() {
-    final authViewModel = ref.watch(authViewModelProvider.notifier);
-    final authState = ref.watch(authViewModelProvider);
-
+  Widget _buildSignInForm(
+      AuthViewModel authViewModel, AsyncValue<void> authState) {
     return FormBuilder(
       key: _formKey,
       autovalidateMode:
@@ -138,10 +138,10 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
   Widget _buildGoogleSignInButton(AuthViewModel authViewModel) {
     return GoogleAuthButton(
-      label: 'Sign in with Google',
+      label: 'Sign up with Google',
       onPressed: () async {
         try {
-          await authViewModel.googleSignIn();
+          await authViewModel.googleSignUp();
           _showMessage('Sign in with Google successful', Colors.green);
           context.go('/chat');
         } catch (e) {
@@ -161,17 +161,13 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       final email = formData?['email'];
       final password = formData?['password'];
 
-      try {
-        await authViewModel.signIn(email, password);
-        final errorMessage = authViewModel.errorMessage;
-        if (errorMessage != null) {
-          _showMessage(errorMessage, Colors.red);
-        } else {
-          _showMessage('Sign in successful', Colors.green);
-          context.go('/chat');
-        }
-      } catch (e) {
-        _showMessage('Sign in failed', Colors.red);
+      await authViewModel.signIn(email, password);
+      final errorMessage = authViewModel.errorMessage;
+      if (errorMessage != null) {
+        _showMessage(errorMessage, Colors.red);
+      } else {
+        _showMessage('Sign in successful', Colors.green);
+        context.go('/chat');
       }
     }
   }

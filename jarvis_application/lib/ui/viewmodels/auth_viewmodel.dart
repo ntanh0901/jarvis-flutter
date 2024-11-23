@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/auth_notifier.dart';
+import '../../providers/auth_notifier_provider.dart';
 
 class AuthViewModel extends StateNotifier<AsyncValue<void>> {
   final AuthNotifier _authNotifier;
@@ -12,7 +13,6 @@ class AuthViewModel extends StateNotifier<AsyncValue<void>> {
 
   Future<void> signIn(String email, String password) async {
     state = const AsyncLoading();
-    // _authNotifier.state = _authNotifier.state.copyWith(errorMessage: null);
     try {
       await _authNotifier.signIn(email, password);
       state = const AsyncData(null);
@@ -23,7 +23,6 @@ class AuthViewModel extends StateNotifier<AsyncValue<void>> {
 
   Future<void> signUp(String username, String email, String password) async {
     state = const AsyncLoading();
-    _authNotifier.state = _authNotifier.state.copyWith(errorMessage: null);
     try {
       await _authNotifier.signUp(username, email, password);
       state = const AsyncData(null);
@@ -37,13 +36,17 @@ class AuthViewModel extends StateNotifier<AsyncValue<void>> {
     state = const AsyncData(null);
   }
 
-  googleSignIn() {
-    // Google sign in implementation
+  Future<void> signInWithGoogle() async {
+    //   TODO: Implement sign in with Google
+  }
+
+  Future<void> googleSignUp() async {
+    //   TODO: Implement sign up with Google
   }
 }
 
 final authViewModelProvider =
     StateNotifierProvider<AuthViewModel, AsyncValue<void>>((ref) {
-  final authNotifier = ref.watch(authProvider.notifier);
+  final authNotifier = ref.read(authNotifierProvider.notifier);
   return AuthViewModel(authNotifier);
 });

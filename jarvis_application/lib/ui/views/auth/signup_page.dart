@@ -148,18 +148,18 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
           const SizedBox(height: 30),
           const CustomDivider(middleText: 'or'),
           const SizedBox(height: 20),
-          _buildGoogleSignInButton(authViewModel),
+          _buildGoogleSignUpButton(authViewModel),
         ],
       ),
     );
   }
 
-  Widget _buildGoogleSignInButton(AuthViewModel authViewModel) {
+  Widget _buildGoogleSignUpButton(AuthViewModel authViewModel) {
     return GoogleAuthButton(
       label: 'Sign up with Google',
       onPressed: () async {
         try {
-          await authViewModel.googleSignIn();
+          await authViewModel.googleSignUp();
           _showMessage('Sign up with Google successful', Colors.green);
           context.go('/chat');
         } catch (e) {

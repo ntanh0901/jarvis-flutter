@@ -1,17 +1,19 @@
 import 'package:dio/dio.dart';
 
-import '../../core/constants/api_paths.dart';
+import '../../core/constants/api_endpoints.dart';
+import 'token_manager.dart'; // Assuming you have a TokenManager file for handling tokens
 
 class AuthService {
   final Dio dio;
+  final TokenManager tokenManager;
 
-  AuthService(this.dio);
+  AuthService(this.dio, this.tokenManager);
 
   Future<Map<String, dynamic>?> signUp(
       String username, String email, String password) async {
     try {
       final response = await dio.post(
-        ApiPaths.signUp,
+        ApiEndpoints.signUp,
         data: {'username': username, 'email': email, 'password': password},
       );
       if (response.statusCode == 201) {
@@ -31,7 +33,7 @@ class AuthService {
   Future<Map<String, dynamic>?> signIn(String email, String password) async {
     try {
       final response = await dio.post(
-        ApiPaths.signIn,
+        ApiEndpoints.signIn,
         data: {'email': email, 'password': password},
       );
       if (response.statusCode == 200) {
@@ -48,28 +50,49 @@ class AuthService {
     return null;
   }
 
-  // Google sign in
   Future<Map<String, dynamic>?> signInWithGoogle() async {
-    try {
-      final response = await dio.post(ApiPaths.googleSignIn);
-      if (response.statusCode == 200) {
-        return response.data;
-      }
-    } on DioException catch (e) {
-      if (e.response != null) {
-        throw Exception(parseError(e.response));
-      }
-      throw Exception('Network error: ${e.message}');
-    } catch (e) {
-      throw Exception('Error signing in with Google: $e');
-    }
     return null;
+
+    //   TODO: Implement sign in with Google
+  }
+
+  Future<Map<String, dynamic>?> signUpWithGoogle() async {
+    return null;
+
+    //   TODO: Implement sign up with Google
+  }
+
+  Future<Map<String, dynamic>?> getCurrentUser() async {
+    try {
+      final accessToken = await tokenManager.getAccessToken();
+      if (accessToken == null) {
+        throw Exception("No access token found");
+      }
+
+      dio.options.headers['Authorization'] = 'Bearer $accessToken';
+
+      final response = await dio.get(ApiEndpoints.getCurrentUser);
+      return response.data;
+    } catch (e) {
+      if (e is DioException && e.response?.statusCode == 401) {
+        // Token expired or invalid, attempt refresh
+        final refreshToken = await tokenManager.getRefreshToken();
+        final tokens = await refreshTokens(refreshToken!);
+        if (tokens != null) {
+          // Save new tokens and retry the original request
+          await tokenManager.saveTokens(
+              tokens['accessToken'], tokens['refreshToken']);
+          return await getCurrentUser(); // Retry the request with new token
+        }
+      }
+      throw Exception('Failed to get current user: $e');
+    }
   }
 
   Future<Map<String, dynamic>?> refreshTokens(String refreshToken) async {
     try {
       final response = await dio.post(
-        ApiPaths.refreshTokens,
+        ApiEndpoints.refreshTokens,
         data: {'refreshToken': refreshToken},
       );
       if (response.statusCode == 200) {
@@ -91,11 +114,9 @@ class AuthService {
       return 'Unknown error occurred';
     }
 
-    // Check if response.data is a Map
     if (response.data is Map) {
       final data = response.data;
 
-      // Extract 'details' and get 'issue' if available
       if (data.containsKey('details') && data['details'] is List) {
         final details = data['details'];
         if (details.isNotEmpty &&

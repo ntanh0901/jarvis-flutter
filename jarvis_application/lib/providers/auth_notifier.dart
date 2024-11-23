@@ -1,49 +1,43 @@
-// lib/providers/auth_notifier.dart
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/services/auth_service.dart';
-import 'auth_service_provider.dart';
+import '../data/services/token_manager.dart';
+import '../data/services/user_manager.dart';
 import 'auth_state.dart';
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthService _authService;
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final TokenManager _tokenManager;
+  final UserManager _userManager;
 
-  AuthState get currentState => state;
-
-  AuthNotifier(this._authService) : super(AuthState());
+  AuthNotifier(this._authService, this._tokenManager, this._userManager)
+      : super(AuthState());
 
   Future<void> signUp(String username, String email, String password) async {
+    state = AuthState();
     try {
       final response = await _authService.signUp(username, email, password);
-      if (response != null && response['user'] != null) {
-        state = AuthState();
-      } else {
-        state = state.copyWith(errorMessage: 'Sign-up failed.');
+      if (response != null) {
+        final accessToken = response['accessToken'];
+        final refreshToken = response['refreshToken'];
+        await _tokenManager.saveTokens(accessToken, refreshToken);
+        state = state.copyWith(isAuthenticated: true);
       }
     } catch (e) {
-      state = state.copyWith(
-          errorMessage: e.toString().replaceFirst('Exception: ', ''));
+      state = state.copyWith(errorMessage: e.toString());
     }
   }
 
   Future<void> signIn(String email, String password) async {
+    state = AuthState();
     try {
       final response = await _authService.signIn(email, password);
-      if (response != null && response.containsKey('token')) {
-        final accessToken = response['token']['accessToken'];
-        final refreshToken = response['token']['refreshToken'];
-        await _storage.write(key: 'accessToken', value: accessToken);
-        await _storage.write(key: 'refreshToken', value: refreshToken);
-        state = state.copyWith(
-          accessToken: accessToken,
-          refreshToken: refreshToken,
-          isAuthenticated: true,
-          errorMessage: null,
-        );
-      } else {
-        state = state.copyWith(errorMessage: 'Sign-in failed.');
+      if (response != null) {
+        final token = response['token'];
+        final accessToken = token['accessToken'];
+        final refreshToken = token['refreshToken'];
+        await _tokenManager.saveTokens(accessToken, refreshToken);
+        state = state.copyWith(isAuthenticated: true);
       }
     } catch (e) {
       state = state.copyWith(
@@ -51,18 +45,27 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> signOut() async {
-    await _storage.delete(key: 'accessToken');
-    await _storage.delete(key: 'refreshToken');
-    state = AuthState();
+  Future<void> signInWithGoogle() async {
+    //   TODO: Implement sign in with Google
   }
 
-  void updateAccessToken(String newAccessToken) {
-    state = state.copyWith(accessToken: newAccessToken);
+  Future<void> signUpWithGoogle() async {
+    //   TODO: Implement sign up with Google
+  }
+
+  Future<void> getCurrentUser() async {
+    try {
+      final user = await _userManager.getCurrentUser();
+      if (user != null) {
+        state = state.copyWith(user: user);
+      }
+    } catch (e) {
+      state = state.copyWith(errorMessage: e.toString());
+    }
+  }
+
+  Future<void> signOut() async {
+    await _tokenManager.deleteTokens();
+    state = state.copyWith(isAuthenticated: false, user: null);
   }
 }
-
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  final authService = ref.watch(authServiceProvider);
-  return AuthNotifier(authService);
-});
