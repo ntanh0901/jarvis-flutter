@@ -226,6 +226,20 @@ class ApiService {
       throw Exception('Failed to delete prompt');
     }
   }
+
+  static Future<List<Item>> getPromptsForChat() async {
+    try {
+      final privatePrompts = await getPrompts(isPublic: false);
+      final favoritePrompts = await getPrompts(isPublic: true);
+      return [
+        ...privatePrompts,
+        ...favoritePrompts.where((prompt) => prompt.isFavorite == true)
+      ];
+    } catch (e) {
+      print('Error fetching my prompts for chat: $e');
+      throw Exception('Error fetching my prompts for chat');
+    }
+  }
 }
 
 class Item {
