@@ -234,7 +234,7 @@ class PromptLibraryState extends State<PromptLibrary> {
                 Text.rich(
                   TextSpan(
                     children: [
-                      TextSpan(
+                      const TextSpan(
                         text: 'Description: ',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
@@ -245,7 +245,7 @@ class PromptLibraryState extends State<PromptLibrary> {
                 Text.rich(
                   TextSpan(
                     children: [
-                      TextSpan(
+                      const TextSpan(
                         text: 'Category: ',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
@@ -256,7 +256,7 @@ class PromptLibraryState extends State<PromptLibrary> {
                 Text.rich(
                   TextSpan(
                     children: [
-                      TextSpan(
+                      const TextSpan(
                         text: 'Language: ',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
@@ -265,7 +265,7 @@ class PromptLibraryState extends State<PromptLibrary> {
                   ),
                 ),
                 const SizedBox(height: 16.0),
-                Text(
+                const Text(
                   'Content:',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),

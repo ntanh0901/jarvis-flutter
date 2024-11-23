@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jarvis_application/data/models/assistant.dart';
 import 'package:jarvis_application/data/models/chat_message.dart';
-import 'package:jarvis_application/data/models/assistant_dto.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 

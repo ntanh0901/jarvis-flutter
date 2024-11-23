@@ -143,7 +143,6 @@ class _SignInPageState extends ConsumerState<SignInPage> {
         try {
           await authViewModel.googleSignUp();
           _showMessage('Sign in with Google successful', Colors.green);
-          context.go('/chat');
         } catch (e) {
           _showMessage('Sign in with Google failed', Colors.red);
         }
@@ -167,7 +166,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
         _showMessage(errorMessage, Colors.red);
       } else {
         _showMessage('Sign in successful', Colors.green);
-        context.go('/chat');
+        context.go('/main-screen');
         // get curren user
         final user = await authViewModel.getCurrentUser();
       }

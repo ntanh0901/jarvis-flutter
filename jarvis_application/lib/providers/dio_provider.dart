@@ -20,7 +20,7 @@ final rawDioProvider = Provider<Dio>((ref) {
 
 // Dio Provider with Interceptors
 final dioProvider = Provider<Dio>((ref) {
-  final dio = ref.read(rawDioProvider); // Use raw Dio as base
+  final dio = ref.read(rawDioProvider);
   final tokenManager = ref.read(tokenManagerProvider);
   final authService = ref.read(authServiceProvider);
   bool isRefreshing = false;

@@ -21,7 +21,7 @@ class ChatMessage {
     if (newAssistant != null) {
       assistant = newAssistant;
     }
-      content = newContent!=null?newContent:"";
+      content = newContent ?? "";
     if (newRole != null) {
       role = newRole;
     }

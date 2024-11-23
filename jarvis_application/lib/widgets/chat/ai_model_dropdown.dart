@@ -8,11 +8,11 @@ class AIModelDropdown extends StatelessWidget {
   final ValueChanged<Assistant> onAssistantSelected;
 
   const AIModelDropdown({
-    Key? key,
+    super.key,
     required this.assistants,
     required this.selectedAssistant,
     required this.onAssistantSelected,
-  }) : super(key: key);
+  });
 
   void _showAssistantSelectionDialog(BuildContext context) {
     showDialog(

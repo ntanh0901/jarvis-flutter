@@ -6,12 +6,12 @@ class ConversationHistoryDialog extends StatefulWidget {
   final ValueChanged<List<Map<String, dynamic>>> onItemsUpdated;
   final ValueChanged<String>  onItemSelected;
   const ConversationHistoryDialog({
-    Key? key,
+    super.key,
     required this.initialItems,
     required this.cursor,
     required this.onItemsUpdated,
     required this.onItemSelected,
-  }) : super(key: key);
+  });
 
   @override
   _ConversationHistoryDialogState createState() =>

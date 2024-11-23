@@ -11,13 +11,13 @@ class ActionRow extends StatelessWidget {
   final int remainUsage;
 
   const ActionRow({
-    Key? key,
+    super.key,
     required this.assistants,
     required this.selectedAssistant,
     required this.onAssistantSelected,
     required this.onActionSelected,
     required this.remainUsage,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

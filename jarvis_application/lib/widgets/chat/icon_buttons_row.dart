@@ -5,10 +5,10 @@ class IconButtonsRow extends StatelessWidget {
   final int remainUsage;
 
   const IconButtonsRow({
-    Key? key,
+    super.key,
     required this.onIconPressed,
     required this.remainUsage,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

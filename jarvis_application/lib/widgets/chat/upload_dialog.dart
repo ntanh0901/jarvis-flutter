@@ -5,7 +5,7 @@ import 'package:file_picker/file_picker.dart';
 class UploadDialog extends StatelessWidget {
   final Function(File?) onFilePicked;
 
-  const UploadDialog({Key? key, required this.onFilePicked}) : super(key: key);
+  const UploadDialog({super.key, required this.onFilePicked});
 
   Future<void> _pickPdfFile(BuildContext context) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
