@@ -9,6 +9,7 @@ import 'package:jarvis_application/ui/chat_page.dart';
 import 'package:jarvis_application/ui/views/auth/forget_password_page.dart';
 import 'package:jarvis_application/ui/views/auth/signin_page.dart';
 import 'package:jarvis_application/ui/views/auth/signup_page.dart';
+import 'package:jarvis_application/ui/views/main_screen.dart';
 import 'package:jarvis_application/ui/views/splash/splash_screen.dart';
 
 import '../providers/auth_notifier.dart';
@@ -19,6 +20,10 @@ class AppRouter {
       GoRoute(
         path: '/',
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/main-screen',
+        builder: (context, state) => const MainScreen(),
       ),
       GoRoute(
         path: '/sign-in',

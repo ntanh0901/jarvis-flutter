@@ -1,33 +1,29 @@
 import 'dart:convert';
-import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
-import 'package:jarvis_application/data/models/ai_chat_metadata.dart';
-import 'package:jarvis_application/data/models/conversation_history_res.dart';
-import 'package:jarvis_application/data/models/request_ai_chat.dart';
 import 'package:jarvis_application/widgets/chat/greeting_text.dart';
-import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 
-import 'package:jarvis_application/data/models/assistant.dart';
-import 'package:jarvis_application/data/models/assistant_dto.dart';
-import 'package:jarvis_application/data/models/chat_message.dart';
-import 'package:jarvis_application/data/models/conversations_query_params.dart';
-import 'package:jarvis_application/data/models/conversations_res.dart';
+import '../data/models/ai_chat_metadata.dart';
+import '../data/models/assistant.dart';
+import '../data/models/assistant_dto.dart';
+import '../data/models/chat_message.dart';
+import '../data/models/conversation_history_res.dart';
+import '../data/models/conversations_query_params.dart';
+import '../data/models/conversations_res.dart';
+import '../data/models/request_ai_chat.dart';
 import '../widgets/chat/action_row.dart';
-import '../widgets/chat/ai_model_dropdown.dart';
 import '../widgets/chat/conversation_history_dialog.dart';
 import '../widgets/chat/image_picker_helper.dart';
 import '../widgets/chat/logo_widget.dart';
 import '../widgets/chat/upload_dialog.dart';
-import 'dart:convert';
 
 class ChatPage extends StatefulWidget {
   static const String routeName = '/chat';
 
-  const ChatPage({Key? key}) : super(key: key);
-
+  const ChatPage({super.key});
   @override
   State<ChatPage> createState() => _ChatPageState();
 }
@@ -36,6 +32,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   final TextEditingController messageController = TextEditingController();
   final ScreenshotController screenshotController = ScreenshotController();
   final ScrollController _scrollController = ScrollController();
+  final String token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRjMjI5ZTQwLTIzYWQtNGVmYy1hMWEzLTZhYTBhNWU5MWNhZCIsImVtYWlsIjoicXVhbmd0aGllbjEyMzRAZ21haWwuY29tIiwiaWF0IjoxNzMyMzgzMjg4LCJleHAiOjE3NjM5MTkyODh9.XOW7jVor7eSnViQmwlfwAUHWgiQ_QIzAcpCrcBCUT6E';
 
   final FocusNode messageFocusNode = FocusNode();
   final metadata = AiChatMetadata.empty();
@@ -110,14 +107,14 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     var headers = {
       'x-jarvis-guid': '',
       'Authorization':
-          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA3YjU2OGVkLTc1YTItNGFmMS05ZTBiLTdmYzg0NDBlNDZjZiIsImVtYWlsIjoicXVhbmd0aGllbjEyM0BnbWFpbC5jb20iLCJpYXQiOjE3MzIxMjMwMjYsImV4cCI6MTc2MzY1OTAyNn0.rWURsgNyRlaIlWxzWYqnJCBtAOJJLi7fEi1jOQTLOZk',
+          'Bearer $token',
       'Content-Type': 'application/json',
     };
 
     // Send request to the API
     try {
-      var url;
-      var request;
+      Uri url;
+      http.Request request;
 
       // For first time
       if (metadata.conversation.id == "") {
@@ -207,8 +204,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     // Setup headers
     var headers = {
       'x-jarvis-guid': '',
-      'Authorization':
-          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk2OWI2NGJiLTUzNjQtNGZkYy1hMTA5LTIyYzBmYzQ5NDAwZSIsImVtYWlsIjoibGVlbmdvODA4NzlAZ21haWwuY29tIiwiaWF0IjoxNzMyMTU3MTkwLCJleHAiOjE3NjM2OTMxOTB9.252o7hvJOALehGB2J5QVg1PcTtptwbVWYoI5764_ugI',
+      'Authorization': 'Bearer $token',
       'Content-Type': 'application/json',
     };
 
@@ -272,8 +268,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     // Setup headers
     var headers = {
       'x-jarvis-guid': '',
-      'Authorization':
-          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk2OWI2NGJiLTUzNjQtNGZkYy1hMTA5LTIyYzBmYzQ5NDAwZSIsImVtYWlsIjoibGVlbmdvODA4NzlAZ21haWwuY29tIiwiaWF0IjoxNzMyMTU3MTkwLCJleHAiOjE3NjM2OTMxOTB9.252o7hvJOALehGB2J5QVg1PcTtptwbVWYoI5764_ugI',
+      'Authorization': 'Bearer $token',
       'Content-Type': 'application/json',
     };
 
@@ -289,7 +284,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       // Build request URL
       var url = Uri.https(
         'api.dev.jarvis.cx',
-        '/api/v1/ai-chat/conversations/$newConversationID/messages', // Đường dẫn không chứa query string
+        '/api/v1/ai-chat/conversations/$newConversationID/messages',
+        // Đường dẫn không chứa query string
         {
           'assistantId': idValues.reverse[queryParams.assistantId],
           'assistantModel': 'dify',
@@ -366,7 +362,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
             children: [
               Text(title),
               IconButton(
-                icon: Icon(Icons.close),
+                icon: const Icon(Icons.close),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -379,7 +375,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );
@@ -462,7 +458,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       remainUsage = 0;
     });
 
-    await Future.delayed(Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 200));
 
     // Reset các giá trị khác
     metadata.conversation.id = "";
@@ -571,9 +567,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
           child: Column(
             children: [
               const SizedBox(height: 10),
-              LogoWidget(),
+              const LogoWidget(),
               const SizedBox(height: 10),
-              GreetingText(),
+              const GreetingText(),
               const SizedBox(height: 10),
               Expanded(
                 child: ListView.builder(
@@ -582,10 +578,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                   itemBuilder: (context, index) {
                     if (index == messages.length && isTyping) {
                       // Hiển thị hiệu ứng "jumping dots" khi đang chờ phản hồi
-                      return Align(
+                      return const Align(
                         alignment: Alignment.centerLeft,
                         child: Padding(
-                          padding: const EdgeInsets.all(8.0),
+                          padding: EdgeInsets.all(8.0),
                           child: SpinKitThreeBounce(
                             color: Colors.grey,
                             size: 20.0,
