@@ -6,19 +6,20 @@ import 'package:http/http.dart' as http;
 import 'package:jarvis_application/widgets/chat/greeting_text.dart';
 import 'package:screenshot/screenshot.dart';
 
-import '../data/models/ai_chat_metadata.dart';
-import '../data/models/assistant.dart';
-import '../data/models/assistant_dto.dart';
-import '../data/models/chat_message.dart';
-import '../data/models/conversation_history_res.dart';
-import '../data/models/conversations_query_params.dart';
-import '../data/models/conversations_res.dart';
-import '../data/models/request_ai_chat.dart';
-import '../widgets/chat/action_row.dart';
-import '../widgets/chat/conversation_history_dialog.dart';
-import '../widgets/chat/image_picker_helper.dart';
-import '../widgets/chat/logo_widget.dart';
-import '../widgets/chat/upload_dialog.dart';
+import '../../../data/models/ai_chat_metadata.dart';
+import '../../../data/models/assistant.dart';
+import '../../../data/models/assistant_dto.dart';
+import '../../../data/models/chat_message.dart';
+import '../../../data/models/conversation_history_res.dart';
+import '../../../data/models/conversations_query_params.dart';
+import '../../../data/models/conversations_res.dart';
+import '../../../data/models/request_ai_chat.dart';
+import '../../../widgets/chat/action_row.dart';
+import '../../../widgets/chat/conversation_history_dialog.dart';
+import '../../../widgets/chat/image_picker_helper.dart';
+import '../../../widgets/chat/logo_widget.dart';
+import '../../../widgets/chat/upload_dialog.dart';
+import '../../widgets/app_drawer.dart';
 
 class ChatPage extends StatefulWidget {
   static const String routeName = '/chat';
@@ -563,6 +564,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
             ),
           ],
         ),
+        drawer: AppDrawer(),
         body: SafeArea(
           child: Column(
             children: [

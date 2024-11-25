@@ -4,5 +4,5 @@ class Config {
   static String get baseUrl =>
       dotenv.env['BASE_URL'] ??
       'https://api.dev.jarvix'
-          '.cx/';
+          '.cx';
 }

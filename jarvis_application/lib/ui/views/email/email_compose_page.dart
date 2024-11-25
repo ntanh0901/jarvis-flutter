@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:jarvis_application/ui/widgets/app_drawer.dart';
 import 'package:provider/provider.dart';
 
 import '../../viewmodels/email_compose_view_model.dart';
@@ -56,7 +57,7 @@ class EmailComposeScreen extends StatelessWidget {
               ],
             ),
           ),
-          endDrawer: _buildDrawer(context),
+          drawer: const AppDrawer(),
           body: Column(
             children: [
               Expanded(
@@ -80,147 +81,6 @@ class EmailComposeScreen extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.blue[300]!, Colors.blue[500]!],
-          ),
-        ),
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.3),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 5,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(6.0),
-                          child: Image.asset('assets/app_circle_icon.png'),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        'Jarvis',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 5),
-                  const Text(
-                    'AI Email Assistant',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[400],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Text(
-                      'Powered by AI',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            _buildDrawerItem(Icons.email, 'New Email', Colors.white, () {
-              Navigator.pop(context);
-              // Handle new email composition
-            }),
-            _buildDrawerItem(Icons.history, 'Email History', Colors.white70,
-                () {
-              Navigator.pop(context);
-              // Show history of AI-assisted emails
-            }),
-            _buildDrawerItem(Icons.style, 'Writing Styles', Colors.white70, () {
-              Navigator.pop(context);
-              // Show/edit available writing styles
-            }),
-            _buildDrawerItem(Icons.person, 'Recipient Profiles', Colors.white70,
-                () {
-              Navigator.pop(context);
-              // Manage recipient profiles for personalized emails
-            }),
-            const Divider(color: Colors.white24, height: 1),
-            _buildDrawerItem(Icons.settings, 'AI Settings', Colors.white70, () {
-              Navigator.pop(context);
-              // Adjust AI behavior and preferences
-            }),
-            _buildDrawerItem(Icons.analytics, 'Usage Analytics', Colors.white70,
-                () {
-              Navigator.pop(context);
-              // Show AI usage statistics
-            }),
-            const Divider(color: Colors.white24, height: 1),
-            _buildDrawerItem(
-                Icons.help_outline, 'Help & Tutorials', Colors.white70, () {
-              Navigator.pop(context);
-              // Show help and tutorials for using the AI assistant
-            }),
-            _buildDrawerItem(Icons.feedback, 'Feedback', Colors.white70, () {
-              Navigator.pop(context);
-              // Allow users to provide feedback on the AI
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem(
-      IconData icon, String title, Color color, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: color, size: 20),
-      title: Text(
-        title,
-        style: TextStyle(color: color, fontSize: 14),
-      ),
-      onTap: onTap,
-      dense: true,
-      visualDensity: VisualDensity.compact,
     );
   }
 }

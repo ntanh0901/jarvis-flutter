@@ -29,7 +29,6 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isLargeScreen = size.width > 600;
-    final authViewModel = ref.watch(authViewModelProvider.notifier);
 
     return Scaffold(
       body: GradientContainer(

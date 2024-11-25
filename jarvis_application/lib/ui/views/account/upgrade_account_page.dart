@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../data/models/account_plan_model.dart';
 import '../../viewmodels/account_view_model.dart';
+import '../../widgets/app_drawer.dart';
 
 class UpgradeAccountScreen extends StatefulWidget {
   const UpgradeAccountScreen({super.key});
@@ -33,6 +34,7 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
       appBar: AppBar(
         title: const Text('Upgrade Account'),
       ),
+      drawer: AppDrawer(),
       body: Consumer<AccountViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.availablePlans.isEmpty) {

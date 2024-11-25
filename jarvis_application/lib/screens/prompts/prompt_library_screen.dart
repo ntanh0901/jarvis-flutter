@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:jarvis_application/screens/prompts/api_prompts.dart';
 import 'package:jarvis_application/ui/widgets/create_prompt_button.dart';
 import 'package:jarvis_application/ui/widgets/prompts_switch_button.dart';
 import 'package:jarvis_application/ui/widgets/search_text_field.dart';
-import 'package:jarvis_application/screens/prompts/api_prompts.dart';
+
+import '../../ui/widgets/app_drawer.dart';
 
 class PromptLibrary extends StatefulWidget {
   const PromptLibrary({super.key});
@@ -316,6 +318,7 @@ class PromptLibraryState extends State<PromptLibrary> {
           ),
         ],
       ),
+      drawer: AppDrawer(),
       body: Column(
         children: <Widget>[
           Align(

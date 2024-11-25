@@ -166,7 +166,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
         _showMessage(errorMessage, Colors.red);
       } else {
         _showMessage('Sign in successful', Colors.green);
-        context.go('/main-screen');
+        context.go('/chat');
         // get curren user
         final user = await authViewModel.getCurrentUser();
       }

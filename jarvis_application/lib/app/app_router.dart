@@ -1,15 +1,14 @@
-// lib/app/app_router.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jarvis_application/screens/aiBots/bot_list_page.dart';
 import 'package:jarvis_application/screens/aiBots/publish_screen.dart';
 import 'package:jarvis_application/screens/knowledgeBase/knowledge_base_screen.dart';
 import 'package:jarvis_application/screens/prompts/prompt_library_screen.dart';
-import 'package:jarvis_application/ui/chat_page.dart';
 import 'package:jarvis_application/ui/views/auth/forget_password_page.dart';
 import 'package:jarvis_application/ui/views/auth/signin_page.dart';
 import 'package:jarvis_application/ui/views/auth/signup_page.dart';
-import 'package:jarvis_application/ui/views/main_screen.dart';
+import 'package:jarvis_application/ui/views/chat/chat_page.dart';
+import 'package:jarvis_application/ui/views/email/email_compose_page.dart';
 import 'package:jarvis_application/ui/views/splash/splash_screen.dart';
 
 import '../providers/auth_notifier.dart';
@@ -22,10 +21,6 @@ class AppRouter {
         builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
-        path: '/main-screen',
-        builder: (context, state) => const MainScreen(),
-      ),
-      GoRoute(
         path: '/sign-in',
         builder: (context, state) => const SignInPage(),
       ),
@@ -34,31 +29,38 @@ class AppRouter {
         builder: (context, state) => const SignUpPage(),
       ),
       GoRoute(
-          path: '/forgot-password',
-          builder: (context, state) => const ForgotPasswordPage()),
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordPage(),
+      ),
       GoRoute(
         path: '/chat',
         builder: (context, state) => const ChatPage(),
+        name: 'Chat',
       ),
       GoRoute(
         path: '/bot-list',
         builder: (context, state) => const BotListPage(),
+        name: 'Bot List',
       ),
       GoRoute(
         path: '/publish',
         builder: (context, state) => const PublishingPlatformPage(),
+        name: 'Publishing Platform',
       ),
       GoRoute(
         path: '/knowledge-base',
         builder: (context, state) => const KnowledgeBase(),
+        name: 'Knowledge Base',
       ),
       GoRoute(
         path: '/prompt-library',
         builder: (context, state) => const PromptLibrary(),
+        name: 'Prompt Library',
       ),
       GoRoute(
         path: '/email-compose',
-        builder: (context, state) => const PromptLibrary(),
+        builder: (context, state) => const EmailComposeScreen(),
+        name: 'Email Compose',
       ),
     ],
     redirect: (context, state) {
