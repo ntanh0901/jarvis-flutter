@@ -16,7 +16,7 @@ class KnowledgeBaseConfiguration extends StatelessWidget {
       appBar: AppBar(
         title: Text('Knowledge Base / ${knowledgeBase['name']}'),
       ),
-      drawer: AppDrawer(),
+      drawer: const AppDrawer(),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

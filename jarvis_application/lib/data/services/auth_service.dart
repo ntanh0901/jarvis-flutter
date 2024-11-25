@@ -70,6 +70,59 @@ class AuthService {
     //   TODO: Implement sign up with Google
   }
 
+  Future<void> signOut() async {
+    try {
+      final accessToken = await tokenManager.getAccessToken();
+      if (accessToken == null) {
+        throw Exception("No access token found");
+      }
+
+      dio.options.headers['Authorization'] = 'Bearer $accessToken';
+
+      final response = await dio.get(ApiEndpoints.signOut);
+      if (response.statusCode == 200) {
+        await tokenManager.deleteTokens();
+      } else {
+        throw Exception(
+            'Sign out failed with status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is DioException) {
+        if (e.response?.statusCode == 401) {
+          // Token expired or invalid, attempt refresh
+          final refreshToken = await tokenManager.getRefreshToken();
+          if (refreshToken == null) {
+            throw Exception("No refresh token found");
+          }
+
+          try {
+            final tokens = await refreshTokens(refreshToken);
+            if (tokens != null) {
+              // Retry sign out after refreshing the token
+              dio.options.headers['Authorization'] =
+                  'Bearer ${tokens['accessToken']}';
+              final retryResponse = await dio.get(ApiEndpoints.signOut);
+              if (retryResponse.statusCode == 200) {
+                await tokenManager.deleteTokens();
+              } else {
+                throw Exception(
+                    'Sign out failed after token refresh, status code: ${retryResponse.statusCode}');
+              }
+            } else {
+              throw Exception("Failed to refresh tokens");
+            }
+          } catch (refreshError) {
+            throw Exception('Failed to refresh tokens: $refreshError');
+          }
+        } else {
+          throw Exception('Failed to sign out: ${e.message}');
+        }
+      } else {
+        throw Exception('An unknown error occurred: $e');
+      }
+    }
+  }
+
   Future<Map<String, dynamic>?> getCurrentUser() async {
     try {
       final accessToken = await tokenManager.getAccessToken();

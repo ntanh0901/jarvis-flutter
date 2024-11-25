@@ -68,8 +68,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> signOut() async {
-    await _tokenManager.deleteTokens();
-    await _userManager.deleteUser();
-    state = state.copyWith(isAuthenticated: false, user: null);
+    try {
+      await _authService.signOut();
+      await _tokenManager.deleteTokens();
+      await _userManager.deleteUser();
+      state = state.copyWith(isAuthenticated: false, user: null);
+    } catch (e) {
+      state = state.copyWith(
+          errorMessage: e.toString().replaceFirst('Exception: ', ''));
+    }
   }
 }

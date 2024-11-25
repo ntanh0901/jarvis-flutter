@@ -564,7 +564,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
             ),
           ],
         ),
-        drawer: AppDrawer(),
+        drawer: const AppDrawer(),
         body: SafeArea(
           child: Column(
             children: [
