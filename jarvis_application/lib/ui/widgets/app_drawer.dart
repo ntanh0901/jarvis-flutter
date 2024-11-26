@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../providers/auth_notifier.dart';
 import 'app_logo.dart';
 
-// DrawerCubit class
-class DrawerCubit extends Cubit<int> {
-  DrawerCubit() : super(0);
-
-  void selectItem(int index) => emit(index);
-}
+final drawerProvider = StateNotifierProvider<DrawerNotifier, int>((ref) {
+  return DrawerNotifier();
+});
 
 // DrawerNotifier class and drawerProvider
 class DrawerNotifier extends StateNotifier<int> {
@@ -22,29 +18,15 @@ class DrawerNotifier extends StateNotifier<int> {
   }
 }
 
-final drawerProvider = StateNotifierProvider<DrawerNotifier, int>((ref) {
-  return DrawerNotifier();
-});
+// Global key for managing Scaffold state
+final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
 // AppDrawer widget
-class AppDrawer extends ConsumerStatefulWidget {
+class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
 
   @override
-  ConsumerState<AppDrawer> createState() => _AppDrawerState();
-}
-
-class _AppDrawerState extends ConsumerState<AppDrawer> {
-  late BuildContext _context;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _context = context;
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = ref.watch(drawerProvider);
 
     return SafeArea(
@@ -85,45 +67,56 @@ class _AppDrawerState extends ConsumerState<AppDrawer> {
     final bool isSelected = selectedIndex == index;
 
     return ListTile(
-        leading: Icon(
-          icon,
+      leading: Icon(
+        icon,
+        color: isSelected ? Colors.white : Colors.black,
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
           color: isSelected ? Colors.white : Colors.black,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-        tileColor: isSelected ? Colors.blue[700] : Colors.transparent,
-        onTap: () async {
-          ref.read(drawerProvider.notifier).selectItem(index);
-          // Perform navigation directly
-          switch (index) {
-            case 0:
-              _context.go('/chat');
-              break;
-            case 1:
-              _context.go('/bot-list');
-              break;
-            case 2:
-              _context.go('/knowledge-base');
-              break;
-            case 3:
-              _context.go('/prompt-library');
-              break;
-            case 4:
-              _context.go('/email-compose');
-              break;
-            case 5:
-              await ref.read(authNotifierProvider.notifier).signOut();
+      ),
+      tileColor: isSelected ? Colors.blue[700] : Colors.transparent,
+      onTap: () async {
+        ref.read(drawerProvider.notifier).selectItem(index);
 
-              if (!mounted) return;
+        // Close the drawer
+        scaffoldKey.currentState?.closeDrawer();
 
-              _context.go('/sign-in');
-              break;
-          }
-        });
+        // Perform navigation
+        switch (index) {
+          case 0:
+            context.go('/chat');
+            break;
+          case 1:
+            context.go('/bot-list');
+            break;
+          case 2:
+            context.go('/knowledge-base');
+            break;
+          case 3:
+            context.go('/prompt-library');
+            break;
+          case 4:
+            context.go('/email-compose');
+            break;
+          case 5:
+            // Sign out logic
+            await ref.read(authNotifierProvider.notifier).signOut();
+
+            // Reset drawer state after sign-out
+            ref.read(drawerProvider.notifier).selectItem(0);
+
+            // Navigate to the sign-in page
+            if (context.mounted) {
+              context.go('/sign-in');
+            }
+
+            break;
+        }
+      },
+    );
   }
 }

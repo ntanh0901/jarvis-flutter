@@ -34,7 +34,7 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
       appBar: AppBar(
         title: const Text('Upgrade Account'),
       ),
-      drawer: AppDrawer(),
+      drawer: const AppDrawer(),
       body: Consumer<AccountViewModel>(
         builder: (context, viewModel, child) {
           if (viewModel.availablePlans.isEmpty) {

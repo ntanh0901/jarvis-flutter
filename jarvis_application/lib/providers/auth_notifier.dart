@@ -6,7 +6,7 @@ import '../data/services/user_manager.dart';
 import 'auth_state.dart';
 
 final authNotifierProvider =
-    StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final authService = ref.read(authServiceProvider);
   final tokenManager = ref.read(tokenManagerProvider);
   final userManager = ref.read(userManagerProvider);
@@ -41,6 +41,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         final refreshToken = token['refreshToken'];
         await _tokenManager.saveTokens(accessToken, refreshToken);
         state = state.copyWith(isAuthenticated: true);
+        // Reset the drawer state after successful sign-in
       }
     } catch (e) {
       state = state.copyWith(

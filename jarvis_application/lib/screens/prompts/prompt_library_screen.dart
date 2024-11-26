@@ -41,6 +41,7 @@ class PromptLibraryState extends State<PromptLibrary> {
     } catch (e) {
       print('Error during sign in and fetch prompts: $e');
     } finally {
+      if (!mounted) return;
       setState(() {
         isLoading = false;
       });
@@ -318,7 +319,7 @@ class PromptLibraryState extends State<PromptLibrary> {
           ),
         ],
       ),
-      drawer: AppDrawer(),
+      drawer: const AppDrawer(),
       body: Column(
         children: <Widget>[
           Align(
