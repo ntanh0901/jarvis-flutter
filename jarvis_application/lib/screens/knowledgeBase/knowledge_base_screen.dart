@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jarvis_application/ui/widgets/app_drawer.dart';
 
 import '../../ui/widgets/create_kb_button.dart';
 import '../../ui/widgets/knowledge_base_list_view.dart';
@@ -13,6 +14,7 @@ class KnowledgeBase extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Knowledge Base'),
       ),
+      drawer: const AppDrawer(),
       body: SingleChildScrollView(
         child: Column(
           children: <Widget>[
@@ -21,9 +23,8 @@ class KnowledgeBase extends StatelessWidget {
               child: const Row(
                 children: <Widget>[
                   Expanded(child: SearchTextField()),
-                  SizedBox(
-                      width:
-                          16.0), // Add margin between the search field and the button
+                  SizedBox(width: 16.0),
+                  // Add margin between the search field and the button
                   CreateKBButton(),
                 ],
               ),

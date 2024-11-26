@@ -26,7 +26,7 @@ class _BotListPageState extends State<BotListPage> {
       appBar: AppBar(
         title: const Text('AI Bots'),
       ),
-      drawer: AppDrawer(),
+      drawer: const AppDrawer(),
       body: Column(
         children: [
           Padding(
