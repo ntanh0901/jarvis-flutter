@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_application/screens/prompts/api_prompts.dart';
+import 'package:jarvis_application/ui/views/prompts/api_prompts.dart';
 
 class CreateNewPrompt extends StatefulWidget {
   const CreateNewPrompt({super.key});

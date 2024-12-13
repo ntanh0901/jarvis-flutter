@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:jarvis_application/ui/widgets/app_drawer.dart';
 
-import '../../ui/widgets/create_kb_button.dart';
-import '../../ui/widgets/knowledge_base_list_view.dart';
-import '../../ui/widgets/search_text_field.dart';
+import '../../widgets/create_kb_button.dart';
+import '../../widgets/knowledge_base_list_view.dart';
+import '../../widgets/search_text_field.dart';
 
 class KnowledgeBase extends StatelessWidget {
   const KnowledgeBase({super.key});

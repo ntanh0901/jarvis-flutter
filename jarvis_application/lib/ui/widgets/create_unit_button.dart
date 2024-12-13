@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_application/screens/knowledgeBase/add_new_unit_screen.dart';
+import 'package:jarvis_application/ui/views/knowledgeBase/add_new_unit_screen.dart';
 
 class CreateUnitButton extends StatelessWidget {
   const CreateUnitButton({super.key});

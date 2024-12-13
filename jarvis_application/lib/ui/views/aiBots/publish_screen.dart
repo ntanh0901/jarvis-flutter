@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../providers/platform_provider.dart';
+import '../../../providers/platform_provider.dart';
 
 class PublishingPlatformPage extends StatefulWidget {
   const PublishingPlatformPage({super.key});
@@ -17,8 +17,10 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
   @override
   void initState() {
     super.initState();
-    final platformProvider = Provider.of<PlatformProvider>(context, listen: false);
-    _selectedPlatforms = List<bool>.filled(platformProvider.platforms.length, false);
+    final platformProvider =
+        Provider.of<PlatformProvider>(context, listen: false);
+    _selectedPlatforms =
+        List<bool>.filled(platformProvider.platforms.length, false);
   }
 
   bool get _hasSelectedPlatforms {
@@ -45,7 +47,8 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
                   itemBuilder: (context, index) {
                     final platform = platforms[index];
                     return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8.0, horizontal: 16.0),
                       child: Row(
                         children: [
                           // Checkbox để lựa chọn platform
@@ -66,14 +69,16 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
                           Expanded(
                             child: Text(
                               platform['name'],
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                           ),
                           const SizedBox(width: 16),
                           TextButton(
                             onPressed: () {
                               if (platform['name'] == 'Messenger') {
-                                _showMessengerConfigDialog(context, platformProvider);
+                                _showMessengerConfigDialog(
+                                    context, platformProvider);
                               }
                             },
                             child: const Text(
@@ -95,12 +100,15 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
                   child: ElevatedButton(
                     onPressed: _hasSelectedPlatforms
                         ? () {
-                      // Hành động khi nhấn nút Publish
-                      print("Published");
-                    }
+                            // Hành động khi nhấn nút Publish
+                            print("Published");
+                          }
                         : null, // Disable nếu không có platform nào được chọn
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _hasSelectedPlatforms ? Colors.blue : Colors.grey, // Xám khi không có selected, xanh dương khi có
+                      backgroundColor: _hasSelectedPlatforms
+                          ? Colors.blue
+                          : Colors
+                              .grey, // Xám khi không có selected, xanh dương khi có
                     ),
                     child: const Text('Publish'),
                   ),
@@ -113,7 +121,8 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
     );
   }
 
-  void _showMessengerConfigDialog(BuildContext context, PlatformProvider platformProvider) {
+  void _showMessengerConfigDialog(
+      BuildContext context, PlatformProvider platformProvider) {
     showDialog(
       context: context,
       builder: (BuildContext context) {

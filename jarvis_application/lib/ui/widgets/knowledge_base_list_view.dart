@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_application/screens/knowledgeBase/knowledge_base_config_screen.dart';
+
+import '../views/knowledgeBase/knowledge_base_config_screen.dart';
 
 class KnowledgeBaseListView extends StatelessWidget {
   const KnowledgeBaseListView({super.key});
@@ -53,7 +54,8 @@ class KnowledgeBaseListView extends StatelessWidget {
             ),
           ),
           title: Text(knowledgeBaseItems[index]['name']),
-          subtitle: Text(knowledgeBaseItems[index]['description']), // Add description text
+          subtitle: Text(
+              knowledgeBaseItems[index]['description']), // Add description text
           onTap: () {
             Navigator.push(
               context,
@@ -77,19 +79,23 @@ class KnowledgeBaseListView extends StatelessWidget {
                         title: Text(knowledgeBaseItems[index]['name']),
                         content: Column(
                           mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start, // Align items to the left
+                          crossAxisAlignment: CrossAxisAlignment
+                              .start, // Align items to the left
                           children: <Widget>[
                             Align(
                               alignment: Alignment.centerLeft,
-                              child: Text('Units: ${knowledgeBaseItems[index]['units']}'),
+                              child: Text(
+                                  'Units: ${knowledgeBaseItems[index]['units']}'),
                             ),
                             Align(
                               alignment: Alignment.centerLeft,
-                              child: Text('Size: ${knowledgeBaseItems[index]['size']}'),
+                              child: Text(
+                                  'Size: ${knowledgeBaseItems[index]['size']}'),
                             ),
                             Align(
                               alignment: Alignment.centerLeft,
-                              child: Text('Last Edited: ${knowledgeBaseItems[index]['editTime']}'),
+                              child: Text(
+                                  'Last Edited: ${knowledgeBaseItems[index]['editTime']}'),
                             ),
                           ],
                         ),

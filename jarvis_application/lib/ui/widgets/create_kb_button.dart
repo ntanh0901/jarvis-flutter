@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_application/screens/knowledgeBase/create_new_kb_screen.dart';
+import 'package:jarvis_application/ui/views/knowledgeBase/create_new_kb_screen.dart';
 
 class CreateKBButton extends StatelessWidget {
   const CreateKBButton({super.key});

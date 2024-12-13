@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:jarvis_application/providers/ai_bot_provider.dart';
 import 'package:provider/provider.dart';
 
-import '../../ui/widgets/app_drawer.dart';
+import '../../widgets/app_drawer.dart';
 
 class BotListPage extends StatefulWidget {
   static const String routeName = '/bot-list';

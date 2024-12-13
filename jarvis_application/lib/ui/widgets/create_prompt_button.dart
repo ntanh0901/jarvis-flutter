@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_application/screens/prompts/create_new_prompt_screen.dart';
-import 'package:jarvis_application/screens/prompts/prompt_library_screen.dart';
+
+import '../views/prompts/create_new_prompt_screen.dart';
+import '../views/prompts/prompt_library_screen.dart';
 
 class CreatePromptButton extends StatelessWidget {
   const CreatePromptButton({super.key});

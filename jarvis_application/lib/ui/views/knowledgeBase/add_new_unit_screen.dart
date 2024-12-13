@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_application/screens/knowledgeBase/units/local_files_screen.dart';
-import 'package:jarvis_application/screens/knowledgeBase/units/website_screen.dart';
-import 'package:jarvis_application/screens/knowledgeBase/units/google_drive_screen.dart';
-import 'package:jarvis_application/screens/knowledgeBase/units/slack_screen.dart';
-import 'package:jarvis_application/screens/knowledgeBase/units/confluence_screen.dart';
+
+import 'units/confluence_screen.dart';
+import 'units/google_drive_screen.dart';
+import 'units/local_files_screen.dart';
+import 'units/slack_screen.dart';
+import 'units/website_screen.dart';
 
 class AddNewUnit extends StatefulWidget {
   const AddNewUnit({super.key});
@@ -103,7 +104,9 @@ class _AddNewUnitState extends State<AddNewUnit> {
                       margin: const EdgeInsets.symmetric(vertical: 8.0),
                       padding: const EdgeInsets.all(16.0),
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.white,
+                        color: isSelected
+                            ? Colors.blue.withOpacity(0.1)
+                            : Colors.white,
                         border: Border.all(
                           color: isSelected ? Colors.blue : Colors.grey,
                         ),
@@ -119,7 +122,8 @@ class _AddNewUnitState extends State<AddNewUnit> {
                               border: Border.all(
                                 color: isSelected ? Colors.blue : Colors.grey,
                               ),
-                              color: isSelected ? Colors.blue : Colors.transparent,
+                              color:
+                                  isSelected ? Colors.blue : Colors.transparent,
                             ),
                             child: const Icon(
                               Icons.circle,
@@ -142,7 +146,8 @@ class _AddNewUnitState extends State<AddNewUnit> {
                                 style: TextStyle(
                                   fontSize: 16.0,
                                   fontWeight: FontWeight.bold,
-                                  color: isSelected ? Colors.blue : Colors.black,
+                                  color:
+                                      isSelected ? Colors.blue : Colors.black,
                                 ),
                               ),
                               const SizedBox(height: 4.0),
@@ -150,7 +155,8 @@ class _AddNewUnitState extends State<AddNewUnit> {
                                 unitItems[index]['description']!,
                                 style: TextStyle(
                                   fontSize: 14.0,
-                                  color: isSelected ? Colors.blue : Colors.black,
+                                  color:
+                                      isSelected ? Colors.blue : Colors.black,
                                 ),
                               ),
                             ],

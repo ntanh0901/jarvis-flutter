@@ -1,9 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:jarvis_application/screens/aiBots/bot_list_page.dart';
-import 'package:jarvis_application/screens/aiBots/publish_screen.dart';
-import 'package:jarvis_application/screens/knowledgeBase/knowledge_base_screen.dart';
-import 'package:jarvis_application/screens/prompts/prompt_library_screen.dart';
 import 'package:jarvis_application/ui/views/auth/forget_password_page.dart';
 import 'package:jarvis_application/ui/views/auth/signin_page.dart';
 import 'package:jarvis_application/ui/views/auth/signup_page.dart';
@@ -12,6 +8,10 @@ import 'package:jarvis_application/ui/views/email/email_compose_page.dart';
 import 'package:jarvis_application/ui/views/splash/splash_screen.dart';
 
 import '../providers/auth_notifier.dart';
+import '../ui/views/aiBots/bot_list_page.dart';
+import '../ui/views/aiBots/publish_screen.dart';
+import '../ui/views/knowledgeBase/knowledge_base_screen.dart';
+import '../ui/views/prompts/prompt_library_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
