@@ -1,69 +1,90 @@
 import 'package:dio/dio.dart';
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/config.dart';
-import '../data/services/auth_service.dart';
+import '../core/constants/api_endpoints.dart';
 import '../data/services/token_manager.dart';
 
-// Raw Dio Provider without interceptors
-final rawDioProvider = Provider<Dio>((ref) {
-  return Dio(
-    BaseOptions(
-      baseUrl: Config.baseUrl,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    ),
-  );
+final dioProvider = Provider<Dio>((ref) {
+  final tokenManager = ref.read(tokenManagerProvider);
+  return DioClient(tokenManager).dio;
 });
 
-// Dio Provider with Interceptors
-final dioProvider = Provider<Dio>((ref) {
-  final dio = ref.read(rawDioProvider);
-  final tokenManager = ref.read(tokenManagerProvider);
-  final authService = ref.read(authServiceProvider);
-  bool isRefreshing = false;
+class DioClient {
+  final Dio _dio = Dio();
+  final TokenManager _tokenManager;
 
-  dio.interceptors.add(
-    InterceptorsWrapper(
+  DioClient(this._tokenManager) {
+    _dio.options.baseUrl = Config.baseUrl;
+    _dio.options.headers = {'Content-Type': 'application/json'};
+
+    _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        final accessToken = await tokenManager.getAccessToken();
-        if (accessToken != null) {
-          options.headers['Authorization'] = 'Bearer $accessToken';
+        // Only add Authorization header if the request requires it
+        if (options.extra['requiresAuth'] ?? true) {
+          await _addAuthorizationHeader(options);
         }
-        handler.next(options); // Continue with the request
+        return handler.next(options);
       },
       onError: (DioException e, handler) async {
-        if (e.response?.statusCode == 401 && !isRefreshing) {
-          isRefreshing = true;
-          try {
-            final refreshToken = await tokenManager.getRefreshToken();
-            if (refreshToken != null) {
-              final tokens = await authService.refreshTokens(refreshToken);
-              if (tokens != null) {
-                final newAccessToken = tokens['accessToken']!;
-                final newRefreshToken = tokens['refreshToken']!;
-                // Save the new tokens securely
-                await tokenManager.saveTokens(newAccessToken, newRefreshToken);
-                // Retry the original request with the new access token
-                e.requestOptions.headers['Authorization'] =
-                    'Bearer $newAccessToken';
-                final cloneReq = await dio.fetch(e.requestOptions);
-                handler.resolve(cloneReq);
-                return;
-              }
+        if (e.response?.statusCode == 401 &&
+            !(e.requestOptions.extra['retried'] ?? false)) {
+          e.requestOptions.extra['retried'] = true;
+
+          final refreshToken = await _tokenManager.getRefreshToken();
+          if (refreshToken != null) {
+            final newAccessToken = await _refreshTokens(refreshToken);
+            if (newAccessToken != null) {
+              final accessToken = newAccessToken['accessToken'];
+              await _tokenManager.saveTokens(newAccessToken,
+                  isSaveRefreshToken: false);
+
+              e.requestOptions.headers['Authorization'] = 'Bearer $accessToken';
+
+              final retryResponse = await _dio.request(
+                e.requestOptions.path,
+                options: Options(
+                  method: e.requestOptions.method,
+                  headers: e.requestOptions.headers,
+                  contentType: e.requestOptions.contentType,
+                  extra: e.requestOptions.extra,
+                ),
+                data: e.requestOptions.data,
+              );
+              return handler.resolve(retryResponse);
             }
-          } catch (refreshError) {
-            print('Error refreshing token: $refreshError');
-          } finally {
-            isRefreshing = false;
           }
         }
-        handler.next(e); // Pass the error to the caller
+        return handler.next(e);
       },
-    ),
-  );
+    ));
+  }
 
-  return dio;
-});
+  Future<void> _addAuthorizationHeader(RequestOptions options) async {
+    final accessToken = await _tokenManager.getAccessToken();
+    if (accessToken != null) {
+      options.headers['Authorization'] = 'Bearer $accessToken';
+    }
+  }
+
+  Future<Map<String, dynamic>?> _refreshTokens(String refreshToken) async {
+    try {
+      final response = await _dio.get(
+        ApiEndpoints.refreshToken,
+        options: Options(extra: {'requiresAuth': false}),
+        queryParameters: {'refreshToken': refreshToken},
+      );
+      if (response.statusCode == 200) {
+        return response.data['token'];
+      } else {
+        print('Failed to refresh token. Status code: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error: $e');
+      return null;
+    }
+  }
+
+  Dio get dio => _dio;
+}

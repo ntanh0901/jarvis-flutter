@@ -18,9 +18,26 @@ class TokenManager {
   }
 
   // Method to save tokens securely
-  Future<void> saveTokens(String accessToken, String refreshToken) async {
-    await _secureStorage.write(key: _accessTokenKey, value: accessToken);
-    await _secureStorage.write(key: _refreshTokenKey, value: refreshToken);
+  // Save tokens securely
+  Future<void> saveTokens(Map<String, dynamic> tokens,
+      {bool isSaveRefreshToken = true}) async {
+    try {
+      // Store the access token
+      await _secureStorage.write(
+        key: _accessTokenKey,
+        value: tokens['accessToken'],
+      );
+
+      // Store the refresh token
+      if (isSaveRefreshToken) {
+        await _secureStorage.write(
+          key: _refreshTokenKey,
+          value: tokens['refreshToken'],
+        );
+      }
+    } catch (e) {
+      print('Error saving tokens: $e');
+    }
   }
 
   // Method to get the refresh token

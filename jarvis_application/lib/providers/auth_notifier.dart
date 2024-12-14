@@ -6,7 +6,7 @@ import '../data/services/user_manager.dart';
 import 'auth_state.dart';
 
 final authNotifierProvider =
-StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+    StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final authService = ref.read(authServiceProvider);
   final tokenManager = ref.read(tokenManagerProvider);
   final userManager = ref.read(userManagerProvider);
@@ -21,42 +21,55 @@ class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier(this._authService, this._tokenManager, this._userManager)
       : super(AuthState());
 
+  // Helper method to handle error and update state
+  void _handleError(String error) {
+    state = state.copyWith(
+      errorMessage: error.replaceFirst('Exception: ', ''),
+    );
+  }
+
+  // Helper method to update authentication state
+  void _setAuthenticatedState(Map<String, dynamic> response) {
+    final tokens = response['token'];
+    _tokenManager.saveTokens(tokens); // Save tokens
+    state = state.copyWith(isAuthenticated: true);
+  }
+
+  // SignUp method
   Future<void> signUp(String username, String email, String password) async {
-    state = AuthState();
+    state = AuthState(); // Reset state before action
     try {
       final response = await _authService.signUp(username, email, password);
+      _setAuthenticatedState(response!);
     } catch (e) {
-      state = state.copyWith(
-          errorMessage: e.toString().replaceFirst('Exception: ', ''));
+      _handleError(e.toString());
     }
   }
 
+  // SignIn method
   Future<void> signIn(String email, String password) async {
-    state = AuthState();
+    state = AuthState(); // Reset state before action
     try {
       final response = await _authService.signIn(email, password);
       if (response != null) {
-        final token = response['token'];
-        final accessToken = token['accessToken'];
-        final refreshToken = token['refreshToken'];
-        await _tokenManager.saveTokens(accessToken, refreshToken);
-        state = state.copyWith(isAuthenticated: true);
-        // Reset the drawer state after successful sign-in
+        _setAuthenticatedState(response);
       }
     } catch (e) {
-      state = state.copyWith(
-          errorMessage: e.toString().replaceFirst('Exception: ', ''));
+      _handleError(e.toString());
     }
   }
 
+  // SignIn with Google (TODO: Implement sign-in)
   Future<void> signInWithGoogle() async {
-    //   TODO: Implement sign in with Google
+    // Implement Google sign-in logic here
   }
 
+  // SignUp with Google (TODO: Implement sign-up)
   Future<void> signUpWithGoogle() async {
-    //   TODO: Implement sign up with Google
+    // Implement Google sign-up logic here
   }
 
+  // Get current user info
   Future<void> getCurrentUser() async {
     try {
       final user = await _userManager.getCurrentUser();
@@ -64,10 +77,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
         state = state.copyWith(user: user);
       }
     } catch (e) {
-      state = state.copyWith(errorMessage: e.toString());
+      _handleError(e.toString());
     }
   }
 
+  // Sign out method
   Future<void> signOut() async {
     try {
       await _authService.signOut();
@@ -75,8 +89,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _userManager.deleteUser();
       state = state.copyWith(isAuthenticated: false, user: null);
     } catch (e) {
-      state = state.copyWith(
-          errorMessage: e.toString().replaceFirst('Exception: ', ''));
+      _handleError(e.toString());
     }
   }
 }

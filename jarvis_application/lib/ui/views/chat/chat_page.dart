@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
 import 'package:jarvis_application/widgets/chat/greeting_text.dart';
@@ -14,6 +16,7 @@ import '../../../data/models/conversation_history_res.dart';
 import '../../../data/models/conversations_query_params.dart';
 import '../../../data/models/conversations_res.dart';
 import '../../../data/models/request_ai_chat.dart';
+import '../../../providers/dio_provider.dart';
 import '../../../widgets/chat/action_row.dart';
 import '../../../widgets/chat/conversation_history_dialog.dart';
 import '../../../widgets/chat/image_picker_helper.dart';
@@ -21,16 +24,17 @@ import '../../../widgets/chat/logo_widget.dart';
 import '../../../widgets/chat/upload_dialog.dart';
 import '../../widgets/app_drawer.dart';
 
-class ChatPage extends StatefulWidget {
+class ChatPage extends ConsumerStatefulWidget {
   static const String routeName = '/chat';
 
   const ChatPage({super.key});
 
   @override
-  State<ChatPage> createState() => _ChatPageState();
+  ConsumerState<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
+class _ChatPageState extends ConsumerState<ChatPage>
+    with WidgetsBindingObserver {
   final TextEditingController messageController = TextEditingController();
   final ScreenshotController screenshotController = ScreenshotController();
   final ScrollController _scrollController = ScrollController();
@@ -63,6 +67,8 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
   Assistant? selectedAssistant;
 
+  late Dio _dio;
+
   @override
   void initState() {
     super.initState();
@@ -77,6 +83,7 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       content: '',
       metadata: metadata,
     );
+    _dio = ref.read(dioProvider);
   }
 
   @override
@@ -99,61 +106,49 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       isTyping = true;
     });
 
-    // reduce Token for each message
+    // Reduce Token for each message
     content = cleanContent(content);
 
-    // print("Request Body Before Sendingssssss: ${jsonEncode(requestAiChat.toJson())}");
-
-    // Setup headers and URL
-    var headers = {
-      'x-jarvis-guid': '',
-      'Authorization':
-          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImNjMDdhYTc4LTE3YzAtNDU1ZC1hZGEzLTMzMjMwMzY2NjlkMSIsImVtYWlsIjoidGVzdF85QGdtYWlsLmNvbSIsImlhdCI6MTczMjM3MzMzNCwiZXhwIjoxNzMyMzczMzk0fQ.IZkb-34w3Bb7x816cVRG0OO5z3NXG6hH6BHavnDCd7g',
-      'Content-Type': 'application/json',
-    };
-
-    // Send request to the API
     try {
-      Uri url;
-      http.Request request;
+      Response response;
 
-      // For first time
+      // Set up the request data
       if (metadata.conversation.id == "") {
-        url = Uri.parse('https://api.dev.jarvis.cx/api/v1/ai-chat');
-        request = http.Request('POST', url);
-        requestAiChat.setContent(content);
-        requestAiChat.setAssistant(currAssistant.dto);
-        request.body = jsonEncode(requestAiChat.toJsonFirstTime());
-        print("Meta Req First Timeeeeeee: ${jsonEncode(metadata.toJson())}");
+        // First-time request
+        final requestBody = requestAiChat
+          ..setContent(content)
+          ..setAssistant(currAssistant.dto);
+
+        response = await _dio.post(
+          '/api/v1/ai-chat', // Adjust endpoint if necessary
+          data: requestBody.toJsonFirstTime(),
+          options: Options(headers: {'x-jarvis-guid': ''}),
+        );
+
+        print("Meta Req First Time: ${metadata.toJson()}");
+      } else {
+        // Subsequent messages
+        final requestBody = requestAiChat
+          ..setContent(content)
+          ..setAssistant(currAssistant.dto)
+          ..setMetadata(metadata);
+
+        response = await _dio.post(
+          '/api/v1/ai-chat/messages',
+          data: requestBody.toJson(),
+          options: Options(headers: {'x-jarvis-guid': ''}),
+        );
+
+        print("Meta Req Next Time: ${metadata.toJson()}");
       }
-      // For next messages
-      else {
-        url = Uri.parse('https://api.dev.jarvis.cx/api/v1/ai-chat/messages');
-        request = http.Request('POST', url);
 
-        requestAiChat.setContent(content);
-        requestAiChat.setAssistant(currAssistant.dto);
-        requestAiChat.setMetadata(metadata);
-        print("Meta Req Next Timeeeeeee: ${jsonEncode(metadata.toJson())}");
-
-        request.body = jsonEncode(requestAiChat.toJson());
-      }
-
-      request.headers.addAll(headers);
-
-      http.StreamedResponse response = await request.send();
-
-      // Read response
+      // Handle response
       if (response.statusCode == 200) {
-        String responseJson = await response.stream.bytesToString();
-        Map<String, dynamic> responseAIChat = jsonDecode(responseJson);
+        final responseAIChat = response.data;
 
-        // Extract values from the response
         conversationID = responseAIChat['conversationId'];
-        String messageAI = responseAIChat['message'];
-        int remainingUsage = responseAIChat['remainingUsage'];
-        // print("requestttttttt111111111111111: ${jsonEncode(requestAiChat.toJson())}");
-        // print("Response JSON: $responseJson");
+        final messageAI = responseAIChat['message'];
+        final remainingUsage = responseAIChat['remainingUsage'];
 
         messages.add(ChatMessage(
           assistant: currAssistant.dto,
@@ -163,27 +158,28 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
         setState(() {
           remainUsage = remainingUsage;
-        }); // Đảm bảo UI được cập nhật
+        });
         _scrollToBottom();
 
         currentMessageUser.setValues(
-            newRole: 'user',
-            newContent: content,
-            newAssistant: currAssistant.dto);
+          newRole: 'user',
+          newContent: content,
+          newAssistant: currAssistant.dto,
+        );
 
         currentMessageAI.setValues(
-            newRole: 'model',
-            newContent: messageAI,
-            newAssistant: currAssistant.dto);
+          newRole: 'model',
+          newContent: messageAI,
+          newAssistant: currAssistant.dto,
+        );
         metadata.setConversationID(conversationID);
         metadata.addMessage(currentMessageUser);
         metadata.addMessage(currentMessageAI);
-        print("Meta Resultttttttttt: ${jsonEncode(metadata.toJson())}");
 
-        // Optionally update local state or UI
+        print("Meta Result: ${metadata.toJson()}");
       } else {
         String errorMessage =
-            "Request failed with status: ${response.statusCode}\nReason: ${response.reasonPhrase}";
+            "Request failed with status: ${response.statusCode}\nReason: ${response.statusMessage}";
         _showErrorDialog(context, "Error", errorMessage);
       }
     } catch (e) {
