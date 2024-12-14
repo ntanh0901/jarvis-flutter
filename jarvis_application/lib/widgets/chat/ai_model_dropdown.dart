@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:jarvis_application/data/models/assistant.dart';
 
 class AIModelDropdown extends StatelessWidget {
@@ -15,37 +14,60 @@ class AIModelDropdown extends StatelessWidget {
   });
 
   void _showAssistantSelectionDialog(BuildContext context) {
-    showDialog(
+    final RenderBox renderBox = context.findRenderObject() as RenderBox;
+    final Offset offset = renderBox.localToGlobal(Offset.zero);
+
+    showMenu(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Select Assistant'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: assistants.length,
-              itemBuilder: (BuildContext context, int index) {
-                final assistant = assistants[index];
-                return ListTile(
-                  leading: Image.asset(
+      position: RelativeRect.fromLTRB(
+        offset.dx,
+        offset.dy + renderBox.size.height,
+        offset.dx + renderBox.size.width,
+        offset.dy,
+      ),
+      items: assistants.map((assistant) {
+        final isSelected = assistant == selectedAssistant;
+
+        return PopupMenuItem<Assistant>(
+          value: assistant,
+          child: Container(
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? Colors.blue.withOpacity(0.1)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+              child: ListTile(
+                leading: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
                     assistant.imagePath,
                     width: 24,
                     height: 24,
+                    fit: BoxFit.cover,
                   ),
-                  title: Text(assistant.dto.name),
-                  subtitle: Text(assistant.dto.model.toString()),
-                  onTap: () {
-                    onAssistantSelected(assistant); // Truyền Assistant đã chọn
-                    Navigator.of(context).pop();
-                  },
-                );
-              },
+                ),
+                title: Text(
+                  assistant.dto.name,
+                  style: const TextStyle(fontSize: 14),
+                ),
+                onTap: () {
+                  onAssistantSelected(assistant);
+                  Navigator.of(context).pop();
+                },
+              ),
             ),
           ),
         );
-      },
-    );
+      }).toList(),
+      color: Colors.white,
+    ).then((selectedAssistant) {
+      if (selectedAssistant != null) {
+        onAssistantSelected(selectedAssistant);
+      }
+    });
   }
 
   @override
@@ -64,14 +86,18 @@ class AIModelDropdown extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (selectedAssistant != null)
-                Image.asset(
-                  selectedAssistant!.imagePath,
-                  width: 24,
-                  height: 24,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    selectedAssistant!.imagePath,
+                    width: 24,
+                    height: 24,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               const SizedBox(width: 8),
               Text(
-                selectedAssistant?.dto.name ?? 'Select Assistant',
+                selectedAssistant?.dto.name ?? '',
                 style: const TextStyle(fontSize: 14),
               ),
               const SizedBox(width: 4),

@@ -309,149 +309,151 @@ class PromptLibraryState extends State<PromptLibrary> {
   Widget build(BuildContext context) {
     final prompts = isMyPromptSelected ? myPrompts : filteredPrompts;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Prompt Library'),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16.0),
-            child: CreatePromptButton(),
-          ),
-        ],
-      ),
-      drawer: const AppDrawer(),
-      body: Column(
-        children: <Widget>[
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: PromptsSwitchButton(
-                isMyPromptSelected: isMyPromptSelected,
-                onMyPromptSelected: () {
-                  setState(() {
-                    isMyPromptSelected = true;
-                  });
-                },
-                onPublicPromptSelected: () {
-                  setState(() {
-                    isMyPromptSelected = false;
-                  });
-                },
-              ),
-            ),
-          ),
-          const SizedBox(height: 16.0),
-          if (!isMyPromptSelected) ...[
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Prompt Library'),
+          actions: const [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: SearchTextField(
-                onSubmitted: (query) {
-                  setState(() {
-                    searchQuery = query;
-                    filterPrompts();
-                  });
-                },
-              ),
+              padding: EdgeInsets.only(right: 16.0),
+              child: CreatePromptButton(),
             ),
-            const SizedBox(height: 16.0),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: DropdownButtonFormField<String>(
-                value: selectedCategory,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Category',
-                ),
-                items: categories.map((String category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedCategory = newValue!;
-                    filterPrompts();
-                  });
-                },
-              ),
-            ),
-            const SizedBox(height: 16.0),
           ],
-          Expanded(
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.separated(
-                    itemCount: prompts.length,
-                    itemBuilder: (context, index) {
-                      final prompt = prompts[index];
-                      return ListTile(
-                        title: Text(prompt.title),
-                        subtitle: isMyPromptSelected
-                            ? null
-                            : Text(prompt.description ?? ''),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            if (isMyPromptSelected &&
-                                !(prompt.isPublic == true))
-                              IconButton(
-                                icon: const Icon(Icons.edit),
-                                onPressed: () {
-                                  showEditPromptDialog(prompt);
-                                },
-                              ),
-                            if (isMyPromptSelected && prompt.isPublic == true)
-                              IconButton(
-                                icon: Icon(
-                                  prompt.isFavorite == true
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                  color: prompt.isFavorite == true
-                                      ? Colors.red
-                                      : null,
-                                ),
-                                onPressed: () {
-                                  toggleFavorite(prompt);
-                                },
-                              ),
-                            if (isMyPromptSelected && prompt.isPublic == true)
-                              IconButton(
-                                icon: const Icon(Icons.info_outline),
-                                onPressed: () {
-                                  showPromptInfoDialog(prompt);
-                                },
-                              ),
-                            if (!isMyPromptSelected)
-                              IconButton(
-                                icon: Icon(
-                                  prompt.isFavorite == true
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                  color: prompt.isFavorite == true
-                                      ? Colors.red
-                                      : null,
-                                ),
-                                onPressed: () {
-                                  toggleFavorite(prompt);
-                                },
-                              ),
-                            if (!isMyPromptSelected)
-                              IconButton(
-                                icon: const Icon(Icons.info_outline),
-                                onPressed: () {
-                                  showPromptInfoDialog(prompt);
-                                },
-                              ),
-                          ],
-                        ),
-                      );
-                    },
-                    separatorBuilder: (context, index) => const Divider(),
+        ),
+        drawer: const AppDrawer(),
+        body: Column(
+          children: <Widget>[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: PromptsSwitchButton(
+                  isMyPromptSelected: isMyPromptSelected,
+                  onMyPromptSelected: () {
+                    setState(() {
+                      isMyPromptSelected = true;
+                    });
+                  },
+                  onPublicPromptSelected: () {
+                    setState(() {
+                      isMyPromptSelected = false;
+                    });
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 16.0),
+            if (!isMyPromptSelected) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: SearchTextField(
+                  onSubmitted: (query) {
+                    setState(() {
+                      searchQuery = query;
+                      filterPrompts();
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 16.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: DropdownButtonFormField<String>(
+                  value: selectedCategory,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Category',
                   ),
-          ),
-        ],
+                  items: categories.map((String category) {
+                    return DropdownMenuItem<String>(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedCategory = newValue!;
+                      filterPrompts();
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 16.0),
+            ],
+            Expanded(
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.separated(
+                      itemCount: prompts.length,
+                      itemBuilder: (context, index) {
+                        final prompt = prompts[index];
+                        return ListTile(
+                          title: Text(prompt.title),
+                          subtitle: isMyPromptSelected
+                              ? null
+                              : Text(prompt.description ?? ''),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              if (isMyPromptSelected &&
+                                  !(prompt.isPublic == true))
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () {
+                                    showEditPromptDialog(prompt);
+                                  },
+                                ),
+                              if (isMyPromptSelected && prompt.isPublic == true)
+                                IconButton(
+                                  icon: Icon(
+                                    prompt.isFavorite == true
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: prompt.isFavorite == true
+                                        ? Colors.red
+                                        : null,
+                                  ),
+                                  onPressed: () {
+                                    toggleFavorite(prompt);
+                                  },
+                                ),
+                              if (isMyPromptSelected && prompt.isPublic == true)
+                                IconButton(
+                                  icon: const Icon(Icons.info_outline),
+                                  onPressed: () {
+                                    showPromptInfoDialog(prompt);
+                                  },
+                                ),
+                              if (!isMyPromptSelected)
+                                IconButton(
+                                  icon: Icon(
+                                    prompt.isFavorite == true
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: prompt.isFavorite == true
+                                        ? Colors.red
+                                        : null,
+                                  ),
+                                  onPressed: () {
+                                    toggleFavorite(prompt);
+                                  },
+                                ),
+                              if (!isMyPromptSelected)
+                                IconButton(
+                                  icon: const Icon(Icons.info_outline),
+                                  onPressed: () {
+                                    showPromptInfoDialog(prompt);
+                                  },
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                      separatorBuilder: (context, index) => const Divider(),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

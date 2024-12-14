@@ -13,71 +13,73 @@ class EmailComposeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<EmailComposeViewModel>(
       builder: (context, emailViewModel, child) {
-        return Scaffold(
-          backgroundColor: Colors.grey[100],
-          appBar: AppBar(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            title: Row(
+        return SafeArea(
+          child: Scaffold(
+            backgroundColor: Colors.grey[100],
+            appBar: AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[700],
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.mail_outline,
+                        color: Colors.white, size: 24),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('Email reply',
+                      style: TextStyle(color: Colors.black, fontSize: 18)),
+                  const Spacer(),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.local_fire_department,
+                            color: Colors.blue[700], size: 20),
+                        const SizedBox(width: 4),
+                        const Text('73',
+                            style: TextStyle(
+                                color: Color(0xFF64748b),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            drawer: const AppDrawer(),
+            body: Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[700],
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.mail_outline,
-                      color: Colors.white, size: 24),
-                ),
-                const SizedBox(width: 8),
-                const Text('Email reply',
-                    style: TextStyle(color: Colors.black, fontSize: 18)),
-                const Spacer(),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[50],
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.local_fire_department,
-                          color: Colors.blue[700], size: 20),
-                      const SizedBox(width: 4),
-                      const Text('73',
-                          style: TextStyle(
-                              color: Color(0xFF64748b),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16)),
-                    ],
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: emailViewModel.conversationHistory.length,
+                    itemBuilder: (context, index) {
+                      final message = emailViewModel.conversationHistory[index];
+                      final isUser = message['role'] == 'user';
+                      return isUser
+                          ? _UserMessage(content: message['content'])
+                          : _AIResponse(
+                              requestIndex: index,
+                            );
+                    },
                   ),
                 ),
+                _QuickActionButtons(emailViewModel: emailViewModel),
+                _ChatInputWidget(emailViewModel: emailViewModel),
               ],
             ),
-          ),
-          drawer: const AppDrawer(),
-          body: Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: emailViewModel.conversationHistory.length,
-                  itemBuilder: (context, index) {
-                    final message = emailViewModel.conversationHistory[index];
-                    final isUser = message['role'] == 'user';
-                    return isUser
-                        ? _UserMessage(content: message['content'])
-                        : _AIResponse(
-                            requestIndex: index,
-                          );
-                  },
-                ),
-              ),
-              _QuickActionButtons(emailViewModel: emailViewModel),
-              _ChatInputWidget(emailViewModel: emailViewModel),
-            ],
           ),
         );
       },

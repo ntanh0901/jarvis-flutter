@@ -32,41 +32,43 @@ class _SignInPageState extends ConsumerState<SignInPage> {
     final authViewModel = ref.watch(authViewModelProvider.notifier);
     final authState = ref.watch(authViewModelProvider);
 
-    return Scaffold(
-      body: GradientContainer(
-        isLargeScreen: isLargeScreen,
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Center(
-              child: CardContainer(
-                isLargeScreen: isLargeScreen,
-                width: isLargeScreen ? 600 : size.width,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 40.0,
-                  vertical: 40.0,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 50),
-                    const AppLogo(size: 24),
-                    const SizedBox(height: 70),
-                    _buildSignInForm(authViewModel, authState),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          "Don't have an account?",
-                          style: TextStyle(color: Colors.black),
-                        ),
-                        HoverTextButton(
-                          text: 'Sign Up',
-                          onPressed: () => context.go('/sign-up'),
-                        ),
-                      ],
-                    ),
-                  ],
+    return SafeArea(
+      child: Scaffold(
+        body: GradientContainer(
+          isLargeScreen: isLargeScreen,
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: Center(
+                child: CardContainer(
+                  isLargeScreen: isLargeScreen,
+                  width: isLargeScreen ? 600 : size.width,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 40.0,
+                    vertical: 40.0,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 50),
+                      const AppLogo(size: 24),
+                      const SizedBox(height: 70),
+                      _buildSignInForm(authViewModel, authState),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            "Don't have an account?",
+                            style: TextStyle(color: Colors.black),
+                          ),
+                          HoverTextButton(
+                            text: 'Sign Up',
+                            onPressed: () => context.go('/sign-up'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

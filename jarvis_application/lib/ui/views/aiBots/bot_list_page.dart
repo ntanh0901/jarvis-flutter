@@ -22,117 +22,120 @@ class _BotListPageState extends State<BotListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('AI Bots'),
-      ),
-      drawer: const AppDrawer(),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              decoration: const InputDecoration(
-                labelText: 'Search AI Bots',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('AI Bots'),
+        ),
+        drawer: const AppDrawer(),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                decoration: const InputDecoration(
+                  labelText: 'Search AI Bots',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.search),
+                ),
+                onChanged: (query) {
+                  setState(() {
+                    _searchQuery =
+                        query; // Cập nhật giá trị tìm kiếm khi người dùng nhập
+                  });
+                },
               ),
-              onChanged: (query) {
-                setState(() {
-                  _searchQuery =
-                      query; // Cập nhật giá trị tìm kiếm khi người dùng nhập
-                });
-              },
             ),
-          ),
-          Expanded(
-            child: Consumer<AIBotProvider>(
-              builder: (context, botProvider, child) {
-                // Lọc danh sách bot dựa trên giá trị tìm kiếm
-                final filteredBots = botProvider.aiBots
-                    .where((bot) => bot.name
-                        .toLowerCase()
-                        .contains(_searchQuery.toLowerCase()))
-                    .toList();
+            Expanded(
+              child: Consumer<AIBotProvider>(
+                builder: (context, botProvider, child) {
+                  // Lọc danh sách bot dựa trên giá trị tìm kiếm
+                  final filteredBots = botProvider.aiBots
+                      .where((bot) => bot.name
+                          .toLowerCase()
+                          .contains(_searchQuery.toLowerCase()))
+                      .toList();
 
-                return ListView.builder(
-                  itemCount: filteredBots.length,
-                  itemBuilder: (context, index) {
-                    final bot = filteredBots[index];
-                    String formattedDate =
-                        DateFormat('MM/dd/yyyy').format(bot.createdAt);
+                  return ListView.builder(
+                    itemCount: filteredBots.length,
+                    itemBuilder: (context, index) {
+                      final bot = filteredBots[index];
+                      String formattedDate =
+                          DateFormat('MM/dd/yyyy').format(bot.createdAt);
 
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8.0, horizontal: 16.0),
-                      child: Card(
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundImage: AssetImage(bot.imageUrl),
-                            // Hiển thị ảnh từ imageUrl
-                            radius: 30,
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8.0, horizontal: 16.0),
+                        child: Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          title: Text(
-                            bot.name,
-                            style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(bot.description),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  const Icon(Icons.access_time,
-                                      size: 16, color: Colors.grey),
-                                  const SizedBox(width: 5),
-                                  Text(formattedDate,
-                                      style:
-                                          const TextStyle(color: Colors.grey)),
-                                ],
-                              ),
-                            ],
-                          ),
-                          trailing: IntrinsicWidth(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              // Đẩy các icon về bên phải
-                              children: <Widget>[
-                                IconButton(
-                                  icon: const Icon(Icons.star_border,
-                                      color: Colors.grey, size: 20),
-                                  onPressed: () {},
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete,
-                                      color: Colors.red, size: 20),
-                                  onPressed: () {
-                                    botProvider.deleteAIBot(bot.id); // Xóa bot
-                                  },
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage: AssetImage(bot.imageUrl),
+                              // Hiển thị ảnh từ imageUrl
+                              radius: 30,
+                            ),
+                            title: Text(
+                              bot.name,
+                              style: const TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(bot.description),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.access_time,
+                                        size: 16, color: Colors.grey),
+                                    const SizedBox(width: 5),
+                                    Text(formattedDate,
+                                        style: const TextStyle(
+                                            color: Colors.grey)),
+                                  ],
                                 ),
                               ],
                             ),
+                            trailing: IntrinsicWidth(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                // Đẩy các icon về bên phải
+                                children: <Widget>[
+                                  IconButton(
+                                    icon: const Icon(Icons.star_border,
+                                        color: Colors.grey, size: 20),
+                                    onPressed: () {},
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete,
+                                        color: Colors.red, size: 20),
+                                    onPressed: () {
+                                      botProvider
+                                          .deleteAIBot(bot.id); // Xóa bot
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                );
-              },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showCreateBotDialog(context); // Hiển thị form tạo bot khi nhấn nút
-        },
-        child: const Icon(Icons.add),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            _showCreateBotDialog(context); // Hiển thị form tạo bot khi nhấn nút
+          },
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }

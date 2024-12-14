@@ -13,7 +13,7 @@ class IconButtonsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween, // Để canh lề các phần tử
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -24,7 +24,10 @@ class IconButtonsRow extends StatelessWidget {
             _buildIconButton(Icons.access_time, 'view_history'),
           ],
         ),
+
+        // Remaining usage
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
               Icons.local_fire_department_sharp,
@@ -44,7 +47,7 @@ class IconButtonsRow extends StatelessWidget {
 
   Widget _buildIconButton(IconData icon, String action) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 1.0),
+      padding: const EdgeInsets.symmetric(horizontal: .4),
       child: IconButton(
         icon: Icon(icon),
         iconSize: 18,

@@ -10,31 +10,33 @@ class KnowledgeBase extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Knowledge Base'),
-      ),
-      drawer: const AppDrawer(),
-      body: SingleChildScrollView(
-        child: Column(
-          children: <Widget>[
-            Container(
-              margin: const EdgeInsets.all(16.0),
-              child: const Row(
-                children: <Widget>[
-                  Expanded(child: SearchTextField()),
-                  SizedBox(width: 16.0),
-                  // Add margin between the search field and the button
-                  CreateKBButton(),
-                ],
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Knowledge Base'),
+        ),
+        drawer: const AppDrawer(),
+        body: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              Container(
+                margin: const EdgeInsets.all(16.0),
+                child: const Row(
+                  children: <Widget>[
+                    Expanded(child: SearchTextField()),
+                    SizedBox(width: 16.0),
+                    // Add margin between the search field and the button
+                    CreateKBButton(),
+                  ],
+                ),
               ),
-            ),
-            const Divider(
-              indent: 10,
-              endIndent: 10,
-            ),
-            const KnowledgeBaseListView(),
-          ],
+              const Divider(
+                indent: 10,
+                endIndent: 10,
+              ),
+              const KnowledgeBaseListView(),
+            ],
+          ),
         ),
       ),
     );

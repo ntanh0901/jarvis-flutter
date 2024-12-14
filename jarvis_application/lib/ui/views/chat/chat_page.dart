@@ -120,7 +120,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
           ..setAssistant(currAssistant.dto);
 
         response = await _dio.post(
-          '/api/v1/ai-chat', // Adjust endpoint if necessary
+          '/api/v1/ai-chat',
           data: requestBody.toJsonFirstTime(),
           options: Options(headers: {'x-jarvis-guid': ''}),
         );
@@ -424,6 +424,9 @@ class _ChatPageState extends ConsumerState<ChatPage>
                   controller: messageController,
                   decoration: const InputDecoration(
                     hintText: 'Type a message...',
+                    hintStyle: TextStyle(
+                      color: Color(0xFFB9B9B9),
+                    ),
                     border: InputBorder.none,
                     isDense: true,
                     contentPadding: EdgeInsets.symmetric(vertical: 8.0),
@@ -534,99 +537,110 @@ class _ChatPageState extends ConsumerState<ChatPage>
 
   @override
   Widget build(BuildContext context) {
-    return Screenshot(
-      controller: screenshotController,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Chat',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 24,
-            ),
-          ),
-          backgroundColor: Colors.white,
-          elevation: 0,
-          centerTitle: true,
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/publishing-platforms');
-              },
-              child: const Text(
-                'Publish',
-                style: TextStyle(color: Colors.blue, fontSize: 16),
+    return SafeArea(
+      child: Screenshot(
+        controller: screenshotController,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text(
+              'Chat',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 24,
               ),
             ),
-          ],
-        ),
-        drawer: const AppDrawer(),
-        body: SafeArea(
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-              const LogoWidget(),
-              const SizedBox(height: 10),
-              const GreetingText(),
-              const SizedBox(height: 10),
-              Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  itemCount: messages.length + (isTyping ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index == messages.length && isTyping) {
-                      // Hiển thị hiệu ứng "jumping dots" khi đang chờ phản hồi
-                      return const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: SpinKitThreeBounce(
-                            color: Colors.grey,
-                            size: 20.0,
+            backgroundColor: Colors.white,
+            elevation: 0,
+            centerTitle: true,
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/publishing-platforms');
+                },
+                child: const Text(
+                  'Publish',
+                  style: TextStyle(color: Colors.blue, fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+          drawer: const AppDrawer(),
+          body: SafeArea(
+            child: Column(
+              children: [
+                if (messages.isEmpty) ...[
+                  const LogoWidget(),
+                  const SizedBox(height: 10),
+                  const GreetingText(),
+                  const SizedBox(height: 10),
+                ],
+                Expanded(
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    itemCount: messages.length + (isTyping ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == messages.length && isTyping) {
+                        return const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: SpinKitThreeBounce(
+                              color: Colors.grey,
+                              size: 20.0,
+                            ),
+                          ),
+                        );
+                      }
+
+                      final message = messages[index];
+                      return Align(
+                        alignment: message.role == 'user'
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Container(
+                          margin: message.role == 'user'
+                              ? const EdgeInsets.only(
+                                  left: 50, right: 10, top: 5, bottom: 5)
+                              : const EdgeInsets.only(
+                                  left: 10, right: 50, top: 5, bottom: 5),
+                          padding: const EdgeInsets.all(15),
+                          decoration: BoxDecoration(
+                            color: message.role == 'user'
+                                ? Colors.blue[100]
+                                : Colors.grey[300],
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(
+                                  message.role == 'user' ? 20 : 0),
+                              topRight: Radius.circular(
+                                  message.role == 'user' ? 0 : 20),
+                              bottomLeft: const Radius.circular(20),
+                              bottomRight: const Radius.circular(20),
+                            ),
+                          ),
+                          child: Flexible(
+                            child: Text(message.content!),
                           ),
                         ),
                       );
-                    }
-
-                    final message = messages[index];
-                    return Align(
-                      alignment: message.role == 'user'
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      child: Container(
-                        margin: message.role == 'user'
-                            ? const EdgeInsets.only(
-                                left: 50, right: 10, top: 5, bottom: 5)
-                            : const EdgeInsets.only(
-                                left: 10, right: 50, top: 5, bottom: 5),
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: message.role == 'user'
-                              ? Colors.blue[100]
-                              : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(message.content!),
-                      ),
-                    );
-                  },
+                    },
+                  ),
                 ),
-              ),
-              ActionRow(
-                assistants: assistants,
-                selectedAssistant: selectedAssistant,
-                onAssistantSelected: (assistant) {
-                  setState(() {
-                    selectedAssistant = assistant;
-                  });
-                },
-                onActionSelected: (action) {
-                  _handleAction(action, context);
-                },
-                remainUsage: remainUsage,
-              ),
-              _buildChatInput(),
-            ],
+                ActionRow(
+                  assistants: assistants,
+                  selectedAssistant: selectedAssistant,
+                  onAssistantSelected: (assistant) {
+                    setState(() {
+                      selectedAssistant = assistant;
+                    });
+                  },
+                  onActionSelected: (action) {
+                    _handleAction(action, context);
+                  },
+                  remainUsage: remainUsage,
+                ),
+                _buildChatInput(),
+              ],
+            ),
           ),
         ),
       ),
