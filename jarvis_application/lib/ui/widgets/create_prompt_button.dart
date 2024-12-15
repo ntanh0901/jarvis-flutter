@@ -12,8 +12,10 @@ class CreatePromptButton extends StatelessWidget {
       color: Colors.white,
       child: Center(
         child: Ink(
+          width: 40.0,
+          height: 40.0,
           decoration: const ShapeDecoration(
-            color: Colors.lightBlue,
+            color: Color(0xff6841EA),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(20.0)),
             ),

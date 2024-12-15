@@ -3,19 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/api_endpoints.dart';
 import '../../providers/dio_provider.dart';
-import 'token_manager.dart';
 
 final authServiceProvider = Provider<AuthService>((ref) {
-  final tokenManager = ref.read(tokenManagerProvider);
   final dio = ref.read(dioProvider);
-  return AuthService(dio, tokenManager);
+  return AuthService(dio);
 });
 
 class AuthService {
   final Dio _dio;
-  final TokenManager _tokenManager;
 
-  AuthService(this._dio, this._tokenManager);
+  AuthService(this._dio);
 
   Future<Map<String, dynamic>?> signUp(
       String username, String email, String password) async {

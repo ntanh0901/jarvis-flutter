@@ -1,5 +1,8 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+
+import '../../../data/models/prompt.dart';
 
 class ApiService {
   static const String baseUrl = 'https://api.dev.jarvis.cx';
@@ -42,10 +45,9 @@ class ApiService {
   }
 
   static Future<void> refreshAccessToken() async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/api/v1/auth/refresh'),
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/v1/auth/refresh?refreshToken=$refreshToken'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'refreshToken': refreshToken}),
     );
 
     if (response.statusCode == 200) {
@@ -58,7 +60,7 @@ class ApiService {
     }
   }
 
-  static Future<List<Item>> getPrompts(
+  static Future<List<Prompt>> getPrompts(
       {String? category, String? query, bool? isPublic}) async {
     if (accessToken == null) {
       await signIn();
@@ -88,7 +90,7 @@ class ApiService {
       print('Prompts fetched successfully.');
       print('Prompts count: ${data['items'].length}');
       return (data['items'] as List)
-          .map((item) => Item.fromJson(item))
+          .map((item) => Prompt.fromJson(item))
           .toList();
     } else {
       print('Failed to load prompts. Status code: ${response.statusCode}');
@@ -225,52 +227,5 @@ class ApiService {
       print('Failed to delete prompt. Status code: ${response.statusCode}');
       throw Exception('Failed to delete prompt');
     }
-  }
-}
-
-class Item {
-  final String id;
-  final String? category;
-  String content;
-  final String createdAt;
-  final String? description;
-  bool? isFavorite;
-  bool? isPublic;
-  final String? language;
-  String title;
-  final String updatedAt;
-  final String? userId;
-  final String? userName;
-
-  Item({
-    required this.id,
-    this.category,
-    required this.content,
-    required this.createdAt,
-    this.description,
-    this.isFavorite,
-    this.isPublic,
-    this.language,
-    required this.title,
-    required this.updatedAt,
-    this.userId,
-    this.userName,
-  });
-
-  factory Item.fromJson(Map<String, dynamic> json) {
-    return Item(
-      id: json['_id'],
-      category: json['category'],
-      content: json['content'],
-      createdAt: json['createdAt'],
-      description: json['description'],
-      isFavorite: json['isFavorite'],
-      isPublic: json['isPublic'],
-      language: json['language'],
-      title: json['title'],
-      updatedAt: json['updatedAt'],
-      userId: json['userId'],
-      userName: json['userName'],
-    );
   }
 }
