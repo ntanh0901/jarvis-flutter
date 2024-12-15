@@ -1,6 +1,8 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
+
+import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 
 class UploadDialog extends StatelessWidget {
   final Function(File?) onFilePicked;
@@ -10,64 +12,96 @@ class UploadDialog extends StatelessWidget {
   Future<void> _pickPdfFile(BuildContext context) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf'], // Chỉ cho phép chọn file PDF
+      allowedExtensions: ['pdf'], // Only allow PDF files
     );
 
     if (result != null) {
       File file = File(result.files.single.path!);
-      Navigator.of(context).pop(); // Đóng hộp thoại sau khi chọn file
-      onFilePicked(file); // Trả file về qua callback
+      Navigator.of(context).pop(); // Close the dialog after selecting the file
+      onFilePicked(file); // Return the file via callback
     } else {
-      Navigator.of(context).pop(); // Đóng nếu không chọn file
-      onFilePicked(null); // Trả null nếu người dùng hủy chọn
+      Navigator.of(context).pop(); // Close the dialog if the user cancels
+      onFilePicked(null); // Return null if no file was picked
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text('Upload PDF'),
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(30),
       ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-              'Use Chat with PDF to easily get intelligent summaries and answers for your documents.'),
-          const SizedBox(height: 20),
-          GestureDetector(
-            onTap: () => _pickPdfFile(context), // Gọi hàm chọn file
-            child: Container(
-              height: 150,
-              width: 300,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.picture_as_pdf, size: 50),
-                  const SizedBox(height: 10),
-                  const Text('Click or drag and drop here to upload'),
-                  const SizedBox(height: 5),
-                  Text('File types supported: PDF  |  Max file size: 50MB',
-                      style:
-                      TextStyle(fontSize: 10, color: Colors.grey.shade600)),
-                ],
+      backgroundColor: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(30.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Upload PDF',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+            // Dialog content
+
+            const SizedBox(height: 8),
+            const Text(
+              'Use Chat with PDF to easily get intelligent summaries and answers for your documents.',
+            ),
+            const SizedBox(height: 16),
+            DottedBorder(
+              color: Colors.grey,
+              strokeWidth: 1,
+              borderType: BorderType.RRect,
+              radius: const Radius.circular(12),
+              child: GestureDetector(
+                onTap: () => _pickPdfFile(context),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  child: const Column(
+                    children: [
+                      Icon(
+                        Icons.picture_as_pdf,
+                        size: 50,
+                        color: Colors.blueGrey,
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Click or drag and drop here to upload',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'File types supported: PDF | Max file size: 50MB',
+                        style: TextStyle(fontSize: 10, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

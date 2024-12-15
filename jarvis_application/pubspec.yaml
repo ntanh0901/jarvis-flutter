@@ -57,6 +57,8 @@ dependencies:
   flutter_spinkit: ^5.2.1
   flutter_bloc: ^8.1.6
   sentry_flutter: ^8.11.0
+  dotted_border: ^2.1.0
+  flutter_advanced_segment: ^3.0.2
 
 dev_dependencies:
   flutter_test:
