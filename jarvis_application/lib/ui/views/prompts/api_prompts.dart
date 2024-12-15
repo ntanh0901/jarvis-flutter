@@ -228,4 +228,8 @@ class ApiService {
       throw Exception('Failed to delete prompt');
     }
   }
+
+  static List<String> getCategories() {
+    return categories;
+  }
 }

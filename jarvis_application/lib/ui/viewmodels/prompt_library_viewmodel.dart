@@ -3,62 +3,53 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/prompt.dart';
 import '../views/prompts/api_prompts.dart';
 
-// Define the state model for managing prompts
-class PromptState {
+class PromptLibraryState {
   final bool isLoading;
+  final bool isMyPromptSelected;
   final List<Prompt> myPrompts;
   final List<Prompt> publicPrompts;
   final List<Prompt> filteredPrompts;
   final String selectedCategory;
   final String searchQuery;
+  final List<String> categories;
 
-  PromptState({
-    required this.isLoading,
-    required this.myPrompts,
-    required this.publicPrompts,
-    required this.filteredPrompts,
-    required this.selectedCategory,
-    required this.searchQuery,
+  PromptLibraryState({
+    this.isLoading = true,
+    this.isMyPromptSelected = true,
+    this.myPrompts = const [],
+    this.publicPrompts = const [],
+    this.filteredPrompts = const [],
+    this.selectedCategory = 'All',
+    this.searchQuery = '',
+    this.categories = const [],
   });
 
-  // Copy constructor to easily create a new state based on the old one
-  PromptState copyWith({
+  PromptLibraryState copyWith({
     bool? isLoading,
+    bool? isMyPromptSelected,
     List<Prompt>? myPrompts,
     List<Prompt>? publicPrompts,
     List<Prompt>? filteredPrompts,
     String? selectedCategory,
     String? searchQuery,
+    List<String>? categories,
   }) {
-    return PromptState(
+    return PromptLibraryState(
       isLoading: isLoading ?? this.isLoading,
+      isMyPromptSelected: isMyPromptSelected ?? this.isMyPromptSelected,
       myPrompts: myPrompts ?? this.myPrompts,
       publicPrompts: publicPrompts ?? this.publicPrompts,
       filteredPrompts: filteredPrompts ?? this.filteredPrompts,
       selectedCategory: selectedCategory ?? this.selectedCategory,
       searchQuery: searchQuery ?? this.searchQuery,
+      categories: categories ?? this.categories,
     );
   }
 }
 
-// Define the Riverpod provider for the view model
-final promptViewModelProvider =
-    StateNotifierProvider<PromptViewModel, PromptState>((ref) {
-  return PromptViewModel();
-});
+class PromptNotifier extends StateNotifier<PromptLibraryState> {
+  PromptNotifier() : super(PromptLibraryState());
 
-class PromptViewModel extends StateNotifier<PromptState> {
-  PromptViewModel()
-      : super(PromptState(
-          isLoading: true,
-          myPrompts: [],
-          publicPrompts: [],
-          filteredPrompts: [],
-          selectedCategory: 'All',
-          searchQuery: '',
-        ));
-
-  // Fetch user-specific prompts
   Future<void> fetchMyPrompts() async {
     try {
       final privatePrompts = await ApiService.getPrompts(isPublic: false);
@@ -66,7 +57,7 @@ class PromptViewModel extends StateNotifier<PromptState> {
       state = state.copyWith(
         myPrompts: [
           ...privatePrompts,
-          ...favoritePrompts.where((prompt) => prompt.isFavorite == true)
+          ...favoritePrompts.where((prompt) => prompt.isFavorite == true),
         ],
       );
     } catch (e) {
@@ -74,13 +65,18 @@ class PromptViewModel extends StateNotifier<PromptState> {
     }
   }
 
-  // Fetch public prompts
   Future<void> fetchPublicPrompts() async {
     try {
       final fetchedPrompts = await ApiService.getPrompts(isPublic: true);
+      final fetchedCategories = fetchedPrompts
+          .map((prompt) => prompt.category)
+          .whereType<String>()
+          .toSet()
+          .toList();
       state = state.copyWith(
         publicPrompts: fetchedPrompts,
         filteredPrompts: fetchedPrompts,
+        categories: ['All', ...fetchedCategories],
         selectedCategory: 'All',
         isLoading: false,
       );
@@ -89,7 +85,19 @@ class PromptViewModel extends StateNotifier<PromptState> {
     }
   }
 
-  // Toggle favorite state
+  Future<void> refreshPrompts() async {
+    await fetchMyPrompts();
+    await fetchPublicPrompts();
+  }
+
+  Future<void> deletePrompt(String id) async {
+    try {
+      await ApiService.deletePrompt(id);
+    } catch (e) {
+      print('Error deleting prompt: $e');
+    }
+  }
+
   Future<void> toggleFavorite(Prompt prompt) async {
     try {
       final newFavoriteStatus = !(prompt.isFavorite ?? false);
@@ -99,9 +107,10 @@ class PromptViewModel extends StateNotifier<PromptState> {
         await ApiService.unfavoritePrompt(prompt.id);
       }
 
+      // Update the prompt locally
       prompt.isFavorite = newFavoriteStatus;
 
-      // Update the state to reflect the favorite toggle
+      refreshPrompts();
       state = state.copyWith(
         myPrompts: [...state.myPrompts],
         publicPrompts: [...state.publicPrompts],
@@ -111,7 +120,6 @@ class PromptViewModel extends StateNotifier<PromptState> {
     }
   }
 
-  // Update prompt details
   Future<void> updatePrompt(
       Prompt prompt, String newTitle, String newContent) async {
     try {
@@ -120,10 +128,11 @@ class PromptViewModel extends StateNotifier<PromptState> {
         title: newTitle,
         content: newContent,
       );
+
+      // Update the prompt locally
       prompt.title = newTitle;
       prompt.content = newContent;
 
-      // Update the state
       state = state.copyWith(
         publicPrompts: [...state.publicPrompts],
         myPrompts: [...state.myPrompts],
@@ -133,7 +142,6 @@ class PromptViewModel extends StateNotifier<PromptState> {
     }
   }
 
-  // Filter prompts based on category and search query
   void filterPrompts() {
     state = state.copyWith(
       filteredPrompts: state.publicPrompts.where((prompt) {
@@ -152,15 +160,23 @@ class PromptViewModel extends StateNotifier<PromptState> {
     );
   }
 
-  // Change category filter
   void changeCategory(String category) {
     state = state.copyWith(selectedCategory: category);
     filterPrompts();
   }
 
-  // Change search query
   void changeSearchQuery(String query) {
     state = state.copyWith(searchQuery: query);
     filterPrompts();
   }
+
+  void togglePromptSelection() {
+    state = state.copyWith(isMyPromptSelected: !state.isMyPromptSelected);
+  }
 }
+
+// Define the Riverpod provider for the PromptNotifier
+final promptViewModelProvider =
+    StateNotifierProvider<PromptNotifier, PromptLibraryState>((ref) {
+  return PromptNotifier();
+});
