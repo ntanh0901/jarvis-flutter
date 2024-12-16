@@ -215,9 +215,8 @@ class _ChatPageState extends ConsumerState<ChatPage>
 
     try {
       // Build request URL
-      //var url = Uri.parse('https://api.dev.jarvis.cx/api/v1/ai-chat/conversations');
       var url = Uri.https(
-        'api.dev.jarvis.cx',
+        'api.jarvis.cx',
         '/api/v1/ai-chat/conversations', // Đường dẫn không chứa query string
         {
           'assistantId': idValues.reverse[queryParams.assistantId],
@@ -280,7 +279,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
     try {
       // Build request URL
       var url = Uri.https(
-        'api.dev.jarvis.cx',
+        'api.jarvis.cx',
         '/api/v1/ai-chat/conversations/$newConversationID/messages',
         // Đường dẫn không chứa query string
         {

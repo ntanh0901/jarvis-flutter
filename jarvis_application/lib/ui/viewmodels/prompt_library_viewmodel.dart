@@ -9,7 +9,7 @@ class PromptLibraryState {
   final List<Prompt> myPrompts;
   final List<Prompt> publicPrompts;
   final List<Prompt> filteredPrompts;
-  final String selectedCategory;
+  final List<String> selectedCategories; // Changed to a list of categories
   final String searchQuery;
   final List<String> categories;
 
@@ -19,7 +19,7 @@ class PromptLibraryState {
     this.myPrompts = const [],
     this.publicPrompts = const [],
     this.filteredPrompts = const [],
-    this.selectedCategory = 'All',
+    this.selectedCategories = const [], // Default to an empty list
     this.searchQuery = '',
     this.categories = const [],
   });
@@ -30,7 +30,7 @@ class PromptLibraryState {
     List<Prompt>? myPrompts,
     List<Prompt>? publicPrompts,
     List<Prompt>? filteredPrompts,
-    String? selectedCategory,
+    List<String>? selectedCategories, // Changed to a list
     String? searchQuery,
     List<String>? categories,
   }) {
@@ -40,7 +40,8 @@ class PromptLibraryState {
       myPrompts: myPrompts ?? this.myPrompts,
       publicPrompts: publicPrompts ?? this.publicPrompts,
       filteredPrompts: filteredPrompts ?? this.filteredPrompts,
-      selectedCategory: selectedCategory ?? this.selectedCategory,
+      selectedCategories:
+          selectedCategories ?? this.selectedCategories, // Handle list
       searchQuery: searchQuery ?? this.searchQuery,
       categories: categories ?? this.categories,
     );
@@ -49,6 +50,20 @@ class PromptLibraryState {
 
 class PromptNotifier extends StateNotifier<PromptLibraryState> {
   PromptNotifier() : super(PromptLibraryState());
+
+  Future<void> signInAndFetchPrompts() async {
+    state = state.copyWith(isLoading: true);
+
+    try {
+      await ApiService.signIn();
+      await fetchMyPrompts();
+      await fetchPublicPrompts();
+    } catch (e) {
+      print('Error during sign in and fetch prompts: $e');
+    } finally {
+      state = state.copyWith(isLoading: false);
+    }
+  }
 
   Future<void> fetchMyPrompts() async {
     try {
@@ -77,7 +92,7 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
         publicPrompts: fetchedPrompts,
         filteredPrompts: fetchedPrompts,
         categories: ['All', ...fetchedCategories],
-        selectedCategory: 'All',
+        selectedCategories: ['All'],
         isLoading: false,
       );
     } catch (e) {
@@ -143,30 +158,59 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
   }
 
   void filterPrompts() {
-    state = state.copyWith(
-      filteredPrompts: state.publicPrompts.where((prompt) {
-        final matchesCategory = state.selectedCategory == 'All' ||
-            prompt.category == state.selectedCategory;
-        final matchesQuery = state.searchQuery.isEmpty ||
-            prompt.title
-                .toLowerCase()
-                .contains(state.searchQuery.toLowerCase()) ||
-            (prompt.description
-                    ?.toLowerCase()
-                    .contains(state.searchQuery.toLowerCase()) ??
-                false);
-        return matchesCategory && matchesQuery;
-      }).toList(),
-    );
+    bool matchesQuery(Prompt prompt) {
+      return state.searchQuery.isEmpty ||
+          prompt.title
+              .toLowerCase()
+              .contains(state.searchQuery.toLowerCase()) ||
+          (prompt.description
+                  ?.toLowerCase()
+                  .contains(state.searchQuery.toLowerCase()) ??
+              false);
+    }
+
+    if (state.selectedCategories.contains('All')) {
+      state = state.copyWith(
+        filteredPrompts: state.publicPrompts.where(matchesQuery).toList(),
+      );
+    } else {
+      state = state.copyWith(
+        filteredPrompts: state.publicPrompts.where((prompt) {
+          final matchesCategory =
+              state.selectedCategories.contains(prompt.category);
+          return matchesCategory && matchesQuery(prompt);
+        }).toList(),
+      );
+    }
   }
 
   void changeCategory(String category) {
-    state = state.copyWith(selectedCategory: category);
+    final updatedCategories = List<String>.from(state.selectedCategories);
+    if (category == 'All') {
+      updatedCategories.clear();
+      updatedCategories.add('All');
+    } else {
+      if (updatedCategories.contains('All')) {
+        updatedCategories.remove('All');
+      }
+      if (updatedCategories.contains(category)) {
+        updatedCategories.remove(category);
+      } else {
+        updatedCategories.add(category);
+      }
+    }
+
+    state = state.copyWith(selectedCategories: updatedCategories);
     filterPrompts();
   }
 
   void changeSearchQuery(String query) {
     state = state.copyWith(searchQuery: query);
+    filterPrompts();
+  }
+
+  void clearSelectedCategories() {
+    state = state.copyWith(selectedCategories: ['All']);
     filterPrompts();
   }
 

@@ -1,14 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SearchTextField extends StatelessWidget {
-  final ValueChanged<String>? onSubmitted;
+// Define a StateProvider for managing the text field state
+final searchTextProvider = StateProvider<String>((ref) => '');
 
-  const SearchTextField({super.key, this.onSubmitted});
+class SearchTextField extends ConsumerWidget {
+  final ValueChanged<String>? onChanged;
+
+  const SearchTextField({super.key, this.onChanged});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final text = ref.watch(searchTextProvider);
+    final textNotifier = ref.read(searchTextProvider.notifier);
+
     return TextField(
-      obscureText: false,
+      controller: TextEditingController(text: text)
+        ..selection = TextSelection.collapsed(offset: text.length),
+      onChanged: (value) {
+        textNotifier.state = value;
+        if (onChanged != null) {
+          onChanged!(value);
+        }
+      },
       decoration: InputDecoration(
         filled: true,
         fillColor: const Color(0xFFF1F2F3),
@@ -28,8 +42,15 @@ class SearchTextField extends StatelessWidget {
           color: Colors.grey,
         ),
         prefixIcon: const Icon(Icons.search),
+        suffixIcon: text.isNotEmpty
+            ? IconButton(
+                icon: const Icon(Icons.clear),
+                onPressed: () => textNotifier.state = '',
+                color: Colors.grey,
+                iconSize: 20.0,
+              )
+            : null,
       ),
-      onSubmitted: onSubmitted,
     );
   }
 }

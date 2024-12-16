@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:jarvis_application/ui/views/prompts/api_prompts.dart';
 import 'package:jarvis_application/ui/widgets/create_prompt_button.dart';
 import 'package:jarvis_application/ui/widgets/prompts_switch_button.dart';
 import 'package:jarvis_application/ui/widgets/search_text_field.dart';
@@ -21,25 +20,10 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
   @override
   void initState() {
     super.initState();
-    signInAndFetchPrompts();
-  }
-
-  Future<void> signInAndFetchPrompts() async {
-    var promptNotifier = ref.read(promptViewModelProvider.notifier);
-    var state = ref.read(promptViewModelProvider);
-
-    state = state.copyWith(isLoading: true);
-
-    try {
-      await ApiService.signIn();
-      await promptNotifier.fetchMyPrompts();
-      await promptNotifier.fetchPublicPrompts();
-    } catch (e) {
-      print('Error during sign in and fetch prompts: $e');
-    } finally {
-      if (!mounted) return;
-      state = state.copyWith(isLoading: false);
-    }
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(promptViewModelProvider.notifier).signInAndFetchPrompts();
+    });
   }
 
   @override
@@ -88,7 +72,7 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: SearchTextField(
-                    onSubmitted: (query) {
+                    onChanged: (query) {
                       viewModel.changeSearchQuery(query);
                     },
                   ),
@@ -96,21 +80,32 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                 const SizedBox(height: 16.0),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: DropdownButtonFormField<String>(
-                    value: state.selectedCategory,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Category',
-                    ),
-                    items: state.categories.map((String category) {
-                      return DropdownMenuItem<String>(
-                        value: category,
-                        child: Text(category),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      viewModel.changeCategory(newValue!);
-                    },
+                  child: Column(
+                    children: [
+                      Wrap(
+                        spacing: 8.0, // space between chips
+                        children: state.categories.map((String category) {
+                          return InputChip(
+                            label: Text(category),
+                            selected:
+                                state.selectedCategories.contains(category),
+                            selectedColor: Colors.blue.shade100,
+                            onSelected: (bool selected) {
+                              viewModel.changeCategory(category);
+                            },
+                            showCheckmark: false,
+                            deleteIcon: null,
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: () {
+                          viewModel.clearSelectedCategories();
+                        },
+                        child: const Text('Clear All'),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16.0),
@@ -129,7 +124,11 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                                 )),
                             subtitle: state.isMyPromptSelected
                                 ? null
-                                : Text(prompt.description ?? ''),
+                                : Text(
+                                    prompt.description ?? '',
+                                    style: const TextStyle(
+                                        color: Color(0xFF89929D)),
+                                  ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: <Widget>[
@@ -422,7 +421,11 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                   borderRadius: BorderRadius.circular(16.0),
                 ),
               ),
-              icon: const Icon(Icons.check_circle, color: Colors.white),
+              icon: Image.asset(
+                'assets/images/chat.png',
+                height: 20.0,
+                width: 20.0,
+              ),
               label: const Text(
                 'Use Prompt',
                 style: TextStyle(color: Colors.white),

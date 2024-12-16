@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import '../../../data/models/prompt.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://api.dev.jarvis.cx';
+  static const String baseUrl = 'https://api.jarvis.cx';
   static String? accessToken;
   static String? refreshToken;
 
@@ -28,8 +28,8 @@ class ApiService {
       Uri.parse('$baseUrl/api/v1/auth/sign-in'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'email': 'ntanh.fit@gmail.com',
-        'password': 'JarvisApplication123!',
+        'email': 'test_5@gmail.com',
+        'password': 'Khtn@ptmle1122',
       }),
     );
 
