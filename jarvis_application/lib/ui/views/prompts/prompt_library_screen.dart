@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,7 @@ import 'package:jarvis_application/ui/widgets/search_text_field.dart';
 import '../../../data/models/prompt.dart';
 import '../../viewmodels/prompt_library_viewmodel.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/chips_widget.dart';
 
 class PromptLibrary extends ConsumerStatefulWidget {
   const PromptLibrary({super.key});
@@ -72,41 +74,16 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: SearchTextField(
-                    onChanged: (query) {
+                    onChange: (query) {
                       viewModel.changeSearchQuery(query);
                     },
                   ),
                 ),
                 const SizedBox(height: 16.0),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Column(
-                    children: [
-                      Wrap(
-                        spacing: 8.0, // space between chips
-                        children: state.categories.map((String category) {
-                          return InputChip(
-                            label: Text(category),
-                            selected:
-                                state.selectedCategories.contains(category),
-                            selectedColor: Colors.blue.shade100,
-                            onSelected: (bool selected) {
-                              viewModel.changeCategory(category);
-                            },
-                            showCheckmark: false,
-                            deleteIcon: null,
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 8),
-                      ElevatedButton(
-                        onPressed: () {
-                          viewModel.clearSelectedCategories();
-                        },
-                        child: const Text('Clear All'),
-                      ),
-                    ],
-                  ),
+                Chips(
+                  items: state.categories,
+                  selectedItems: state.selectedCategories,
+                  onItemSelected: viewModel.changeCategory,
                 ),
                 const SizedBox(height: 16.0),
               ],
@@ -146,6 +123,11 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                                   ),
                                 if (prompt.isPublic == true) ...[
                                   IconButton(
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                    style: const ButtonStyle(
+                                        tapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap),
                                     icon: Icon(
                                       prompt.isFavorite == true
                                           ? Icons.favorite
@@ -275,7 +257,6 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title with Close Button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -290,16 +271,22 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                       ),
                     ),
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          style: const ButtonStyle(
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                           icon: Icon(
-                              (prompt.isFavorite ?? false)
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                              color: (prompt.isFavorite ?? false)
-                                  ? Colors.red
-                                  : Colors.grey,
-                              size: 20),
+                            (prompt.isFavorite ?? false)
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: (prompt.isFavorite ?? false)
+                                ? Colors.red
+                                : Colors.grey,
+                            size: 20,
+                          ),
                           onPressed: () async {
                             await ref
                                 .read(promptViewModelProvider.notifier)
@@ -307,7 +294,12 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                             (context as Element).markNeedsBuild();
                           },
                         ),
+                        const SizedBox(width: 15.0),
                         IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          style: const ButtonStyle(
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                           icon: const Icon(Icons.close,
                               color: Colors.grey, size: 20),
                           onPressed: () {
@@ -318,9 +310,7 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 16.0),
-
                 ListBody(
                   children: <Widget>[
                     Text.rich(
@@ -361,7 +351,6 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                   ],
                 ),
                 const SizedBox(height: 16.0),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -385,7 +374,6 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                     ),
                   ],
                 ),
-
                 Flexible(
                   child: Container(
                     decoration: BoxDecoration(
@@ -421,20 +409,19 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                   borderRadius: BorderRadius.circular(16.0),
                 ),
               ),
-              icon: Image.asset(
-                'assets/images/chat.png',
-                height: 20.0,
-                width: 20.0,
+              icon: const Icon(
+                CupertinoIcons.conversation_bubble,
+                color: Colors.white,
+                size: 20.0,
               ),
               label: const Text(
                 'Use Prompt',
                 style: TextStyle(color: Colors.white),
               ),
               onPressed: () {
-                // Handle use prompt action
                 Navigator.of(context).pop();
               },
-            ),
+            )
           ],
         );
       },

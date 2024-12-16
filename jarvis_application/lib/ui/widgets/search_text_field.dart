@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final searchTextProvider = StateProvider<String>((ref) => '');
 
 class SearchTextField extends ConsumerWidget {
-  final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onChange;
 
-  const SearchTextField({super.key, this.onChanged});
+  const SearchTextField({super.key, this.onChange});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -17,10 +17,10 @@ class SearchTextField extends ConsumerWidget {
     return TextField(
       controller: TextEditingController(text: text)
         ..selection = TextSelection.collapsed(offset: text.length),
-      onChanged: (value) {
+      onChange: (value) {
         textNotifier.state = value;
-        if (onChanged != null) {
-          onChanged!(value);
+        if (onChange != null) {
+          onChange!(value);
         }
       },
       decoration: InputDecoration(
@@ -45,7 +45,12 @@ class SearchTextField extends ConsumerWidget {
         suffixIcon: text.isNotEmpty
             ? IconButton(
                 icon: const Icon(Icons.clear),
-                onPressed: () => textNotifier.state = '',
+                onPressed: () {
+                  textNotifier.state = '';
+                  if (onChange != null) {
+                    onChange!('');
+                  }
+                },
                 color: Colors.grey,
                 iconSize: 20.0,
               )
