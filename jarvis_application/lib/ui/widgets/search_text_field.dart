@@ -17,7 +17,7 @@ class SearchTextField extends ConsumerWidget {
     return TextField(
       controller: TextEditingController(text: text)
         ..selection = TextSelection.collapsed(offset: text.length),
-      onChange: (value) {
+      onChanged: (value) {
         textNotifier.state = value;
         if (onChange != null) {
           onChange!(value);

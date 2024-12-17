@@ -1,5 +1,3 @@
-// lib/app/app_theme.dart
-
 import 'package:flutter/material.dart';
 
 class AppTheme {
@@ -7,6 +5,10 @@ class AppTheme {
     useMaterial3: true,
     primaryColor: Colors.white,
     scaffoldBackgroundColor: Colors.white,
+    colorScheme: const ColorScheme.light(
+      surface: Colors.white,
+      primary: Colors.deepPurple,
+    ),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.white,
       foregroundColor: Colors.black,

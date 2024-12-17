@@ -158,7 +158,9 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                         },
                         separatorBuilder: (context, index) => const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 15.0),
-                          child: Divider(),
+                          child: Divider(
+                            thickness: 0.4,
+                          ),
                         ),
                       ),
               ),
@@ -178,33 +180,103 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        final double minDialogWidth = MediaQuery.of(context).size.width * 0.8;
+
         return AlertDialog(
-          title: const Text('Edit Prompt'),
-          content: SingleChildScrollView(
+          iconPadding: const EdgeInsets.only(top: 10, right: 10),
+          icon: Align(
+            alignment: Alignment.topRight,
+            child: InkWell(
+              onTap: () {
+                Navigator.pop(context);
+              },
+              child: const Icon(Icons.close, color: Colors.grey, size: 20),
+            ),
+          ),
+          contentPadding:
+              const EdgeInsets.only(left: 20, right: 20, bottom: 10),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+              minWidth: minDialogWidth,
+            ),
             child: Column(
-              children: <Widget>[
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Title',
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Center(
+                  child: Text(
+                    'Edit Prompt',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20.0,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16.0),
+                const Text(
+                  'Title',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8.0),
                 TextField(
-                  controller: contentController,
-                  maxLines: 5,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Prompt',
+                  controller: titleController,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                      borderSide: BorderSide.none,
+                    ),
+                    hintText: 'Enter title',
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+                const Text(
+                  'Prompt',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8.0),
+                Flexible(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16.0),
+                      color: const Color(0xffF1F2F3),
+                    ),
+                    child: TextField(
+                      controller: contentController,
+                      maxLines: 8,
+                      decoration: const InputDecoration(
+                        contentPadding: EdgeInsets.all(16.0),
+                        border: InputBorder.none,
+                        hintText: 'Enter prompt details',
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
           actions: <Widget>[
-            TextButton(
-              child: const Text('Delete'),
+            TextButton.icon(
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.0),
+                ),
+              ),
+              icon: const Icon(
+                Icons.delete,
+                color: Colors.white,
+                size: 20.0,
+              ),
+              label: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.white),
+              ),
               onPressed: () {
                 ref
                     .read(promptViewModelProvider.notifier)
@@ -212,17 +284,27 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                 Navigator.of(context).pop();
               },
             ),
-            TextButton(
-              child: const Text('Update'),
+            TextButton.icon(
+              style: TextButton.styleFrom(
+                backgroundColor: const Color(0xFF6841EA),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.0),
+                ),
+              ),
+              icon: const Icon(
+                Icons.check,
+                color: Colors.white,
+                size: 20.0,
+              ),
+              label: const Text(
+                'Update',
+                style: TextStyle(color: Colors.white),
+              ),
               onPressed: () {
                 ref.read(promptViewModelProvider.notifier).updatePrompt(
                     prompt, titleController.text, contentController.text);
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
@@ -379,9 +461,6 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16.0),
                       color: const Color(0xffF1F2F3),
-                    ),
-                    constraints: BoxConstraints(
-                      minWidth: minDialogWidth,
                     ),
                     child: SingleChildScrollView(
                       controller: scrollController,

@@ -236,7 +236,7 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E3A8A), // Dark blue background
+                color: const Color(0xFF1E3A8A),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Text(
@@ -254,7 +254,7 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: const BoxDecoration(
-                  color: Colors.amber, // Amber color
+                  color: Colors.amber,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -324,7 +324,7 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
       width: double.infinity,
       child: ElevatedButton(
         onPressed: () {
-          // Implement subscription logic
+          // TODO: Implement subscription logic
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
@@ -441,10 +441,10 @@ class _UpgradeAccountScreenState extends State<UpgradeAccountScreen> {
                     child: Text(
                       feature,
                       style: const TextStyle(
-                        fontSize: 14, // Smaller font size
+                        fontSize: 14,
                         color: Colors.black87,
-                        fontWeight: FontWeight.w400, // Regular weight
-                        height: 1.4, // Adjusted line height
+                        fontWeight: FontWeight.w400,
+                        height: 1.4,
                       ),
                     ),
                   ),
