@@ -29,15 +29,15 @@ class IconButtonsRow extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Text(
+              '$remainUsage',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(width: 4),
             const Icon(
               Icons.local_fire_department_sharp,
               size: 22,
               color: Colors.blueAccent,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              '$remainUsage',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -46,13 +46,10 @@ class IconButtonsRow extends StatelessWidget {
   }
 
   Widget _buildIconButton(IconData icon, String action) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: .4),
-      child: IconButton(
-        icon: Icon(icon),
-        iconSize: 18,
-        onPressed: () => onIconPressed(action), // Gửi action đến ActionRow
-      ),
+    return IconButton(
+      icon: Icon(icon),
+      iconSize: 18,
+      onPressed: () => onIconPressed(action),
     );
   }
 }

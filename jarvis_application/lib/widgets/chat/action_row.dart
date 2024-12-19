@@ -34,7 +34,6 @@ class ActionRow extends StatelessWidget {
                 selectedAssistant: selectedAssistant,
                 onAssistantSelected: onAssistantSelected,
               ),
-              const SizedBox(height: 3.0),
               IconButtonsRow(
                 onIconPressed: onActionSelected,
                 remainUsage: remainUsage,
@@ -43,17 +42,6 @@ class ActionRow extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildIconButton(IconData icon, String action) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 1.0),
-      child: IconButton(
-        icon: Icon(icon),
-        iconSize: 18,
-        onPressed: () => onActionSelected(action), // Gửi action đến ActionRow
-      ),
     );
   }
 }

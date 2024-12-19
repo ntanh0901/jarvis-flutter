@@ -22,7 +22,6 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
   @override
   void initState() {
     super.initState();
-    super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(promptViewModelProvider.notifier).signInAndFetchPrompts();
     });
@@ -39,16 +38,24 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Prompt Library'),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 16.0),
-              child: CreatePromptButton(
-                onPromptCreated: viewModel.refreshPrompts,
+            surfaceTintColor: Colors.transparent,
+            backgroundColor: Colors.white,
+            title: const Text('Prompt Library'),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: CreatePromptButton(
+                  onPromptCreated: viewModel.refreshPrompts,
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Divider(
+                color: Colors.grey[200],
+                height: 1,
+              ),
+            )),
         drawer: const AppDrawer(),
         body: Padding(
           padding: const EdgeInsets.all(8.0),
@@ -95,6 +102,7 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                         itemBuilder: (context, index) {
                           final prompt = prompts[index];
                           return ListTile(
+                            key: ValueKey(prompt.id),
                             title: Text(prompt.title,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -159,7 +167,7 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                         separatorBuilder: (context, index) => const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 15.0),
                           child: Divider(
-                            thickness: 0.4,
+                            thickness: 0.2,
                           ),
                         ),
                       ),

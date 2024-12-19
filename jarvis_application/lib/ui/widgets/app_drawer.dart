@@ -116,17 +116,13 @@ class AppDrawer extends ConsumerWidget {
                 context.go('/email-compose');
                 break;
               case 5:
-                // Sign out logic
                 await ref.read(authNotifierProvider.notifier).signOut();
 
-                // Reset drawer state after sign-out
                 ref.read(drawerProvider.notifier).selectItem(0);
 
-                // Navigate to the sign-in page
-                if (context.mounted) {
+                Future.microtask(() {
                   context.go('/sign-in');
-                }
-
+                });
                 break;
             }
           },

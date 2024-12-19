@@ -57,272 +57,280 @@ class _CreateNewPromptState extends ConsumerState<CreateNewPrompt> {
       child: Scaffold(
         body: Stack(
           children: [
-            SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    const Center(
-                      child: Text(
-                        'New Prompt',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    // Public/Private Toggle
-                    Row(
-                      children: [
-                        Row(
-                          children: [
-                            Radio<bool>(
-                              activeColor: Colors.blue,
-                              value: false,
-                              groupValue: promptState.isPublic,
-                              onChanged: (value) => viewModel.state =
-                                  viewModel.state =
-                                      viewModel.state.copyWith(isPublic: value),
-                            ),
-                            const Text('Private Prompt'),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Radio<bool>(
-                              activeColor: Colors.blue,
-                              value: true,
-                              groupValue: promptState.isPublic,
-                              onChanged: (value) => viewModel.state =
-                                  viewModel.state =
-                                      viewModel.state.copyWith(isPublic: value),
-                            ),
-                            const Text('Public Prompt'),
-                          ],
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 8),
-                    // Banner
-                    Container(
-                      padding: const EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFDBE6FF), Color(0xFFF2DEFF)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
+            Column(
+              children: [
+                const SizedBox(height: 16),
+                const Text(
+                  'New Prompt',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                          left: 24, right: 24, bottom: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.max,
                         children: [
-                          Text(
-                            '🎉',
-                            style: TextStyle(
-                              fontSize: 18,
+                          const SizedBox(height: 30),
+                          // Public/Private Toggle
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Row(
+                                children: [
+                                  Radio<bool>(
+                                    activeColor: Colors.blue,
+                                    value: false,
+                                    groupValue: promptState.isPublic,
+                                    onChanged: (value) => viewModel.state =
+                                        viewModel.state = viewModel.state
+                                            .copyWith(isPublic: value),
+                                  ),
+                                  const Text('Private Prompt'),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Radio<bool>(
+                                    activeColor: Colors.blue,
+                                    value: true,
+                                    groupValue: promptState.isPublic,
+                                    onChanged: (value) => viewModel.state =
+                                        viewModel.state = viewModel.state
+                                            .copyWith(isPublic: value),
+                                  ),
+                                  const Text('Public Prompt'),
+                                ],
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 8),
+                          // Banner
+                          Container(
+                            padding: const EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFDBE6FF), Color(0xFFF2DEFF)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '🎉',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Create a Prompt, Win Jarvis Pro',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Create a Prompt, Win Monica Pro',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
+
+                          const SizedBox(height: 16),
+                          // Show fields only if the prompt is public
+                          if (promptState.isPublic) ...[
+                            // Language Field
+                            const Text('Prompt Language',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 8),
+                            IntrinsicWidth(
+                              child: DropdownButtonFormField<String>(
+                                value: promptState.language,
+                                isExpanded:
+                                    true, // Ensures the dropdown expands fully
+                                decoration: const InputDecoration(
+                                  enabledBorder: normalBorder,
+                                  focusedBorder: focusedBorder,
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 8.0, vertical: 0.0),
+                                ),
+                                items: languages.map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  viewModel.state = viewModel.state
+                                      .copyWith(language: value!);
+                                },
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 14,
+                                ),
+                              ),
                             ),
+                          ],
+                          const SizedBox(height: 16),
+                          // Name Field
+                          const Text('Name',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          CustomTextField(
+                            hintText: 'Name of the prompt',
+                            onChanged: (value) {
+                              viewModel.state =
+                                  viewModel.state.copyWith(title: value);
+                            },
+                          ),
+                          if (promptState.isPublic) ...[
+                            const SizedBox(height: 16),
+                            // Category Field
+                            const Text('Category',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 8),
+                            IntrinsicWidth(
+                              child: DropdownButtonFormField<String>(
+                                value: promptState.category,
+                                decoration: const InputDecoration(
+                                  enabledBorder: normalBorder,
+                                  focusedBorder: focusedBorder,
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 8.0, vertical: 0.0),
+                                ),
+                                items: categories.map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(0.0),
+                                      child: Text(value),
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  viewModel.state = viewModel.state
+                                      .copyWith(category: value!);
+                                },
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            const Text('Description (Optional)',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 8),
+                            CustomTextField(
+                              hintText:
+                                  'Describe your prompt so others can have a better understanding',
+                              maxLines: 2,
+                              onChanged: (value) {
+                                viewModel.state = viewModel.state
+                                    .copyWith(description: value);
+                              },
+                            ),
+                          ],
+                          const SizedBox(height: 16),
+                          // Prompt Field
+                          const Text('Prompt',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: RichText(
+                                text: TextSpan(
+                                  style: const TextStyle(color: Colors.black),
+                                  children: [
+                                    const TextSpan(
+                                        text: 'Use square brackets ',
+                                        style: TextStyle(fontSize: 14)),
+                                    const TextSpan(
+                                        text: '[ ]',
+                                        style: TextStyle(
+                                            color: Colors.blue,
+                                            fontWeight: FontWeight.bold)),
+                                    const TextSpan(
+                                        text: ' to specify user input. '),
+                                    TextSpan(
+                                      text: 'Learn More',
+                                      style: const TextStyle(
+                                        color: Color(0xFF7552EC),
+                                        fontWeight: FontWeight.bold,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                      recognizer: TapGestureRecognizer()
+                                        ..onTap = () {
+                                          print('Learn More clicked');
+                                        },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          CustomTextField(
+                            hintText:
+                                'e.g: Write an article about [TOPIC], make sure to include these keywords: [KEYWORDS]',
+                            maxLines: 4,
+                            onChanged: (value) {
+                              viewModel.state =
+                                  viewModel.state.copyWith(content: value);
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Cancel and Save Buttons
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text(
+                                  'Cancel',
+                                  style: TextStyle(
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.deepPurple,
+                                ),
+                                onPressed: () async {
+                                  await viewModel.createPrompt();
+                                  Navigator.pop(context);
+                                },
+                                child: const Text(
+                                  'Create',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
-
-                    const SizedBox(height: 16),
-                    // Show fields only if the prompt is public
-                    if (promptState.isPublic) ...[
-                      // Language Field
-                      const Text('Prompt Language',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      IntrinsicWidth(
-                        child: DropdownButtonFormField<String>(
-                          value: promptState.language,
-                          isExpanded:
-                              true, // Ensures the dropdown expands fully
-                          decoration: const InputDecoration(
-                            enabledBorder: normalBorder,
-                            focusedBorder: focusedBorder,
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 8.0, vertical: 0.0),
-                          ),
-                          items: languages.map((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            viewModel.state =
-                                viewModel.state.copyWith(language: value!);
-                          },
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    // Name Field
-                    const Text('Name',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    CustomTextField(
-                      hintText: 'Name of the prompt',
-                      onChanged: (value) {
-                        viewModel.state =
-                            viewModel.state.copyWith(title: value);
-                      },
-                    ),
-                    if (promptState.isPublic) ...[
-                      const SizedBox(height: 16),
-                      // Category Field
-                      const Text('Category',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      IntrinsicWidth(
-                        child: DropdownButtonFormField<String>(
-                          value: promptState.category,
-                          decoration: const InputDecoration(
-                            enabledBorder: normalBorder,
-                            focusedBorder: focusedBorder,
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 8.0, vertical: 0.0),
-                          ),
-                          items: categories.map((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Padding(
-                                padding: const EdgeInsets.all(0.0),
-                                child: Text(value),
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            viewModel.state =
-                                viewModel.state.copyWith(category: value!);
-                          },
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      const Text('Description (Optional)',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      CustomTextField(
-                        hintText:
-                            'Describe your prompt so others can have a better understanding',
-                        maxLines: 2,
-                        onChanged: (value) {
-                          viewModel.state =
-                              viewModel.state.copyWith(description: value);
-                        },
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    // Prompt Field
-                    const Text('Prompt',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: RichText(
-                          text: TextSpan(
-                            style: const TextStyle(color: Colors.black),
-                            children: [
-                              const TextSpan(
-                                  text: 'Use square brackets ',
-                                  style: TextStyle(fontSize: 14)),
-                              const TextSpan(
-                                  text: '[ ]',
-                                  style: TextStyle(
-                                      color: Colors.blue,
-                                      fontWeight: FontWeight.bold)),
-                              const TextSpan(text: ' to specify user input. '),
-                              TextSpan(
-                                text: 'Learn More',
-                                style: const TextStyle(
-                                  color: Color(0xFF7552EC),
-                                  fontWeight: FontWeight.bold,
-                                  decoration: TextDecoration.underline,
-                                ),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () {
-                                    print('Learn More clicked');
-                                  },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    CustomTextField(
-                      hintText:
-                          'e.g: Write an article about [TOPIC], make sure to include these keywords: [KEYWORDS]',
-                      maxLines: 4,
-                      onChanged: (value) {
-                        viewModel.state =
-                            viewModel.state.copyWith(content: value);
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Cancel and Save Buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: const Text(
-                            'Cancel',
-                            style: TextStyle(
-                                color: Colors.blue,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepPurple,
-                          ),
-                          onPressed: () async {
-                            await viewModel.createPrompt();
-                            Navigator.pop(context);
-                          },
-                          child: const Text(
-                            'Create',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
             // Close Icon
             Positioned(

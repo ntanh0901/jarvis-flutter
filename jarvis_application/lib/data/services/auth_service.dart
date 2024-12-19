@@ -19,6 +19,7 @@ class AuthService {
     try {
       final response = await _dio.post(
         ApiEndpoints.signUp,
+        options: Options(extra: {'requiresAuth': false}),
         data: {'username': username, 'email': email, 'password': password},
       );
       if (response.statusCode == 201) {

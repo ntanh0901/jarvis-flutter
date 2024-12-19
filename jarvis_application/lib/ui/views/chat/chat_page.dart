@@ -2,9 +2,10 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:http/http.dart' as http;
+import 'package:jarvis_application/core/constants/api_endpoints.dart';
 import 'package:jarvis_application/widgets/chat/greeting_text.dart';
 import 'package:screenshot/screenshot.dart';
 
@@ -122,7 +123,6 @@ class _ChatPageState extends ConsumerState<ChatPage>
         response = await _dio.post(
           '/api/v1/ai-chat',
           data: requestBody.toJsonFirstTime(),
-          options: Options(headers: {'x-jarvis-guid': ''}),
         );
 
         print("Meta Req First Time: ${metadata.toJson()}");
@@ -198,13 +198,6 @@ class _ChatPageState extends ConsumerState<ChatPage>
   }
 
   Future<void> _fetchConversations() async {
-    // Setup headers
-    var headers = {
-      'x-jarvis-guid': '',
-      'Authorization': 'Bearer ',
-      'Content-Type': 'application/json',
-    };
-
     // Create query parameters
     ConversationsQueryParams queryParams = ConversationsQueryParams(
       cursor: '',
@@ -215,30 +208,25 @@ class _ChatPageState extends ConsumerState<ChatPage>
 
     try {
       // Build request URL
-      var url = Uri.https(
-        'api.jarvis.cx',
-        '/api/v1/ai-chat/conversations', // Đường dẫn không chứa query string
-        {
-          'assistantId': idValues.reverse[queryParams.assistantId],
-          'assistantModel': 'dify',
-        },
-      );
+      final queryParameters = {
+        'assistantId': idValues.reverse[queryParams.assistantId],
+        'assistantModel': 'dify',
+      };
 
-      // print(url.toString());
-      // print("URLLLLLLLLL: ${url}");
+      // Get Dio instance
 
       // Send request
-      var response = await http.get(url, headers: headers);
+      final response = await _dio.get(
+        ApiEndpoints.getConversations,
+        queryParameters: queryParameters,
+      );
 
       if (response.statusCode == 200) {
         // Parse response
-        var responseData = jsonDecode(response.body);
-        // print(responseData['items']);
-        // print("successsssssssssssssssssssssssssssssssssssssssssss data: $responseData");
+        var responseData = response.data;
 
         ConversationsRes conversations =
             ConversationsRes.fromJson(responseData);
-        // print("Response Dataaaaaaaaaaaaaaaa: $conversations");
 
         setState(() {
           items = List<Map<String, dynamic>>.from(
@@ -252,7 +240,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
         });
       } else {
         String errorMessage =
-            "Request failed with status: ${response.statusCode}\nReason: ${response.reasonPhrase}";
+            "Request failed with status: ${response.statusCode}\nReason: ${response.statusMessage}";
         _showErrorDialog(context, "Error", errorMessage);
       }
     } catch (e) {
@@ -261,13 +249,6 @@ class _ChatPageState extends ConsumerState<ChatPage>
   }
 
   Future<void> _fetchConversationHistory(String newConversationID) async {
-    // Setup headers
-    var headers = {
-      'x-jarvis-guid': '',
-      'Authorization': 'Bearer ',
-      'Content-Type': 'application/json',
-    };
-
     // Create query parameters
     ConversationsQueryParams queryParams = ConversationsQueryParams(
       cursor: '',
@@ -278,25 +259,23 @@ class _ChatPageState extends ConsumerState<ChatPage>
 
     try {
       // Build request URL
-      var url = Uri.https(
-        'api.jarvis.cx',
-        '/api/v1/ai-chat/conversations/$newConversationID/messages',
-        // Đường dẫn không chứa query string
-        {
-          'assistantId': idValues.reverse[queryParams.assistantId],
-          'assistantModel': 'dify',
-        },
-      );
+      final queryParameters = {
+        'assistantId': idValues.reverse[queryParams.assistantId],
+        'assistantModel': 'dify',
+      };
 
-      // print("URLLLLLLLLL: ${url}");
+      final newConversationUrl =
+          '/api/v1/ai-chat/conversations/$newConversationID/messages';
 
       // Send request
-      var response = await http.get(url, headers: headers);
+      final response = await _dio.get(
+        newConversationUrl,
+        queryParameters: queryParameters,
+      );
 
       if (response.statusCode == 200) {
         // Parse response
-        var responseData = jsonDecode(response.body);
-        // print(responseData['items']);
+        var responseData = response.data;
         print(
             "successsssssssssssssssssssssssssssssssssssssssssss data: $responseData");
 
@@ -335,12 +314,9 @@ class _ChatPageState extends ConsumerState<ChatPage>
             print("Meta Historyyyyyyyy: ${jsonEncode(metadata.toJson())}");
           }
         });
-
-        // metadata.conversation.id= newConversationID;
-        // metadata.conversation.messages = messages;
       } else {
         String errorMessage =
-            "Request failed with status: ${response.statusCode}\nReason: ${response.reasonPhrase}";
+            "Request failed with status: ${response.statusCode}\nReason: ${response.statusMessage}";
         _showErrorDialog(context, "Error", errorMessage);
       }
     } catch (e) {
@@ -395,20 +371,22 @@ class _ChatPageState extends ConsumerState<ChatPage>
     return GestureDetector(
       onTap: () {
         FocusScope.of(context)
-            .unfocus(); // Dismiss keyboard when tapping outside the input
-        // but it doesn't work =((
+            .unfocus(); // Dismiss keyboard when tapping outside
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFEEEEEE),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(20.0),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Row(
-            children: [
-              IconButton(
+          child: TextField(
+            maxLines: 5,
+            minLines: 1,
+            focusNode: messageFocusNode,
+            controller: messageController,
+            decoration: InputDecoration(
+              prefixIcon: IconButton(
                 icon: const Icon(Icons.add_circle_outline, color: Colors.blue),
                 onPressed: () {
                   ImagePickerHelper.showImagePickerOptions(
@@ -417,34 +395,33 @@ class _ChatPageState extends ConsumerState<ChatPage>
                   );
                 },
               ),
-              Expanded(
-                child: TextField(
-                  focusNode: messageFocusNode, // Attach the focus node
-                  controller: messageController,
-                  decoration: const InputDecoration(
-                    hintText: 'Type a message...',
-                    hintStyle: TextStyle(
-                      color: Color(0xFFB9B9B9),
-                    ),
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 8.0),
-                  ),
-                ),
-              ),
-              IconButton(
+              suffixIcon: IconButton(
                 icon: const Icon(Icons.send, color: Colors.blue),
                 onPressed: () {
                   final text = messageController.text.trim();
                   if (text.isNotEmpty) {
                     _sendMessage(text, selectedAssistant!);
                     messageController.clear();
-                    FocusScope.of(context)
-                        .unfocus(); // Dismiss keyboard after sending
+                    FocusScope.of(context).unfocus();
                   }
                 },
               ),
-            ],
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+                borderRadius: BorderRadius.circular(20.0),
+              ),
+              hintText: 'Ask me anything, press \'/\' for prompts...',
+              hintStyle: const TextStyle(
+                color: Color(0xFFB9B9B9),
+              ),
+              isDense: true, // Reduces height slightly
+            ),
           ),
         ),
       ),
@@ -484,7 +461,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
         _showUploadDialog(context);
         break;
       case 'view_book':
-        _fetchConversationHistory('9117d62c-e295-443b-8259-e3609ca3f74f');
+        _fetchConversationHistory(conversationID);
         break;
       case 'view_history':
         _showConversationHistoryDialog(context);
@@ -540,31 +517,40 @@ class _ChatPageState extends ConsumerState<ChatPage>
       child: Screenshot(
         controller: screenshotController,
         child: Scaffold(
+          backgroundColor: Colors.white,
           appBar: AppBar(
-            title: const Text(
-              'Chat',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 24,
-              ),
-            ),
-            backgroundColor: Colors.white,
-            elevation: 0,
-            centerTitle: true,
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/publishing-platforms');
-                },
-                child: const Text(
-                  'Publish',
-                  style: TextStyle(color: Colors.blue, fontSize: 16),
+              surfaceTintColor: Colors.transparent,
+              elevation: 20,
+              title: const Text(
+                'Chat',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
                 ),
               ),
-            ],
-          ),
+              backgroundColor: Colors.white,
+              centerTitle: true,
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/publishing-platforms');
+                  },
+                  child: const Text(
+                    'Publish',
+                    style: TextStyle(color: Colors.blue, fontSize: 16),
+                  ),
+                ),
+              ],
+              bottom: PreferredSize(
+                preferredSize: Size.fromHeight(1),
+                child: Divider(
+                  color: Colors.grey[200],
+                  height: 1,
+                ),
+              )),
           drawer: const AppDrawer(),
-          body: SafeArea(
+          body: Padding(
+            padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
                 if (messages.isEmpty) ...[
@@ -599,14 +585,14 @@ class _ChatPageState extends ConsumerState<ChatPage>
                         child: Container(
                           margin: message.role == 'user'
                               ? const EdgeInsets.only(
-                                  left: 50, right: 10, top: 5, bottom: 5)
+                                  left: 30, right: 10, top: 10, bottom: 5)
                               : const EdgeInsets.only(
-                                  left: 10, right: 50, top: 5, bottom: 5),
+                                  left: 10, right: 30, top: 20, bottom: 5),
                           padding: const EdgeInsets.all(15),
                           decoration: BoxDecoration(
                             color: message.role == 'user'
-                                ? Colors.blue[100]
-                                : Colors.grey[300],
+                                ? const Color(0xFF6841EA)
+                                : Colors.white,
                             borderRadius: BorderRadius.only(
                               topLeft: Radius.circular(
                                   message.role == 'user' ? 20 : 0),
@@ -615,9 +601,27 @@ class _ChatPageState extends ConsumerState<ChatPage>
                               bottomLeft: const Radius.circular(20),
                               bottomRight: const Radius.circular(20),
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.2),
+                                spreadRadius: 2,
+                                blurRadius: 4,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
                           ),
                           child: Flexible(
-                            child: Text(message.content!),
+                            child: MarkdownBody(
+                              data: message.content!,
+                              styleSheet: MarkdownStyleSheet(
+                                p: TextStyle(
+                                  color: message.role == 'user'
+                                      ? Colors.white
+                                      : Colors.black,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       );

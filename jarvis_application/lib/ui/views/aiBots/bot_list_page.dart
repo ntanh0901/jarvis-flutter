@@ -25,8 +25,14 @@ class _BotListPageState extends State<BotListPage> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('AI Bots'),
-        ),
+            title: const Text('AI Bots'),
+            bottom: PreferredSize(
+              preferredSize: Size.fromHeight(1),
+              child: Divider(
+                color: Colors.grey[200],
+                height: 1,
+              ),
+            )),
         drawer: const AppDrawer(),
         body: Column(
           children: [
@@ -74,51 +80,73 @@ class _BotListPageState extends State<BotListPage> {
                           child: ListTile(
                             leading: CircleAvatar(
                               backgroundImage: AssetImage(bot.imageUrl),
-                              // Hiển thị ảnh từ imageUrl
-                              radius: 30,
+                              radius: 20, // Adjust the size of the avatar
                             ),
-                            title: Text(
-                              bot.name,
-                              style: const TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Column(
+                            title: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(bot.description),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.access_time,
-                                        size: 16, color: Colors.grey),
-                                    const SizedBox(width: 5),
-                                    Text(formattedDate,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        bot.name,
                                         style: const TextStyle(
-                                            color: Colors.grey)),
-                                  ],
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        overflow: TextOverflow
+                                            .visible, // Ensures all content is shown
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        bot.description,
+                                        style: const TextStyle(
+                                            color: Colors
+                                                .black54), // Optional styling
+                                        overflow: TextOverflow.visible,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.access_time,
+                                            size: 16,
+                                            color: Colors.grey,
+                                          ),
+                                          const SizedBox(width: 5),
+                                          Text(
+                                            formattedDate,
+                                            style: const TextStyle(
+                                                color: Colors.grey),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
-                            trailing: IntrinsicWidth(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                // Đẩy các icon về bên phải
-                                children: <Widget>[
-                                  IconButton(
-                                    icon: const Icon(Icons.star_border,
-                                        color: Colors.grey, size: 20),
-                                    onPressed: () {},
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete,
-                                        color: Colors.red, size: 20),
-                                    onPressed: () {
-                                      botProvider
-                                          .deleteAIBot(bot.id); // Xóa bot
-                                    },
-                                  ),
-                                ],
-                              ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                IconButton(
+                                  splashRadius: 16.0,
+                                  icon: const Icon(Icons.star_border,
+                                      color: Colors.grey, size: 20),
+                                  onPressed: () {},
+                                ),
+                                IconButton(
+                                  splashRadius: 16.0,
+                                  padding: EdgeInsets.zero,
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red, size: 20),
+                                  onPressed: () {
+                                    botProvider.deleteAIBot(bot.id);
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                         ),

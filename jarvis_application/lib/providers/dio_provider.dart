@@ -7,22 +7,25 @@ import '../data/services/token_manager.dart';
 
 final dioProvider = Provider<Dio>((ref) {
   final tokenManager = ref.read(tokenManagerProvider);
-  return DioClient(tokenManager).dio;
+  return DioClient(tokenManager)._dio;
 });
 
 class DioClient {
-  final Dio _dio = Dio();
+  final Dio _dio = Dio(
+    BaseOptions(
+      baseUrl: Config.baseUrl,
+      headers: {
+        'x-jarvis-guid': '',
+      },
+    ),
+  );
   final TokenManager _tokenManager;
 
   DioClient(this._tokenManager) {
-    _dio.options
-      ..baseUrl = Config.baseUrl
-      ..headers = {'Content-Type': 'application/json'};
-
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        // Only add Authorization header if the request requires it
-        if (options.extra['requiresAuth'] ?? true) {
+        bool requiresAuth = options.extra['requiresAuth'] ?? true;
+        if (requiresAuth) {
           await _addAuthorizationHeader(options);
         }
         return handler.next(options);
