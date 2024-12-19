@@ -15,8 +15,9 @@ class DioClient {
   final TokenManager _tokenManager;
 
   DioClient(this._tokenManager) {
-    _dio.options.baseUrl = Config.baseUrl;
-    _dio.options.headers = {'Content-Type': 'application/json'};
+    _dio.options
+      ..baseUrl = Config.baseUrl
+      ..headers = {'Content-Type': 'application/json'};
 
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {

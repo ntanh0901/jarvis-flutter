@@ -4,7 +4,8 @@ import '../views/prompts/create_new_prompt_screen.dart';
 import '../views/prompts/prompt_library_screen.dart';
 
 class CreatePromptButton extends StatelessWidget {
-  const CreatePromptButton({super.key});
+  final VoidCallback onPromptCreated;
+  const CreatePromptButton({super.key, required this.onPromptCreated});
 
   @override
   Widget build(BuildContext context) {
@@ -39,9 +40,7 @@ class CreatePromptButton extends StatelessWidget {
                 // Call a method to refresh the prompts
                 if (context.findAncestorStateOfType<PromptLibraryState>() !=
                     null) {
-                  context
-                      .findAncestorStateOfType<PromptLibraryState>()!
-                      .refreshPrompts();
+                  onPromptCreated();
                 }
               }
             },

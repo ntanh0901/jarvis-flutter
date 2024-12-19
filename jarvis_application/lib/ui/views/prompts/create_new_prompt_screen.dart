@@ -1,21 +1,17 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:jarvis_application/ui/views/prompts/api_prompts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class CreateNewPrompt extends StatefulWidget {
+import '../../viewmodels/create_prompt_viewmodel.dart';
+
+class CreateNewPrompt extends ConsumerStatefulWidget {
   const CreateNewPrompt({super.key});
 
   @override
-  _CreateNewPromptState createState() => _CreateNewPromptState();
+  ConsumerState<CreateNewPrompt> createState() => _CreateNewPromptState();
 }
 
-class _CreateNewPromptState extends State<CreateNewPrompt> {
-  bool isPrivatePrompt = true;
-  String selectedLanguage = 'English';
-  String selectedCategory = 'other';
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
-  final TextEditingController contentController = TextEditingController();
-
+class _CreateNewPromptState extends ConsumerState<CreateNewPrompt> {
   final List<String> languages = [
     'English',
     'Spanish',
@@ -27,8 +23,8 @@ class _CreateNewPromptState extends State<CreateNewPrompt> {
 
   final List<String> categories = [
     'other',
-    'carrer',
-    'bussiness',
+    'career',
+    'business',
     'writing',
     'productivity',
     'coding',
@@ -36,167 +32,350 @@ class _CreateNewPromptState extends State<CreateNewPrompt> {
     'seo',
     'education',
     'chatbot',
-    'fun'
+    'fun',
   ];
-
-  Future<void> createPrompt() async {
-    try {
-      await ApiService.createPrompt(
-        category: isPrivatePrompt ? 'other' : selectedCategory,
-        content: contentController.text,
-        description: isPrivatePrompt ? 'nothing' : descriptionController.text,
-        isPublic: !isPrivatePrompt,
-        language: isPrivatePrompt ? 'English' : selectedLanguage,
-        title: titleController.text,
-      );
-      // Prompt created successfully
-      Navigator.pop(context, true);
-    } catch (e) {
-      // Handle error
-      print('Failed to create prompt: $e');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create New Prompt'),
+    final viewModel = ref.watch(createPromptViewmodelProvider.notifier);
+    final promptState = ref.watch(createPromptViewmodelProvider);
+
+    const normalBorder = OutlineInputBorder(
+      borderSide: BorderSide(
+        color: Colors.grey,
+        width: 0.5,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: RadioListTile<bool>(
-                    title: const Text('Private Prompt'),
-                    value: true,
-                    groupValue: isPrivatePrompt,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        isPrivatePrompt = value!;
-                      });
-                    },
-                  ),
+    );
+
+    const focusedBorder = OutlineInputBorder(
+      borderSide: BorderSide(
+        color: Colors.black,
+        width: 1,
+      ),
+    );
+    return SafeArea(
+      child: Scaffold(
+        body: Stack(
+          children: [
+            SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    const Center(
+                      child: Text(
+                        'New Prompt',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    // Public/Private Toggle
+                    Row(
+                      children: [
+                        Row(
+                          children: [
+                            Radio<bool>(
+                              activeColor: Colors.blue,
+                              value: false,
+                              groupValue: promptState.isPublic,
+                              onChanged: (value) => viewModel.state =
+                                  viewModel.state =
+                                      viewModel.state.copyWith(isPublic: value),
+                            ),
+                            const Text('Private Prompt'),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Radio<bool>(
+                              activeColor: Colors.blue,
+                              value: true,
+                              groupValue: promptState.isPublic,
+                              onChanged: (value) => viewModel.state =
+                                  viewModel.state =
+                                      viewModel.state.copyWith(isPublic: value),
+                            ),
+                            const Text('Public Prompt'),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 8),
+                    // Banner
+                    Container(
+                      padding: const EdgeInsets.all(8.0),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFDBE6FF), Color(0xFFF2DEFF)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            '🎉',
+                            style: TextStyle(
+                              fontSize: 18,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Create a Prompt, Win Monica Pro',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+                    // Show fields only if the prompt is public
+                    if (promptState.isPublic) ...[
+                      // Language Field
+                      const Text('Prompt Language',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      IntrinsicWidth(
+                        child: DropdownButtonFormField<String>(
+                          value: promptState.language,
+                          isExpanded:
+                              true, // Ensures the dropdown expands fully
+                          decoration: const InputDecoration(
+                            enabledBorder: normalBorder,
+                            focusedBorder: focusedBorder,
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8.0, vertical: 0.0),
+                          ),
+                          items: languages.map((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            viewModel.state =
+                                viewModel.state.copyWith(language: value!);
+                          },
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    // Name Field
+                    const Text('Name',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    CustomTextField(
+                      hintText: 'Name of the prompt',
+                      onChanged: (value) {
+                        viewModel.state =
+                            viewModel.state.copyWith(title: value);
+                      },
+                    ),
+                    if (promptState.isPublic) ...[
+                      const SizedBox(height: 16),
+                      // Category Field
+                      const Text('Category',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      IntrinsicWidth(
+                        child: DropdownButtonFormField<String>(
+                          value: promptState.category,
+                          decoration: const InputDecoration(
+                            enabledBorder: normalBorder,
+                            focusedBorder: focusedBorder,
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8.0, vertical: 0.0),
+                          ),
+                          items: categories.map((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Padding(
+                                padding: const EdgeInsets.all(0.0),
+                                child: Text(value),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            viewModel.state =
+                                viewModel.state.copyWith(category: value!);
+                          },
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      const Text('Description (Optional)',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      CustomTextField(
+                        hintText:
+                            'Describe your prompt so others can have a better understanding',
+                        maxLines: 2,
+                        onChanged: (value) {
+                          viewModel.state =
+                              viewModel.state.copyWith(description: value);
+                        },
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    // Prompt Field
+                    const Text('Prompt',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: RichText(
+                          text: TextSpan(
+                            style: const TextStyle(color: Colors.black),
+                            children: [
+                              const TextSpan(
+                                  text: 'Use square brackets ',
+                                  style: TextStyle(fontSize: 14)),
+                              const TextSpan(
+                                  text: '[ ]',
+                                  style: TextStyle(
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.bold)),
+                              const TextSpan(text: ' to specify user input. '),
+                              TextSpan(
+                                text: 'Learn More',
+                                style: const TextStyle(
+                                  color: Color(0xFF7552EC),
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                ),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () {
+                                    print('Learn More clicked');
+                                  },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    CustomTextField(
+                      hintText:
+                          'e.g: Write an article about [TOPIC], make sure to include these keywords: [KEYWORDS]',
+                      maxLines: 4,
+                      onChanged: (value) {
+                        viewModel.state =
+                            viewModel.state.copyWith(content: value);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Cancel and Save Buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepPurple,
+                          ),
+                          onPressed: () async {
+                            await viewModel.createPrompt();
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            'Create',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: RadioListTile<bool>(
-                    title: const Text('Public Prompt'),
-                    value: false,
-                    groupValue: isPrivatePrompt,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        isPrivatePrompt = value!;
-                      });
-                    },
-                  ),
-                ),
-              ],
+              ),
             ),
-            const SizedBox(height: 16.0),
-            if (isPrivatePrompt) ...[
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Title',
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: contentController,
-                maxLines: 5,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Prompt',
-                ),
-              ),
-            ] else ...[
-              DropdownButtonFormField<String>(
-                value: selectedLanguage,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Prompt Language',
-                ),
-                items: languages.map((String language) {
-                  return DropdownMenuItem<String>(
-                    value: language,
-                    child: Text(language),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedLanguage = newValue!;
-                  });
+            // Close Icon
+            Positioned(
+              top: 0,
+              right: 0,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.grey, size: 20),
+                onPressed: () {
+                  Navigator.pop(context);
                 },
               ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Name',
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              DropdownButtonFormField<String>(
-                value: selectedCategory,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Category',
-                ),
-                items: categories.map((String category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedCategory = newValue!;
-                  });
-                },
-              ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: descriptionController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Description',
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              TextField(
-                controller: contentController,
-                maxLines: 5,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Prompt',
-                ),
-              ),
-            ],
-            const SizedBox(height: 32.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Cancel'),
-                ),
-                const SizedBox(width: 8.0),
-                ElevatedButton(
-                  onPressed: createPrompt,
-                  child: const Text('Save'),
-                ),
-              ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class CustomTextField extends StatelessWidget {
+  final String hintText;
+  final int maxLines;
+  final ValueChanged<String> onChanged;
+
+  const CustomTextField({
+    super.key,
+    required this.hintText,
+    this.maxLines = 1,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      onChanged: onChanged,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: const TextStyle(
+          color: Colors.grey,
+          fontWeight: FontWeight.w300,
+        ),
+        enabledBorder: const OutlineInputBorder(
+          borderSide: BorderSide(
+            color: Colors.grey,
+            width: 0.5,
+          ),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderSide: BorderSide(
+            color: Colors.black,
+            width: 1,
+          ),
         ),
       ),
     );
