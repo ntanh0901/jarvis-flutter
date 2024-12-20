@@ -1,7 +1,6 @@
-// assistant_item.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
 import '../../providers/ai_bot_provider.dart';
 
@@ -19,62 +18,87 @@ class AssistantItem extends StatelessWidget {
     required this.createdAt,
   }) : super(key: key);
 
+  Future<void> _deleteAssistant(BuildContext context, WidgetRef ref) async {
+    final aiAssistantProviderNotifier = ref.read(aiAssistantProvider.notifier);
+    try {
+      // Gửi HTTP DELETE request
+      await aiAssistantProviderNotifier.deleteAIAssistant(id);
+
+      // Cập nhật danh sách assistants
+      await aiAssistantProviderNotifier.fetchAIAssistants();
+
+      // Hiển thị snackbar thông báo thành công
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Deleted assistant "$name" successfully.')),
+      );
+    } catch (e) {
+      // Hiển thị snackbar thông báo lỗi
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete assistant "$name".')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final formattedDate = DateFormat('MM/dd/yyyy').format(DateTime.parse(createdAt));
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: ListTile(
-          leading: const CircleAvatar(
-            backgroundImage: AssetImage('assets/images/bot_alpha.png'),
-            radius: 30,
-          ),
-          title: Text(
-            name,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (description != null) Text(description!),
-              const SizedBox(height: 8),
-              Row(
+    return Consumer(
+      builder: (context, ref, child) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+          child: Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: ListTile(
+              leading: const CircleAvatar(
+                backgroundImage: AssetImage('assets/images/bot_alpha.png'),
+                radius: 30,
+              ),
+              title: Text(
+                name,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.access_time, size: 16, color: Colors.grey),
-                  const SizedBox(width: 5),
-                  Text(
-                    formattedDate,
-                    style: const TextStyle(color: Colors.grey),
+                  if (description != null) Text(description!),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                      const SizedBox(width: 5),
+                      Text(
+                        formattedDate,
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
-          trailing: IntrinsicWidth(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: <Widget>[
-                IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.grey, size: 20),
-                  onPressed: () {},
+              trailing: IntrinsicWidth(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.grey, size: 20),
+                      onPressed: () {},
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                      onPressed: () {
+                        _deleteAssistant(context, ref);
+                      },
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                  onPressed: () {
-
-                  },
-                ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

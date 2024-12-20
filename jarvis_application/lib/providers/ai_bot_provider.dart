@@ -7,6 +7,8 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
   AIAssistantProvider() : super([]);
 
   final String baseUrl = 'https://knowledge-api.jarvis.cx';
+  final String apiToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY4YzA4ZDNmLTIyMzEtNDE5Ni04ZTVmLTEzZDgwNjRlOWNkMSIsImVtYWlsIjoicXVhbmd0aGllbjEyMzRAZ21haWwuY29tIiwiaWF0IjoxNzM0NzE4NDUxLCJleHAiOjE3MzQ4MDQ4NTF9.m0WdnE1jK6Mj0PTwz5p2b4DDAvsDjpYRqSsPFSzriQ4';
+
 
   // Fetch assistants from API
   Future<void> fetchAIAssistants() async {
@@ -15,11 +17,11 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
         Uri.parse('$baseUrl/kb-core/v1/ai-assistant'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY4YzA4ZDNmLTIyMzEtNDE5Ni04ZTVmLTEzZDgwNjRlOWNkMSIsImVtYWlsIjoicXVhbmd0aGllbjEyMzRAZ21haWwuY29tIiwiaWF0IjoxNzM0NTg1MTI0LCJleHAiOjE3MzQ2NzE1MjR9.JUUws9trtonltGKekAnAN-1U3Z3PF8-qrT7pX3WsY_w', // Thay bằng token hợp lệ
+          'Authorization': 'Bearer $apiToken',
         },
       );
 
-      print('fetchAIAssistants Response Status: ${response.statusCode}');
+      print('fetchAIAssistants Response Statusssssssssss: ${response.statusCode}');
       print('fetchAIAssistants Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
@@ -41,7 +43,7 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
         Uri.parse('$baseUrl/kb-core/v1/ai-assistant'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer YOUR_ACCESS_TOKEN', // Thay bằng token hợp lệ
+          'Authorization': 'Bearer $apiToken', // Thay bằng token hợp lệ
         },
         body: jsonEncode({
           'assistantName': name,
@@ -59,6 +61,31 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
       print('Error creating assistant: $e');
     }
   }
+
+  // Hàm xóa assistant
+  Future<void> deleteAIAssistant(String assistantId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/kb-core/v1/ai-assistant/$assistantId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiToken',
+        },
+      );
+
+      if(response.statusCode == 200) {
+        state = state.where((assistant) => assistant.id != assistantId).toList();
+      } else {
+        throw Exception('Failed to delete assistant');
+      }
+
+    } catch (e) {
+      print('Error deleting assistant: $e');
+      rethrow;
+    }
+  }
+
+
 }
 
 final aiAssistantProvider = StateNotifierProvider<AIAssistantProvider, List<AIAssistant>>((ref) {
