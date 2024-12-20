@@ -17,7 +17,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => AIBotProvider()),
         ChangeNotifierProvider(
             create: (context) => EmailComposeViewModel(MockAIService())),
         ChangeNotifierProvider(create: (context) => ImageHandlerViewModel()),
