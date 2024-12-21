@@ -120,7 +120,29 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
     }
   }
 
+  // Fetch a single assistant by ID
+  Future<AIAssistant?> fetchAssistantById(String assistantId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/kb-core/v1/ai-assistant/$assistantId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiToken',
+        },
+      );
 
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return AIAssistant.fromJson(data);
+      } else {
+        print('Failed to fetch assistant: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching assistant by ID: $e');
+      return null;
+    }
+  }
 }
 
 final aiAssistantProvider = StateNotifierProvider<AIAssistantProvider, List<AIAssistant>>((ref) {

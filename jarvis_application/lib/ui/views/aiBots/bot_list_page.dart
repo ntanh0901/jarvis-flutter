@@ -108,12 +108,53 @@ class _BotListPageState extends ConsumerState<BotListPage> {
                     itemCount: filteredAssistants.length,
                     itemBuilder: (context, index) {
                       final assistant = filteredAssistants[index];
-                      return AssistantItem(
-                        id: assistant.id,
-                        name: assistant.assistantName,
-                        description: assistant.description,
-                        instructions: assistant.instructions,
-                        createdAt: assistant.createdAt,
+                      return GestureDetector(
+                        onTap: () async {
+                          // Gọi fetchAssistantById để lấy chi tiết Assistant
+                          final assistantDetails = await ref
+                              .read(aiAssistantProvider.notifier)
+                              .fetchAssistantById(assistant.id);
+
+                          if (assistantDetails != null) {
+                            // Hiển thị chi tiết Assistant
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Text(assistantDetails.assistantName),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text("Instructions: ${assistantDetails.instructions}"),
+                                      const SizedBox(height: 8),
+                                      Text("Description: ${assistantDetails.description ?? 'N/A'}"),
+                                    ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: const Text('Close'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Failed to fetch assistant details.')),
+                            );
+                          }
+                        },
+                        child: AssistantItem(
+                          id: assistant.id,
+                          name: assistant.assistantName,
+                          description: assistant.description,
+                          instructions: assistant.instructions,
+                          createdAt: assistant.createdAt,
+                        ),
                       );
                     },
                   ),
