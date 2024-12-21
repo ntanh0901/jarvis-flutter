@@ -22,10 +22,14 @@ class _BotListPageState extends ConsumerState<BotListPage> {
   @override
   void initState() {
     super.initState();
-    _loadAssistants();
+    _loadAssistants(true);
   }
 
-  Future<void> _loadAssistants() async {
+  Future<void> _loadAssistants(bool isAppeared) async {
+    setState(() {
+      _isLoading = isAppeared; // Hiển thị trạng thái loading
+    });
+
     try {
       await ref.read(aiAssistantProvider.notifier).fetchAIAssistants();
     } catch (e) {
@@ -34,7 +38,7 @@ class _BotListPageState extends ConsumerState<BotListPage> {
       });
     } finally {
       setState(() {
-        _isLoading = false;
+        _isLoading = false; // Tắt trạng thái loading sau khi hoàn tất
       });
     }
   }
@@ -63,64 +67,66 @@ class _BotListPageState extends ConsumerState<BotListPage> {
         drawer: const AppDrawer(),
         body: _isLoading
             ? const Center(
-          child: CircularProgressIndicator(),
-        )
+                      child: CircularProgressIndicator(),
+                    )
             : _errorMessage != null
             ? Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                _errorMessage!,
-                style: const TextStyle(color: Colors.red),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _loadAssistants,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed:() => _loadAssistants(true),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
         )
             : Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                decoration: const InputDecoration(
-                  labelText: 'Search AI Assistants',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.search),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: TextField(
+                    decoration: const InputDecoration(
+                      labelText: 'Search AI Assistants',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    onChanged: (query) {
+                      setState(() {
+                        _searchQuery = query;
+                      });
+                    },
+                  ),
                 ),
-                onChanged: (query) {
-                  setState(() {
-                    _searchQuery = query;
-                  });
-                },
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: filteredAssistants.length,
-                itemBuilder: (context, index) {
-                  final assistant = filteredAssistants[index];
-                  return AssistantItem(
-                    id: assistant.id,
-                    name: assistant.assistantName,
-                    description: assistant.description,
-                    createdAt: assistant.createdAt,
-                  );
-                },
-              ),
-            ),
-          ],
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: filteredAssistants.length,
+                    itemBuilder: (context, index) {
+                      final assistant = filteredAssistants[index];
+                      return AssistantItem(
+                        id: assistant.id,
+                        name: assistant.assistantName,
+                        description: assistant.description,
+                        instructions: assistant.instructions,
+                        createdAt: assistant.createdAt,
+                      );
+                    },
+                  ),
+                ),
+              ],
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            showDialog(
+          onPressed: () async {
+            await showDialog(
               context: context,
-              builder: (context) => const CreateAssistantDialog(),
+              builder: (context) => const CreateAssistantDialog(title: 'Create New Assistant'),
             );
+            _loadAssistants(false);
           },
           child: const Icon(Icons.add),
         ),

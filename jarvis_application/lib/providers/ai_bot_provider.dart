@@ -52,8 +52,8 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
         }),
       );
 
-      if (response.statusCode == 201) {
-        fetchAIAssistants(); // Refresh the list
+      if (response.statusCode == 200) {
+        await fetchAIAssistants(); // Refresh the list
       } else {
         print('Failed to create assistant: ${response.statusCode}');
       }
@@ -61,6 +61,41 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
       print('Error creating assistant: $e');
     }
   }
+
+
+  // Hàm update assistant
+  Future<void> updateAIAssistant({
+    required String id,
+    required String name,
+    required String instructions,
+    required String description,
+  }) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/kb-core/v1/ai-assistant/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiToken',
+        },
+        body: jsonEncode({
+          'assistantName': name,
+          'instructions': instructions,
+          'description': description,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('Assistant updated successfully');
+        await fetchAIAssistants();
+      } else {
+        throw Exception('Failed to update assistant');
+      }
+    } catch (e) {
+      print('Error updating assistant: $e');
+      rethrow;
+    }
+  }
+
 
   // Hàm xóa assistant
   Future<void> deleteAIAssistant(String assistantId) async {

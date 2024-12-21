@@ -3,18 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../providers/ai_bot_provider.dart';
+import 'create_assistant_dialog.dart';
 
 class AssistantItem extends StatelessWidget {
   final String id;
   final String name;
-  final String? description;
+  final String description;
+  final String instructions;
   final String createdAt;
 
   const AssistantItem({
     Key? key,
     required this.id,
     required this.name,
-    this.description,
+    required this.description,
+    required this.instructions,
     required this.createdAt,
   }) : super(key: key);
 
@@ -38,6 +41,49 @@ class AssistantItem extends StatelessWidget {
       );
     }
   }
+
+
+  Future<void> _editAssistant(BuildContext context, WidgetRef ref) async {
+    final aiAssistantProviderNotifier = ref.read(aiAssistantProvider.notifier);
+
+    // Hiển thị hộp thoại CreateAssistantDialog
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return CreateAssistantDialog(
+          title: 'Update Assistant',
+          initialName: name,
+          initialInstructions: instructions ?? '', // Truyền instructions vào đây
+          initialDescription: description ?? '',
+          onUpdate: (updatedName, updatedInstructions, updatedDescription) async {
+            try {
+              // Gửi HTTP PATCH request
+              await aiAssistantProviderNotifier.updateAIAssistant(
+                id: id,
+                name: updatedName,
+                instructions: updatedInstructions,
+                description: updatedDescription,
+              );
+
+              // Hiển thị snackbar thông báo thành công
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Updated assistant "$updatedName" successfully.')),
+              );
+
+              // Cập nhật danh sách assistants
+              await aiAssistantProviderNotifier.fetchAIAssistants();
+            } catch (e) {
+              // Hiển thị snackbar thông báo lỗi
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to update assistant "$updatedName".')),
+              );
+            }
+          },
+        );
+      },
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +130,9 @@ class AssistantItem extends StatelessWidget {
                   children: <Widget>[
                     IconButton(
                       icon: const Icon(Icons.edit, color: Colors.grey, size: 20),
-                      onPressed: () {},
+                      onPressed: () {
+                        _editAssistant(context, ref);
+                      },
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red, size: 20),

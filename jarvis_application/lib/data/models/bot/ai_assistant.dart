@@ -7,8 +7,8 @@ class AIAssistant {
   final String? updatedAt;
   final String? createdBy;
   final String? updatedBy;
-  final String? instructions;
-  final String? description;
+  final String instructions;
+  final String description;
   final String? openAiThreadIdPlay;
 
   AIAssistant({
@@ -19,8 +19,8 @@ class AIAssistant {
     this.updatedAt,
     this.createdBy,
     this.updatedBy,
-    this.instructions,
-    this.description,
+    required this.instructions,
+    required this.description,
     this.openAiThreadIdPlay,
   });
 
@@ -33,8 +33,8 @@ class AIAssistant {
       updatedAt: json['updatedAt'],
       createdBy: json['createdBy'],
       updatedBy: json['updatedBy'],
-      instructions: json['instructions'],
-      description: json['description'],
+      instructions: json['instructions'] ?? '',
+      description: json['description'] ?? '',
       openAiThreadIdPlay: json['openAiThreadIdPlay'],
     );
   }
