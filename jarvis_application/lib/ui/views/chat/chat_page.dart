@@ -549,104 +549,108 @@ class _ChatPageState extends ConsumerState<ChatPage>
                 ),
               )),
           drawer: const AppDrawer(),
-          body: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                if (messages.isEmpty) ...[
-                  const LogoWidget(),
-                  const SizedBox(height: 10),
-                  const GreetingText(),
-                  const SizedBox(height: 10),
-                ],
-                Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    itemCount: messages.length + (isTyping ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == messages.length && isTyping) {
-                        return const Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: SpinKitThreeBounce(
-                              color: Colors.grey,
-                              size: 20.0,
-                            ),
+          body: Column(
+            children: [
+              Expanded(
+                child: messages.isEmpty
+                    ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      LogoWidget(),
+                      SizedBox(height: 10),
+                      GreetingText(),
+                      SizedBox(height: 10),
+                    ],
+                  ),
+                )
+                    : ListView.builder(
+                  controller: _scrollController,
+                  itemCount: messages.length + (isTyping ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == messages.length && isTyping) {
+                      return const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: SpinKitThreeBounce(
+                            color: Colors.grey,
+                            size: 20.0,
                           ),
-                        );
-                      }
+                        ),
+                      );
+                    }
 
-                      final message = messages[index];
-                      return Align(
-                        alignment: message.role == 'user'
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
-                        child: Container(
-                          margin: message.role == 'user'
-                              ? const EdgeInsets.only(
-                                  left: 30, right: 10, top: 10, bottom: 5)
-                              : const EdgeInsets.only(
-                                  left: 10, right: 30, top: 20, bottom: 5),
-                          padding: const EdgeInsets.all(15),
-                          decoration: BoxDecoration(
-                            color: message.role == 'user'
-                                ? const Color(0xFF6841EA)
-                                : Colors.white,
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(
-                                  message.role == 'user' ? 20 : 0),
-                              topRight: Radius.circular(
-                                  message.role == 'user' ? 0 : 20),
-                              bottomLeft: const Radius.circular(20),
-                              bottomRight: const Radius.circular(20),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.2),
-                                spreadRadius: 2,
-                                blurRadius: 4,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
+                    final message = messages[index];
+                    return Align(
+                      alignment: message.role == 'user'
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: Container(
+                        margin: message.role == 'user'
+                            ? const EdgeInsets.only(
+                            left: 30, right: 10, top: 10, bottom: 5)
+                            : const EdgeInsets.only(
+                            left: 10, right: 30, top: 20, bottom: 5),
+                        padding: const EdgeInsets.all(15),
+                        decoration: BoxDecoration(
+                          color: message.role == 'user'
+                              ? const Color(0xFF6841EA)
+                              : Colors.white,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(
+                                message.role == 'user' ? 20 : 0),
+                            topRight: Radius.circular(
+                                message.role == 'user' ? 0 : 20),
+                            bottomLeft: const Radius.circular(20),
+                            bottomRight: const Radius.circular(20),
                           ),
-                          child: Flexible(
-                            child: MarkdownBody(
-                              data: message.content!,
-                              styleSheet: MarkdownStyleSheet(
-                                p: TextStyle(
-                                  color: message.role == 'user'
-                                      ? Colors.white
-                                      : Colors.black,
-                                  fontSize: 16,
-                                ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.2),
+                              spreadRadius: 2,
+                              blurRadius: 4,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Flexible(
+                          child: MarkdownBody(
+                            data: message.content!,
+                            styleSheet: MarkdownStyleSheet(
+                              p: TextStyle(
+                                color: message.role == 'user'
+                                    ? Colors.white
+                                    : Colors.black,
+                                fontSize: 16,
                               ),
                             ),
                           ),
                         ),
-                      );
-                    },
-                  ),
-                ),
-                ActionRow(
-                  assistants: assistants,
-                  selectedAssistant: selectedAssistant,
-                  onAssistantSelected: (assistant) {
-                    setState(() {
-                      selectedAssistant = assistant;
-                    });
+                      ),
+                    );
                   },
-                  onActionSelected: (action) {
-                    _handleAction(action, context);
-                  },
-                  remainUsage: remainUsage,
                 ),
-                _buildChatInput(),
-              ],
-            ),
+              ),
+              ActionRow(
+                assistants: assistants,
+                selectedAssistant: selectedAssistant,
+                onAssistantSelected: (assistant) {
+                  setState(() {
+                    selectedAssistant = assistant;
+                  });
+                },
+                onActionSelected: (action) {
+                  _handleAction(action, context);
+                },
+                remainUsage: remainUsage,
+              ),
+              _buildChatInput(),
+            ],
           ),
         ),
       ),
     );
   }
+
 }

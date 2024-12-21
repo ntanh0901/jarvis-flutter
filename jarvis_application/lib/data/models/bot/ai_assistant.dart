@@ -9,7 +9,7 @@ class AIAssistant {
   final String? updatedBy;
   final String instructions;
   final String description;
-  final String? openAiThreadIdPlay;
+  final String openAiThreadIdPlay;
 
   AIAssistant({
     required this.createdAt,
@@ -21,7 +21,7 @@ class AIAssistant {
     this.updatedBy,
     required this.instructions,
     required this.description,
-    this.openAiThreadIdPlay,
+    required this.openAiThreadIdPlay,
   });
 
   factory AIAssistant.fromJson(Map<String, dynamic> json) {

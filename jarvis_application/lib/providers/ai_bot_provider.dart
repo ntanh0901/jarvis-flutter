@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import '../data/models/bot/ai_assistant.dart';
+import '../data/models/bot/chat_bot/message.dart';
 
 class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
   AIAssistantProvider() : super([]);
@@ -143,7 +144,83 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
       return null;
     }
   }
+
+
+
+// Fetch messages of a thread by openAiThreadId
+  Future<List<Message>> fetchMessagesByThreadId(String openAiThreadId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/kb-core/v1/ai-assistant/thread/$openAiThreadId/messages'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List<dynamic>;
+        return data.map((json) => Message.fromJson(json)).toList();
+      } else {
+        print('Failed to fetch messages: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching messages by thread ID: $e');
+      return [];
+    }
+  }
+
+
+  // Send a message to an assistant
+  Future<String> sendMessageToAssistant(
+      String assistantId, String message, String openAiThreadId) async {
+    try {
+      print('Ai bot hereeeeee1');
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/kb-core/v1/ai-assistant/$assistantId/ask'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiToken',
+        },
+        body: jsonEncode({
+          'message': message,
+          'openAiThreadId': openAiThreadId,
+          'additionalInstruction': '',
+        }),
+      );
+      print('Ai bot hereeeeee2');
+      print('Response status hereeeeee3: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        print('Response body at ai botttttttttttttt: ${response.body}');
+
+        try {
+          // if it's JSON, return the JSON object
+          final data = jsonDecode(response.body);
+          print('Response body at ai botttttttttttttt2: $data');
+          return data.toString();
+        } catch (e) {
+          // if it's the raw String
+          print('Response is not JSON - raw String: ${response.body}');
+          return response.body;
+        }
+      } else {
+        print('Failed to send message: ${response.statusCode}');
+        return 'Error: ${response.statusCode}';
+      }
+    } catch (e) {
+      print('Error sending message: $e');
+      return 'Error: $e';
+    }
+  }
+
 }
+
+
+
+
 
 final aiAssistantProvider = StateNotifierProvider<AIAssistantProvider, List<AIAssistant>>((ref) {
   return AIAssistantProvider();

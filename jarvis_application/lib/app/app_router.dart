@@ -7,7 +7,9 @@ import 'package:jarvis_application/ui/views/chat/chat_page.dart';
 import 'package:jarvis_application/ui/views/email/email_compose_page.dart';
 import 'package:jarvis_application/ui/views/splash/splash_screen.dart';
 
+import '../data/models/bot/ai_assistant.dart';
 import '../providers/auth_notifier.dart';
+import '../ui/views/aiBots/bot_chat_page.dart';
 import '../ui/views/aiBots/bot_list_page.dart';
 import '../ui/views/aiBots/publish_screen.dart';
 import '../ui/views/knowledgeBase/knowledge_base_screen.dart';
@@ -41,6 +43,21 @@ class AppRouter {
         path: '/bot-list',
         builder: (context, state) => const BotListPage(),
         name: 'Bot List',
+      ),
+      GoRoute(
+        path: '/bot-chat',
+        builder: (context, state) {
+          final assistant = state.extra as AIAssistant; // Lấy AIAssistant từ extra
+          final threadId = state.uri.queryParameters['openAiThreadId'];
+          if (threadId == null) {
+            throw Exception("openAiThreadId is required but was not provided.");
+          }
+          return BotChatPage(
+            currentAssistant: assistant,
+            openAiThreadId: threadId,
+          );
+        },
+        name: 'Bot Chat',
       ),
       GoRoute(
         path: '/publish',
