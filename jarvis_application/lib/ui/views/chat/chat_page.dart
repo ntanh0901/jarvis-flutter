@@ -557,7 +557,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
-                      LogoWidget(),
+                      LogoWidget(imageType: 1),
                       SizedBox(height: 10),
                       GreetingText(),
                       SizedBox(height: 10),
