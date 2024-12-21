@@ -23,21 +23,29 @@ class AssistantItem extends StatelessWidget {
 
   Future<void> _deleteAssistant(BuildContext context, WidgetRef ref) async {
     final aiAssistantProviderNotifier = ref.read(aiAssistantProvider.notifier);
+
+    // delete assistant locally
+    aiAssistantProviderNotifier.removeAssistantById(id);
+
     try {
-      // Gửi HTTP DELETE request
+      // Gửi yêu cầu xóa tới server
       await aiAssistantProviderNotifier.deleteAIAssistant(id);
 
-      // Cập nhật danh sách assistants
-      await aiAssistantProviderNotifier.fetchAIAssistants();
-
-      // Hiển thị snackbar thông báo thành công
+      // display success snackbar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Deleted assistant "$name" successfully.')),
       );
     } catch (e) {
-      // Hiển thị snackbar thông báo lỗi
+      // display error snackbar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to delete assistant "$name".')),
+      );
+      aiAssistantProviderNotifier.reAddAssistant(
+        id: id,
+        name: name,
+        description: description,
+        instructions: instructions,
+        createdAt: createdAt,
       );
     }
   }
@@ -56,8 +64,18 @@ class AssistantItem extends StatelessWidget {
           initialInstructions: instructions ?? '', // Truyền instructions vào đây
           initialDescription: description ?? '',
           onUpdate: (updatedName, updatedInstructions, updatedDescription) async {
+
+            // update assistant locally
+            aiAssistantProviderNotifier.updateAssistantLocally(
+              id: id,
+              name: updatedName,
+              instructions: updatedInstructions,
+              description: updatedDescription,
+            );
+
+
             try {
-              // Gửi HTTP PATCH request
+              // send HTTP PATCH request
               await aiAssistantProviderNotifier.updateAIAssistant(
                 id: id,
                 name: updatedName,
@@ -65,15 +83,15 @@ class AssistantItem extends StatelessWidget {
                 description: updatedDescription,
               );
 
-              // Hiển thị snackbar thông báo thành công
+              // display success snackbar
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Updated assistant "$updatedName" successfully.')),
               );
 
-              // Cập nhật danh sách assistants
+              // update the list of assistants
               await aiAssistantProviderNotifier.fetchAIAssistants();
             } catch (e) {
-              // Hiển thị snackbar thông báo lỗi
+              // display error snackbar
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Failed to update assistant "$updatedName".')),
               );

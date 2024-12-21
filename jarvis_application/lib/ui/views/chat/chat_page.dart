@@ -533,7 +533,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
               actions: [
                 TextButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/publishing-platforms');
+                    Navigator.pushNamed(context, '/publish');
                   },
                   child: const Text(
                     'Publish',

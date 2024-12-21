@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../providers/platform_provider.dart';
 
 class PublishingPlatformPage extends StatefulWidget {
+  static const String routeName = '/publish'; // Thêm routeName
+
   const PublishingPlatformPage({super.key});
 
   @override

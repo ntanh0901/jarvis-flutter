@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:go_router/go_router.dart';
+import 'package:jarvis_application/ui/views/aiBots/publish_screen.dart';
 import '../../../data/models/bot/ai_assistant.dart';
 import '../../../data/models/bot/chat_bot/message.dart';
 import '../../../providers/ai_bot_provider.dart';
@@ -184,13 +186,14 @@ class _BotChatPageState extends ConsumerState<BotChatPage> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pushNamed(context, '/publishing-platforms');
+              context.push(PublishingPlatformPage.routeName);
             },
             child: const Text(
               'Publish',
               style: TextStyle(color: Colors.blue, fontSize: 16),
             ),
           ),
+
         ],
       ),
       body: Column(

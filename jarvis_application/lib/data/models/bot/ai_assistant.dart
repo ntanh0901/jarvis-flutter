@@ -24,6 +24,27 @@ class AIAssistant {
     required this.openAiThreadIdPlay,
   });
 
+
+  AIAssistant copyWith({
+    String? id,
+    String? assistantName,
+    String? instructions,
+    String? description,
+    String? createdAt,
+  }) {
+    return AIAssistant(
+      id: id ?? this.id,
+      assistantName: assistantName ?? this.assistantName,
+      instructions: instructions ?? this.instructions,
+      description: description ?? this.description,
+      createdAt: createdAt ?? this.createdAt,
+      openAiAssistantId: '',
+      openAiThreadIdPlay: '',
+    );
+  }
+
+
+
   factory AIAssistant.fromJson(Map<String, dynamic> json) {
     return AIAssistant(
       createdAt: json['createdAt'] ?? '',

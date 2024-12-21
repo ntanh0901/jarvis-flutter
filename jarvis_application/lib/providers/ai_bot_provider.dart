@@ -97,6 +97,26 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
     }
   }
 
+  // Cập nhật một trợ lý trong danh sách cục bộ
+  void updateAssistantLocally({
+    required String id,
+    required String name,
+    required String instructions,
+    required String description,
+  }) {
+    state = state.map((assistant) {
+      if (assistant.id == id) {
+        return assistant.copyWith(
+          assistantName: name,
+          instructions: instructions,
+          description: description,
+        );
+      }
+      return assistant;
+    }).toList();
+  }
+
+
 
   // Hàm xóa assistant
   Future<void> deleteAIAssistant(String assistantId) async {
@@ -120,6 +140,37 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
       rethrow;
     }
   }
+
+
+  // delete assistant locally
+  void removeAssistantById(String id) {
+    state = state.where((assistant) => assistant.id != id).toList();
+  }
+
+// re-add assistant to the list if deletion fails
+  void reAddAssistant({
+    required String id,
+    required String name,
+    required String description,
+    required String instructions,
+    required String createdAt,
+  }) {
+    state = [
+      ...state,
+      AIAssistant(
+        id: id,
+        assistantName: name,
+        description: description,
+        instructions: instructions,
+        createdAt: createdAt,
+        openAiAssistantId: '',
+        openAiThreadIdPlay: '',
+      ),
+    ];
+  }
+
+
+
 
   // Fetch a single assistant by ID
   Future<AIAssistant?> fetchAssistantById(String assistantId) async {
