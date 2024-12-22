@@ -267,6 +267,34 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
     }
   }
 
+
+  Future<void> addKnowledgeToAssistant({
+    required String assistantId,
+    required String knowledgeId,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/kb-core/v1/ai-assistant/$assistantId/knowledges/$knowledgeId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print('Successfully linked knowledge $knowledgeId to assistant $assistantId');
+        print('Response body: ${response.body}');
+      } else {
+        throw Exception(
+            'Failed to link knowledge. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error linking knowledge to assistant: $e');
+      rethrow; // Nếu cần để xử lý lỗi ở UI
+    }
+  }
+
+
 }
 
 

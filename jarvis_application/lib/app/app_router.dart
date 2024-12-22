@@ -11,7 +11,7 @@ import '../data/models/bot/ai_assistant.dart';
 import '../providers/auth_notifier.dart';
 import '../ui/views/aiBots/bot_chat_page.dart';
 import '../ui/views/aiBots/bot_list_page.dart';
-import '../ui/views/aiBots/publish_screen.dart';
+import '../ui/views/aiBots/publish_page.dart';
 import '../ui/views/knowledgeBase/knowledge_base_screen.dart';
 import '../ui/views/prompts/prompt_library_screen.dart';
 
@@ -47,7 +47,7 @@ class AppRouter {
       GoRoute(
         path: '/bot-chat',
         builder: (context, state) {
-          final assistant = state.extra as AIAssistant; // Lấy AIAssistant từ extra
+          final assistant = state.extra as AIAssistant;
           final threadId = state.uri.queryParameters['openAiThreadId'];
           if (threadId == null) {
             throw Exception("openAiThreadId is required but was not provided.");
@@ -61,7 +61,10 @@ class AppRouter {
       ),
       GoRoute(
         path: '/publish',
-        builder: (context, state) => const PublishingPlatformPage(),
+        builder: (context, state) {
+          final assistant = state.extra as AIAssistant;
+          return PublishingPlatformPage(currentAssistant: assistant);
+        },
         name: 'Publishing Platform',
       ),
       GoRoute(

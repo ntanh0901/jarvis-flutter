@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../data/models/bot/ai_assistant.dart';
 import '../../../providers/platform_provider.dart';
 
 class PublishingPlatformPage extends StatefulWidget {
-  static const String routeName = '/publish'; // Thêm routeName
+  static const String routeName = '/publish';
 
-  const PublishingPlatformPage({super.key});
+  final AIAssistant currentAssistant;
+
+  const PublishingPlatformPage({
+    super.key,
+    required this.currentAssistant,
+  });
 
   @override
   _PublishingPlatformPageState createState() => _PublishingPlatformPageState();
@@ -19,10 +25,9 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
   @override
   void initState() {
     super.initState();
-    final platformProvider =
-        Provider.of<PlatformProvider>(context, listen: false);
-    _selectedPlatforms =
-        List<bool>.filled(platformProvider.platforms.length, false);
+    final platformProvider = Provider.of<PlatformProvider>(context, listen: false);
+
+    _selectedPlatforms =  List<bool>.filled(platformProvider.platforms.length, false);
   }
 
   bool get _hasSelectedPlatforms {
@@ -34,7 +39,7 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Publishing platform"),
+        title: Text("Publishing Platform - ${widget.currentAssistant.assistantName}"),
         centerTitle: true,
       ),
       body: Consumer<PlatformProvider>(
@@ -103,7 +108,7 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
                     onPressed: _hasSelectedPlatforms
                         ? () {
                             // Hành động khi nhấn nút Publish
-                            print("Published");
+                            print("Published for ${widget.currentAssistant.assistantName}");
                           }
                         : null, // Disable nếu không có platform nào được chọn
                     style: ElevatedButton.styleFrom(
