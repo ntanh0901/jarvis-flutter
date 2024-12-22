@@ -84,8 +84,11 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
                           TextButton(
                             onPressed: () {
                               if (platform['name'] == 'Messenger') {
-                                _showMessengerConfigDialog(
-                                    context, platformProvider);
+                                _showMessengerConfigDialog(context, platformProvider);
+                              } else if (platform['name'] == 'Slack') {
+                                _showSlackConfigDialog(context, platformProvider);
+                              } else if (platform['name'] == 'Telegram') {
+                                _showTelegramConfigDialog(context, platformProvider);
                               }
                             },
                             child: const Text(
@@ -130,6 +133,10 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
 
   void _showMessengerConfigDialog(
       BuildContext context, PlatformProvider platformProvider) {
+    final TextEditingController tokenController = TextEditingController();
+    final TextEditingController pageIdController = TextEditingController();
+    final TextEditingController appSecretController = TextEditingController();
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -138,11 +145,11 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildTextField('Messenger Bot Token'),
+              _buildTextField('Messenger Bot Token', tokenController),
               const SizedBox(height: 10),
-              _buildTextField('Messenger Bot Page ID'),
+              _buildTextField('Messenger Bot Page ID', pageIdController),
               const SizedBox(height: 10),
-              _buildTextField('Messenger Bot App Secret'),
+              _buildTextField('Messenger Bot App Secret', appSecretController),
             ],
           ),
           actions: [
@@ -152,6 +159,11 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
             ),
             ElevatedButton(
               onPressed: () {
+                final token = tokenController.text.trim();
+                final pageId = pageIdController.text.trim();
+                final appSecret = appSecretController.text.trim();
+
+                // Add your logic to handle these values if necessary
                 platformProvider.updateStatus('Messenger', 'Configured');
                 Navigator.of(context).pop();
               },
@@ -163,8 +175,89 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
     );
   }
 
-  Widget _buildTextField(String label) {
+
+  void _showSlackConfigDialog(
+      BuildContext context, PlatformProvider platformProvider) {
+    final TextEditingController tokenController = TextEditingController();
+    final TextEditingController clientIdController = TextEditingController();
+    final TextEditingController clientSecretController = TextEditingController();
+    final TextEditingController signingSecretController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Slack Configuration'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildTextField('Slack Bot Token', tokenController),
+              const SizedBox(height: 10),
+              _buildTextField('Client ID', clientIdController),
+              const SizedBox(height: 10),
+              _buildTextField('Client Secret', clientSecretController),
+              const SizedBox(height: 10),
+              _buildTextField('Signing Secret', signingSecretController),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                platformProvider.updateStatus('Slack', 'Configured');
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showTelegramConfigDialog(
+      BuildContext context, PlatformProvider platformProvider) {
+    final TextEditingController tokenController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Telegram Configuration'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildTextField('Telegram Bot Token', tokenController),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                platformProvider.updateStatus('Telegram', 'Configured');
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+
+
+
+  Widget _buildTextField(String label, TextEditingController controller) {
     return TextField(
+      controller: controller,
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),
@@ -172,4 +265,5 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
       ),
     );
   }
+
 }

@@ -8,7 +8,7 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
   AIAssistantProvider() : super([]);
 
   final String baseUrl = 'https://knowledge-api.jarvis.cx';
-  final String apiToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY4YzA4ZDNmLTIyMzEtNDE5Ni04ZTVmLTEzZDgwNjRlOWNkMSIsImVtYWlsIjoicXVhbmd0aGllbjEyMzRAZ21haWwuY29tIiwiaWF0IjoxNzM0NzE4NDUxLCJleHAiOjE3MzQ4MDQ4NTF9.m0WdnE1jK6Mj0PTwz5p2b4DDAvsDjpYRqSsPFSzriQ4';
+  final String apiToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY4YzA4ZDNmLTIyMzEtNDE5Ni04ZTVmLTEzZDgwNjRlOWNkMSIsImVtYWlsIjoicXVhbmd0aGllbjEyMzRAZ21haWwuY29tIiwiaWF0IjoxNzM0ODUyMzA0LCJleHAiOjE3MzQ5Mzg3MDR9.eMNKK-ZhHFuxwzsy-cweORTgRNmsIuihNnx-pNzOFzc';
 
 
   // Fetch assistants from API

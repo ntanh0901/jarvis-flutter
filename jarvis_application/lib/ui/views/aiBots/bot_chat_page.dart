@@ -124,19 +124,17 @@ class _BotChatPageState extends ConsumerState<BotChatPage> {
   }
 
 
-  Future<void> _linkKnowledge(String knowledgeId) async {
+  Future<void> _addKnowledge(String knowledgeId) async {
     try {
       await ref.read(aiAssistantProvider.notifier).addKnowledgeToAssistant(
         assistantId: widget.currentAssistant.id,
         knowledgeId: knowledgeId,
       );
 
-      // Hiển thị thông báo thành công
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Knowledge $knowledgeId linked successfully.')),
       );
     } catch (e) {
-      // Hiển thị thông báo lỗi
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to link knowledge: $e')),
       );
@@ -146,7 +144,7 @@ class _BotChatPageState extends ConsumerState<BotChatPage> {
   // IconButton(
   // icon: const Icon(Icons.link, color: Colors.blue),
   // onPressed: () {
-  // _linkKnowledge('your-knowledge-id');
+  // _addKnowledge('knowledge-id');
   // },
   // ),
 

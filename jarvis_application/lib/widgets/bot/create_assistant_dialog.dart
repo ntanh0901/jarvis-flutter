@@ -92,18 +92,30 @@ class _CreateAssistantDialogState extends ConsumerState<CreateAssistantDialog> {
           children: [
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Assistant Name'),
+              decoration: const InputDecoration(
+                labelText: 'Assistant Name',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              ),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _instructionsController,
-              decoration: const InputDecoration(labelText: 'Instructions'),
+              decoration: const InputDecoration(
+                labelText: 'Instructions',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              ),
               maxLines: 3,
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _descriptionController,
-              decoration: const InputDecoration(labelText: 'Description'),
+              decoration: const InputDecoration(
+                labelText: 'Description',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              ),
               maxLines: 3,
             ),
           ],
@@ -123,4 +135,5 @@ class _CreateAssistantDialogState extends ConsumerState<CreateAssistantDialog> {
       ],
     );
   }
+
 }
