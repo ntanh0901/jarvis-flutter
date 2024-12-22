@@ -61,7 +61,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   // SignIn with Google (TODO: Implement sign-in)
   Future<void> signInWithGoogle() async {
-    // Implement Google sign-in logic here
+    state = AuthState(); // Reset state before action
+    try {
+      final response = await _authService.signInWithGoogle();
+      if (response != null) {
+        _setAuthenticatedState(response);
+      }
+    } catch (e) {
+      _handleError(e.toString());
+    }
   }
 
   // SignUp with Google (TODO: Implement sign-up)

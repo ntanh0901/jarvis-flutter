@@ -25,7 +25,6 @@ class KnowledgeBase extends StatelessWidget {
                   children: <Widget>[
                     Expanded(child: SearchTextField()),
                     SizedBox(width: 16.0),
-                    // Add margin between the search field and the button
                     CreateKBButton(),
                   ],
                 ),

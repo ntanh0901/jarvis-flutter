@@ -140,10 +140,10 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
   Widget _buildGoogleSignInButton(AuthViewModel authViewModel) {
     return GoogleAuthButton(
-      label: 'Sign up with Google',
+      label: 'Sign in with Google',
       onPressed: () async {
         try {
-          await authViewModel.googleSignUp();
+          await authViewModel.signInWithGoogle();
           _showMessage('Sign in with Google successful', Colors.green);
         } catch (e) {
           _showMessage('Sign in with Google failed', Colors.red);

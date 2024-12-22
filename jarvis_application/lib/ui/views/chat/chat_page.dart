@@ -460,9 +460,6 @@ class _ChatPageState extends ConsumerState<ChatPage>
       case 'upload_pdf':
         _showUploadDialog(context);
         break;
-      case 'view_book':
-        _fetchConversationHistory(conversationID);
-        break;
       case 'view_history':
         _showConversationHistoryDialog(context);
         break;

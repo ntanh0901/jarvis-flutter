@@ -1,5 +1,8 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../core/constants/api_endpoints.dart';
 import '../../providers/dio_provider.dart';
@@ -11,6 +14,7 @@ final authServiceProvider = Provider<AuthService>((ref) {
 
 class AuthService {
   final Dio _dio;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   AuthService(this._dio);
 
@@ -58,9 +62,35 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>?> signInWithGoogle() async {
-    return null;
+    try {
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        throw Exception('Google sign-in aborted');
+      }
+      log(googleUser.email);
+      log(googleUser.id);
+      log(googleUser.photoUrl.toString());
 
-    //   TODO: Implement sign in with Google
+      final googleAuth = await googleUser.authentication;
+
+      final response = await _dio.post(
+        ApiEndpoints.googleSignIn,
+        options: Options(extra: {'requiresAuth': false}),
+        data: {'token': googleAuth.accessToken},
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw Exception(parseError(e.response));
+      }
+      throw Exception('Network error: ${e.message}');
+    } catch (e) {
+      throw Exception('Error signing in with Google: $e');
+    }
+    return null;
   }
 
   Future<Map<String, dynamic>?> signUpWithGoogle() async {

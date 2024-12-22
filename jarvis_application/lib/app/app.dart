@@ -23,6 +23,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => ImageHandlerViewModel()),
       ],
       child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
         routerConfig: AppRouter.router,
         title: 'Jarvis Application',
         theme: AppTheme.lightTheme,

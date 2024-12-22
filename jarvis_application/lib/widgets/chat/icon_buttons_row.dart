@@ -20,7 +20,6 @@ class IconButtonsRow extends StatelessWidget {
           children: [
             _buildIconButton(Icons.add_comment, 'add_comment'),
             _buildIconButton(Icons.picture_as_pdf, 'upload_pdf'),
-            _buildIconButton(Icons.menu_book_outlined, 'view_book'),
             _buildIconButton(Icons.access_time, 'view_history'),
           ],
         ),
@@ -33,7 +32,6 @@ class IconButtonsRow extends StatelessWidget {
               '$remainUsage',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(width: 4),
             const Icon(
               Icons.local_fire_department_sharp,
               size: 22,

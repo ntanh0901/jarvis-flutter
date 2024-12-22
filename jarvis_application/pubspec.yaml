@@ -60,6 +60,8 @@ dependencies:
   dotted_border: ^2.1.0
   flutter_advanced_segment: ^3.0.2
   flutter_markdown: ^0.7.4+3
+  google_sign_in: ^6.2.2
+
 
 dev_dependencies:
   flutter_test:

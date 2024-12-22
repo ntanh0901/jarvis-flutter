@@ -36,7 +36,13 @@ class AuthViewModel extends StateNotifier<AsyncValue<void>> {
   }
 
   Future<void> signInWithGoogle() async {
-    //   TODO: Implement sign in with Google
+    state = const AsyncLoading();
+    try {
+      await _authNotifier.signInWithGoogle();
+      state = const AsyncData(null);
+    } catch (e, stackTrace) {
+      state = AsyncError(e, stackTrace);
+    }
   }
 
   Future<void> googleSignUp() async {
