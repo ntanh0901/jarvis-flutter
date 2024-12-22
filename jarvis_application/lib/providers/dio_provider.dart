@@ -10,6 +10,15 @@ final dioProvider = Provider<Dio>((ref) {
   return DioClient(tokenManager)._dio;
 });
 
+final dioKBProvider = Provider<DioKB>((ref) {
+  final dioClient = ref.read(dioProvider);
+  final dioKB = DioKB();
+  dioKB.authenticateWithToken(dioClient); // Thực hiện xác thực
+  return dioKB;
+});
+
+
+
 class DioClient {
   final Dio _dio = Dio(
     BaseOptions(
@@ -87,6 +96,43 @@ class DioClient {
     } catch (e) {
       print('Error: $e');
       return null;
+    }
+  }
+
+  Dio get dio => _dio;
+}
+
+
+class DioKB {
+  final Dio _dio = Dio();
+
+  DioKB() {
+    _dio.options
+      ..baseUrl = 'https://knowledge-api.jarvis.cx'
+      ..headers = {'Content-Type': 'application/json'};
+  }
+
+  Future<void> authenticateWithToken(Dio dioClient) async {
+    try {
+      final tokenResponse = await dioClient.get('/path/to/your/token'); // Adjust with actual token endpoint
+      final token = tokenResponse.data['accessToken'];
+
+      // Authenticate the KB client
+      final response = await _dio.post(
+        '/kb-core/v1/auth/external-sign-in',
+        data: {
+          "token": token,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final accessToken = response.data['token']['accessToken'];
+        _dio.options.headers['Authorization'] = 'Bearer $accessToken';
+      } else {
+        print('Failed to authenticate DioKB: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error during DioKB authentication: $e');
     }
   }
 
