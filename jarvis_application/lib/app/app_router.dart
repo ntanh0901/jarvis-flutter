@@ -12,6 +12,7 @@ import '../providers/auth_notifier.dart';
 import '../ui/views/aiBots/bot_chat_page.dart';
 import '../ui/views/aiBots/bot_list_page.dart';
 import '../ui/views/aiBots/publish_page.dart';
+import '../ui/views/aiBots/result_publish_page.dart';
 import '../ui/views/knowledgeBase/knowledge_base_screen.dart';
 import '../ui/views/prompts/prompt_library_screen.dart';
 
@@ -66,6 +67,15 @@ class AppRouter {
           return PublishingPlatformPage(currentAssistant: assistant);
         },
         name: 'Publishing Platform',
+      ),
+      GoRoute(
+        path: '/result-publish',
+        builder: (context, state) {
+          final selectedPlatforms =
+          state.extra as List<Map<String, dynamic>>; // Extract data from state.extra
+          return ResultPublishPage(selectedPlatforms: selectedPlatforms);
+        },
+        name: 'Result Publish',
       ),
       GoRoute(
         path: '/knowledge-base',

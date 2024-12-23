@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jarvis_application/ui/views/aiBots/result_publish_page.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/models/bot/ai_assistant.dart';
@@ -68,26 +69,37 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
                             },
                           ),
                           Image.asset(
-                            platform['icon'],
+                            platform.icon,
                             width: 40,
                             height: 40,
                           ),
                           const SizedBox(width: 16),
                           Expanded(
-                            child: Text(
-                              platform['name'],
-                              style: const TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  platform.name,
+                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  platform.status ? "Configured" : "Not Configured",
+                                  style: TextStyle(
+                                    color: platform.status ? Colors.green : Colors.red,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(width: 16),
                           TextButton(
                             onPressed: () {
-                              if (platform['name'] == 'Messenger') {
+                              if (platform.name == 'Messenger') {
                                 _showMessengerConfigDialog(context, platformProvider);
-                              } else if (platform['name'] == 'Slack') {
+                              } else if (platform.name == 'Slack') {
                                 _showSlackConfigDialog(context, platformProvider);
-                              } else if (platform['name'] == 'Telegram') {
+                              } else if (platform.name == 'Telegram') {
                                 _showTelegramConfigDialog(context, platformProvider);
                               }
                             },
@@ -110,18 +122,35 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
                   child: ElevatedButton(
                     onPressed: _hasSelectedPlatforms
                         ? () {
-                            // Hành động khi nhấn nút Publish
-                            print("Published for ${widget.currentAssistant.assistantName}");
-                          }
-                        : null, // Disable nếu không có platform nào được chọn
+                      // Tạo danh sách các nền tảng đã chọn
+                      final List<Map<String, dynamic>> selectedPlatforms = [];
+                      for (int i = 0; i < platformProvider.platforms.length; i++) {
+                        if (_selectedPlatforms[i]) {
+                          selectedPlatforms.add({
+                            'name': platformProvider.platforms[i].name,
+                            'icon': platformProvider.platforms[i].icon,
+                            'status': platformProvider.platforms[i].status,
+                          });
+                        }
+                      }
+
+                      // Điều hướng đến ResultPublishPage
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ResultPublishPage(
+                            selectedPlatforms: selectedPlatforms,
+                          ),
+                        ),
+                      );
+                    }
+                        : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _hasSelectedPlatforms
-                          ? Colors.blue
-                          : Colors
-                              .grey, // Xám khi không có selected, xanh dương khi có
+                      backgroundColor: _hasSelectedPlatforms ? Colors.blue : Colors.grey,
                     ),
                     child: const Text('Publish'),
                   ),
+
                 ),
               ),
             ],
@@ -164,7 +193,7 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
                 final appSecret = appSecretController.text.trim();
 
                 // Add your logic to handle these values if necessary
-                platformProvider.updateStatus('Messenger', 'Configured');
+                platformProvider.updateStatus('Messenger', true);
                 Navigator.of(context).pop();
               },
               child: const Text('OK'),
@@ -207,7 +236,7 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
             ),
             ElevatedButton(
               onPressed: () {
-                platformProvider.updateStatus('Slack', 'Configured');
+                platformProvider.updateStatus('Slack', true);
                 Navigator.of(context).pop();
               },
               child: const Text('OK'),
@@ -240,7 +269,7 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
             ),
             ElevatedButton(
               onPressed: () {
-                platformProvider.updateStatus('Telegram', 'Configured');
+                platformProvider.updateStatus('Telegram', true);
                 Navigator.of(context).pop();
               },
               child: const Text('OK'),
