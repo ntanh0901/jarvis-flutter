@@ -47,7 +47,8 @@ class AppRouter {
       GoRoute(
         path: '/bot-chat',
         builder: (context, state) {
-          final assistant = state.extra as AIAssistant; // Lấy AIAssistant từ extra
+          final assistant =
+              state.extra as AIAssistant; // Lấy AIAssistant từ extra
           final threadId = state.uri.queryParameters['openAiThreadId'];
           if (threadId == null) {
             throw Exception("openAiThreadId is required but was not provided.");
@@ -76,7 +77,7 @@ class AppRouter {
       ),
       GoRoute(
         path: '/email-compose',
-        builder: (context, state) => const EmailComposeScreen(),
+        builder: (context, state) => const EmailReplyScreen(),
         name: 'Email Compose',
       ),
     ],

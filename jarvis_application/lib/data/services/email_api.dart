@@ -17,9 +17,19 @@ class EmailApi {
   EmailApi(this._dio);
 
   Future<ResponseAiEmail> sendEmail(RequestAiEmail request) async {
-    final response =
-        await _dio.post('/api/v1/ai-email', data: request.toJson());
-    return ResponseAiEmail.fromJson(response.data);
+    try {
+      final response =
+          await _dio.post('/api/v1/ai-email', data: request.toJson());
+      if (response.statusCode == 200) {
+        return ResponseAiEmail.fromJson(response.data);
+      } else {
+        throw Exception('Failed to send email: ${response.statusCode}');
+      }
+    } on Exception catch (e) {
+      // TODO: Handle the exception appropriately
+      print(e);
+      rethrow;
+    }
   }
 
   Future<ResponseAiEmailIdeas> getReplyIdeas(RequestAiEmail request) async {
