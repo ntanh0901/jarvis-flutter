@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:jarvis_application/ui/views/aiBots/result_publish_page.dart';
 import 'package:provider/provider.dart';
 
@@ -22,13 +24,18 @@ class PublishingPlatformPage extends StatefulWidget {
 class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
   // Danh sách các trạng thái của checkbox cho từng platform
   List<bool> _selectedPlatforms = [];
-
+  final String baseUrl = 'https://knowledge-api.jarvis.cx';
   @override
   void initState() {
     super.initState();
     final platformProvider = Provider.of<PlatformProvider>(context, listen: false);
 
     _selectedPlatforms =  List<bool>.filled(platformProvider.platforms.length, false);
+    platformProvider.fetchPlatformConfigurations(widget.currentAssistant.id).catchError((e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    });
   }
 
   bool get _hasSelectedPlatforms {
@@ -62,11 +69,13 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
                           // Checkbox để lựa chọn platform
                           Checkbox(
                             value: _selectedPlatforms[index],
-                            onChanged: (bool? value) {
+                            onChanged: platform.status
+                                ? (bool? value) {
                               setState(() {
                                 _selectedPlatforms[index] = value ?? false;
                               });
-                            },
+                            }
+                                : null, // Disable checkbox if platform is not configured
                           ),
                           Image.asset(
                             platform.icon,
@@ -165,36 +174,87 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
     final TextEditingController tokenController = TextEditingController();
     final TextEditingController pageIdController = TextEditingController();
     final TextEditingController appSecretController = TextEditingController();
+    final scaffoldContext = context; // Lưu lại BuildContext của Scaffold
+
+    // Pre-fill if data is available
+    final metadata = platformProvider.messengerConfig;
+    if (metadata != null) {
+      tokenController.text = metadata.botToken;
+      pageIdController.text = metadata.pageId;
+      appSecretController.text = metadata.appSecret;
+    }
+
+
+    // Callback URL và Verify Token như trong hình
+    final String callbackUrl =
+        "$baseUrl/kb-core/v1/hook/messenger/${widget.currentAssistant.id}";
+    const String verifyToken = "knowledge";
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Messenger Configuration'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildTextField('Messenger Bot Token', tokenController),
-              const SizedBox(height: 10),
-              _buildTextField('Messenger Bot Page ID', pageIdController),
-              const SizedBox(height: 10),
-              _buildTextField('Messenger Bot App Secret', appSecretController),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Các TextField nhập thông tin
+                _buildTextField('Messenger Bot Token', tokenController),
+                const SizedBox(height: 10),
+                _buildTextField('Messenger Page ID', pageIdController),
+                const SizedBox(height: 10),
+                _buildTextField('Messenger App Secret', appSecretController),
+                const SizedBox(height: 20),
+
+                // Hiển thị thông tin cần copy
+                const Text(
+                  "Messenger copylink",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 10),
+
+                _buildCopyableRow("Callback URL", callbackUrl),
+                const SizedBox(height: 10),
+                _buildCopyableRow("Verify Token", verifyToken),
+              ],
+            ),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
-                final token = tokenController.text.trim();
+              onPressed: () async {
+                final botToken = tokenController.text.trim();
                 final pageId = pageIdController.text.trim();
                 final appSecret = appSecretController.text.trim();
 
-                // Add your logic to handle these values if necessary
-                platformProvider.updateStatus('Messenger', true);
-                Navigator.of(context).pop();
+                if (botToken.isEmpty || pageId.isEmpty || appSecret.isEmpty) {
+                  ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                    const SnackBar(content: Text('All fields are required!')),
+                  );
+                  return;
+                }
+
+                // Đóng AlertDialog
+                Navigator.of(context, rootNavigator: true).pop();
+
+                // Gửi yêu cầu xác thực qua PlatformProvider
+                try {
+                  await platformProvider.verifyMessengerBot(
+                    botToken: botToken,
+                    pageId: pageId,
+                    appSecret: appSecret,
+                    context: scaffoldContext,
+                  );
+                } catch (e) {
+                  // Hiển thị lỗi nếu có vấn đề xảy ra
+                  ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
               },
               child: const Text('OK'),
             ),
@@ -203,7 +263,6 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
       },
     );
   }
-
 
   void _showSlackConfigDialog(
       BuildContext context, PlatformProvider platformProvider) {
@@ -211,33 +270,97 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
     final TextEditingController clientIdController = TextEditingController();
     final TextEditingController clientSecretController = TextEditingController();
     final TextEditingController signingSecretController = TextEditingController();
+    final scaffoldContext = context; // Lưu lại BuildContext của Scaffold
+
+    // Pre-fill if data is available
+    final metadata = platformProvider.slackConfig;
+    if (metadata != null) {
+      tokenController.text = metadata.botToken;
+      clientIdController.text = metadata.clientId;
+      clientSecretController.text = metadata.clientSecret;
+      signingSecretController.text = metadata.signingSecret;
+    }
+
+
+    // Các URL Slack như trong hình
+    final  String oauth2RedirectUrl = "$baseUrl/kb-core/v1/bot-integration/slack/auth/${widget.currentAssistant.id}";
+    final  String eventRequestUrl = "$baseUrl/kb-core/v1/hook/slack/${widget.currentAssistant.id}";
+    final  String slashRequestUrl = "$baseUrl/kb-core/v1/hook/slack/slash/${widget.currentAssistant.id}";
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Slack Configuration'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildTextField('Slack Bot Token', tokenController),
-              const SizedBox(height: 10),
-              _buildTextField('Client ID', clientIdController),
-              const SizedBox(height: 10),
-              _buildTextField('Client Secret', clientSecretController),
-              const SizedBox(height: 10),
-              _buildTextField('Signing Secret', signingSecretController),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Các TextField nhập thông tin
+                _buildTextField('Slack Bot Token', tokenController),
+                const SizedBox(height: 10),
+                _buildTextField('Client ID', clientIdController),
+                const SizedBox(height: 10),
+                _buildTextField('Client Secret', clientSecretController),
+                const SizedBox(height: 10),
+                _buildTextField('Signing Secret', signingSecretController),
+                const SizedBox(height: 20),
+
+                // Hiển thị thông tin cần copy
+                const Text(
+                  "Slack copylink",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 10),
+
+                _buildCopyableRow("OAuth2 Redirect URLs", oauth2RedirectUrl),
+                const SizedBox(height: 10),
+                _buildCopyableRow("Event Request URL", eventRequestUrl),
+                const SizedBox(height: 10),
+                _buildCopyableRow("Slash Request URL", slashRequestUrl),
+              ],
+            ),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
-                platformProvider.updateStatus('Slack', true);
-                Navigator.of(context).pop();
+              onPressed: () async {
+                final botToken = tokenController.text.trim();
+                final clientId = clientIdController.text.trim();
+                final clientSecret = clientSecretController.text.trim();
+                final signingSecret = signingSecretController.text.trim();
+
+                if (botToken.isEmpty ||
+                    clientId.isEmpty ||
+                    clientSecret.isEmpty ||
+                    signingSecret.isEmpty) {
+                  ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                    const SnackBar(content: Text('All fields are required!')),
+                  );
+                  return;
+                }
+
+                // Đóng AlertDialog
+                Navigator.of(context, rootNavigator: true).pop();
+
+                // Gửi yêu cầu xác thực qua PlatformProvider
+                try {
+                  await platformProvider.verifySlackBot(
+                    botToken: botToken,
+                    clientId: clientId,
+                    clientSecret: clientSecret,
+                    signingSecret: signingSecret,
+                    context: scaffoldContext,
+                  );
+                } catch (e) {
+                  // Hiển thị lỗi nếu có vấn đề xảy ra
+                  ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
               },
               child: const Text('OK'),
             ),
@@ -247,9 +370,52 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
     );
   }
 
+// Hàm tạo dòng với khả năng sao chép
+  Widget _buildCopyableRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                value,
+                style: const TextStyle(color: Colors.blue),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.copy, color: Colors.grey),
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: value));
+            // Hiển thị thông báo sao chép thành công
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('$label copied to clipboard!')),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+
+
   void _showTelegramConfigDialog(
       BuildContext context, PlatformProvider platformProvider) {
     final TextEditingController tokenController = TextEditingController();
+    final scaffoldContext = context; // Lưu lại BuildContext của Scaffold
+
+    // Pre-fill if data is available
+    final metadata = platformProvider.telegramConfig;
+    if (metadata != null) {
+      tokenController.text = metadata.botToken;
+    }
 
     showDialog(
       context: context,
@@ -264,13 +430,32 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
-                platformProvider.updateStatus('Telegram', true);
-                Navigator.of(context).pop();
+              onPressed: () async {
+                final botToken = tokenController.text.trim();
+                if (botToken.isEmpty) {
+                  // Hiển thị thông báo lỗi
+                  ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                    const SnackBar(content: Text('Bot Token cannot be empty!')),
+                  );
+                  return;
+                }
+
+                // Đóng AlertDialog
+                Navigator.of(context, rootNavigator: true).pop();
+
+                // Gửi yêu cầu xác thực qua PlatformProvider
+                try {
+                  await platformProvider.verifyTelegramBot(botToken, scaffoldContext);
+                } catch (e) {
+                  // Hiển thị lỗi nếu có vấn đề xảy ra
+                  ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
               },
               child: const Text('OK'),
             ),
@@ -279,6 +464,9 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
       },
     );
   }
+
+
+
 
 
 
