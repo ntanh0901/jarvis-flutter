@@ -1,20 +1,23 @@
 
-class ReqMessagePublish {
+class ReqMessengerPublish {
   final String botToken;
   final String pageId;
   final String appSecret;
+  final String? redirect;
 
-  ReqMessagePublish({
+  ReqMessengerPublish({
     required this.botToken,
     required this.pageId,
     required this.appSecret,
+    this.redirect,
   });
 
-  factory ReqMessagePublish.fromJson(Map<String, dynamic> json) {
-    return ReqMessagePublish(
+  factory ReqMessengerPublish.fromJson(Map<String, dynamic> json) {
+    return ReqMessengerPublish(
       botToken: json['botToken'] ?? '',
       pageId: json['pageId'] ?? '',
       appSecret: json['appSecret'] ?? '',
+      redirect: json['redirect'],
     );
   }
 
@@ -28,6 +31,6 @@ class ReqMessagePublish {
 
   @override
   String toString() {
-    return 'ReqMessagePublish{botToken: $botToken, pageId: $pageId, appSecret: $appSecret}';
+    return 'ReqMessengerPublish{botToken: $botToken, pageId: $pageId, appSecret: $appSecret, redirect: $redirect}';
   }
 }

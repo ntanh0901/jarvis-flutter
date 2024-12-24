@@ -5,12 +5,14 @@ class ReqSlackPublish {
   final String clientId;
   final String clientSecret;
   final String signingSecret;
+  final String? redirect;
 
   ReqSlackPublish({
     required this.botToken,
     required this.clientId,
     required this.clientSecret,
     required this.signingSecret,
+    this.redirect,
   });
 
   factory ReqSlackPublish.fromJson(Map<String, dynamic> json) {
@@ -19,6 +21,7 @@ class ReqSlackPublish {
       clientId: json['clientId'] ?? '',
       clientSecret: json['clientSecret'] ?? '',
       signingSecret: json['signingSecret'] ?? '',
+      redirect: json['redirect'],
     );
   }
 
@@ -33,6 +36,6 @@ class ReqSlackPublish {
 
   @override
   String toString() {
-    return 'ReqSlackPublish{botToken: $botToken, clientId: $clientId, clientSecret: $clientSecret, signingSecret: $signingSecret}';
+    return 'ReqSlackPublish{botToken: $botToken, clientId: $clientId, clientSecret: $clientSecret, signingSecret: $signingSecret, redirect: $redirect}';
   }
 }

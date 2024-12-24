@@ -1,12 +1,16 @@
 
 class ReqTelegramPublish {
   final String botToken;
+  final String? redirect;
 
-  ReqTelegramPublish({required this.botToken});
+  ReqTelegramPublish({
+    required this.botToken,
+    this.redirect,});
 
   factory ReqTelegramPublish.fromJson(Map<String, dynamic> json) {
     return ReqTelegramPublish(
       botToken: json['botToken'] ?? '',
+      redirect: json['redirect'],
     );
   }
 
@@ -18,6 +22,6 @@ class ReqTelegramPublish {
 
   @override
   String toString() {
-    return 'ReqTelegramPublish{botToken: $botToken}';
+    return 'ReqTelegramPublish{botToken: $botToken, redirect: $redirect}';
   }
 }

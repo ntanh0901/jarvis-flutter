@@ -1,4 +1,6 @@
-
+import 'package:jarvis_application/data/models/bot/publish_bot/request/req_messenger_publish.dart';
+import 'package:jarvis_application/data/models/bot/publish_bot/request/req_slack_publish.dart';
+import 'package:jarvis_application/data/models/bot/publish_bot/request/req_telegram_publish.dart';
 
 
 class BotPublish {
@@ -36,7 +38,7 @@ class BotPublish {
       id: json['id'] ?? '',
       type: json['type'] ?? '',
       accessToken: json['accessToken'],
-      metadata: Metadata.fromJson(json['metadata'] ?? {}),
+      metadata: Metadata.fromJson(json['type'], json['metadata'] ?? {}),
       assistantId: json['assistantId'] ?? '',
     );
   }
@@ -63,35 +65,24 @@ class BotPublish {
 }
 
 /// Metadata Model
-class Metadata {
-  final String botName;
-  final String botToken;
-  final String redirect;
+abstract class Metadata {
+  const Metadata();
 
-  Metadata({
-    required this.botName,
-    required this.botToken,
-    required this.redirect,
-  });
-
-  factory Metadata.fromJson(Map<String, dynamic> json) {
-    return Metadata(
-      botName: json['botName'] ?? '',
-      botToken: json['botToken'] ?? '',
-      redirect: json['redirect'] ?? '',
-    );
+  factory Metadata.fromJson(Map<String, dynamic> json, String type) {
+    switch (type) {
+      case 'telegram':
+        return ReqTelegramPublish.fromJson(json) as Metadata;
+      case 'slack':
+        return ReqSlackPublish.fromJson(json) as Metadata;
+      case 'messenger':
+        return ReqMessengerPublish.fromJson(json) as Metadata;
+      default:
+        throw Exception('Unknown metadata type: $type');
+    }
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'botName': botName,
-      'botToken': botToken,
-      'redirect': redirect,
-    };
-  }
-
-  @override
-  String toString() {
-    return 'Metadata{botName: $botName, botToken: $botToken, redirect: $redirect}';
-  }
+  Map<String, dynamic> toJson();
 }
+
+
+// Example usage with polymorphism in Metadata
