@@ -8,7 +8,7 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
   AIAssistantProvider() : super([]);
 
   final String baseUrl = 'https://knowledge-api.jarvis.cx';
-  final String apiToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY4YzA4ZDNmLTIyMzEtNDE5Ni04ZTVmLTEzZDgwNjRlOWNkMSIsImVtYWlsIjoicXVhbmd0aGllbjEyMzRAZ21haWwuY29tIiwiaWF0IjoxNzM0NzE4NDUxLCJleHAiOjE3MzQ4MDQ4NTF9.m0WdnE1jK6Mj0PTwz5p2b4DDAvsDjpYRqSsPFSzriQ4';
+  final String apiToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY4YzA4ZDNmLTIyMzEtNDE5Ni04ZTVmLTEzZDgwNjRlOWNkMSIsImVtYWlsIjoicXVhbmd0aGllbjEyMzRAZ21haWwuY29tIiwiaWF0IjoxNzM0ODUyMzA0LCJleHAiOjE3MzQ5Mzg3MDR9.eMNKK-ZhHFuxwzsy-cweORTgRNmsIuihNnx-pNzOFzc';
 
 
   // Fetch assistants from API
@@ -266,6 +266,34 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
       return 'Error: $e';
     }
   }
+
+
+  Future<void> addKnowledgeToAssistant({
+    required String assistantId,
+    required String knowledgeId,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/kb-core/v1/ai-assistant/$assistantId/knowledges/$knowledgeId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print('Successfully linked knowledge $knowledgeId to assistant $assistantId');
+        print('Response body: ${response.body}');
+      } else {
+        throw Exception(
+            'Failed to link knowledge. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error linking knowledge to assistant: $e');
+      rethrow; // Nếu cần để xử lý lỗi ở UI
+    }
+  }
+
 
 }
 

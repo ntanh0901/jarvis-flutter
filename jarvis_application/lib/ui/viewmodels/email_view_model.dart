@@ -32,6 +32,8 @@ class ConversationMessage {
 
 class EmailViewModel extends StateNotifier<List<ConversationMessage>> {
   final EmailApi _emailApi;
+  String? _selectedAction;
+  String? get selectedAction => _selectedAction;
   final TextEditingController _inputController = TextEditingController();
 
   EmailViewModel(this._emailApi) : super([]);
@@ -68,12 +70,21 @@ class EmailViewModel extends StateNotifier<List<ConversationMessage>> {
     );
   }
 
-  Future<void> sendEmail({String? action}) async {
+  void selectAction(String action) {
+    if (_selectedAction == action) {
+      _selectedAction = null;
+    } else {
+      _selectedAction = action;
+    }
+    state = [...state];
+  }
+
+  Future<void> sendEmail() async {
     final message = _inputController.text;
     if (message.isNotEmpty) {
       final request = _createRequest(
         mainIdea: ' ',
-        action: action != null ? '$_defaultAction, $action' : _defaultAction,
+        action: _selectedAction != null ? _defaultAction : _defaultAction,
         emailContent: message,
       );
 
@@ -82,6 +93,7 @@ class EmailViewModel extends StateNotifier<List<ConversationMessage>> {
         ConversationMessage(request: request, responses: []),
       );
       _inputController.clear();
+      _selectedAction = null;
 
       try {
         final response = await _emailApi.sendEmail(request);
@@ -143,3 +155,4 @@ final emailViewModelProvider =
   final emailApi = ref.read(emailApiProvider);
   return EmailViewModel(emailApi);
 });
+final inputTextProvider = StateProvider<String>((ref) => '');

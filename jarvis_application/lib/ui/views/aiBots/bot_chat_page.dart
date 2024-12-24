@@ -3,7 +3,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:go_router/go_router.dart';
-import 'package:jarvis_application/ui/views/aiBots/publish_screen.dart';
+import 'package:jarvis_application/ui/views/aiBots/publish_page.dart';
 import '../../../data/models/bot/ai_assistant.dart';
 import '../../../data/models/bot/chat_bot/message.dart';
 import '../../../providers/ai_bot_provider.dart';
@@ -123,6 +123,33 @@ class _BotChatPageState extends ConsumerState<BotChatPage> {
     });
   }
 
+
+  Future<void> _addKnowledge(String knowledgeId) async {
+    try {
+      await ref.read(aiAssistantProvider.notifier).addKnowledgeToAssistant(
+        assistantId: widget.currentAssistant.id,
+        knowledgeId: knowledgeId,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Knowledge $knowledgeId linked successfully.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to link knowledge: $e')),
+      );
+    }
+  }
+
+  // IconButton(
+  // icon: const Icon(Icons.link, color: Colors.blue),
+  // onPressed: () {
+  // _addKnowledge('knowledge-id');
+  // },
+  // ),
+
+
+
   Widget _buildChatInput() {
     return GestureDetector(
       onTap: () {
@@ -186,13 +213,21 @@ class _BotChatPageState extends ConsumerState<BotChatPage> {
         actions: [
           TextButton(
             onPressed: () {
-              context.push(PublishingPlatformPage.routeName);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PublishingPlatformPage(
+                    currentAssistant: widget.currentAssistant,
+                  ),
+                ),
+              );
             },
             child: const Text(
               'Publish',
               style: TextStyle(color: Colors.blue, fontSize: 16),
             ),
           ),
+
 
         ],
       ),

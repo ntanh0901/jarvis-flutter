@@ -88,7 +88,7 @@ class EmailReplyScreen extends ConsumerWidget {
                 },
               ),
             ),
-            _QuickActionButtons(viewModelNotifier: viewModelNotifier),
+            const _QuickActionButtons(),
             _ChatInputWidget(viewModelNotifier: viewModelNotifier),
           ],
         ),
@@ -218,13 +218,15 @@ class _ResponseActions extends StatelessWidget {
   }
 }
 
-class _QuickActionButtons extends StatelessWidget {
-  final EmailViewModel viewModelNotifier;
-
-  const _QuickActionButtons({required this.viewModelNotifier});
+class _QuickActionButtons extends ConsumerWidget {
+  const _QuickActionButtons({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewModelNotifier = ref.watch(emailViewModelProvider.notifier);
+    final selectedAction = ref.watch(
+        emailViewModelProvider.notifier.select((vm) => vm.selectedAction));
+
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
@@ -233,32 +235,57 @@ class _QuickActionButtons extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                  child:
-                      _buildQuickActionButton('🙏 Thanks', viewModelNotifier)),
+                child: _buildQuickActionButton(
+                  '🙏 Thanks',
+                  viewModelNotifier,
+                  selectedAction,
+                ),
+              ),
               const SizedBox(width: 8),
               Expanded(
-                  child:
-                      _buildQuickActionButton('😔 Sorry', viewModelNotifier)),
+                child: _buildQuickActionButton(
+                  '😔 Sorry',
+                  viewModelNotifier,
+                  selectedAction,
+                ),
+              ),
               const SizedBox(width: 8),
               Expanded(
-                  child: _buildQuickActionButton('👍 Yes', viewModelNotifier)),
+                child: _buildQuickActionButton(
+                  '👍 Yes',
+                  viewModelNotifier,
+                  selectedAction,
+                ),
+              ),
               const SizedBox(width: 8),
               Expanded(
-                  child: _buildQuickActionButton('👎 No', viewModelNotifier)),
+                child: _buildQuickActionButton(
+                  '👎 No',
+                  viewModelNotifier,
+                  selectedAction,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
-                  flex: 2,
-                  child: _buildQuickActionButton(
-                      '📅 Follow up', viewModelNotifier)),
+                flex: 2,
+                child: _buildQuickActionButton(
+                  '📅 Follow up',
+                  viewModelNotifier,
+                  selectedAction,
+                ),
+              ),
               const SizedBox(width: 8),
               Expanded(
                 flex: 3,
                 child: _buildQuickActionButton(
-                    '🤔 Request more info', viewModelNotifier),
+                  '🤔 Request more info',
+                  viewModelNotifier,
+                  selectedAction,
+                ),
               ),
             ],
           ),
@@ -268,12 +295,15 @@ class _QuickActionButtons extends StatelessWidget {
   }
 
   Widget _buildQuickActionButton(
-      String label, EmailViewModel viewModelNotifier) {
+      String label, EmailViewModel viewModelNotifier, String? selectedAction) {
+    final isSelected = selectedAction == label;
+
     return ElevatedButton(
-      onPressed: () => viewModelNotifier.sendEmail(action: label),
+      onPressed: () => viewModelNotifier.selectAction(label),
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFFF0F5F9),
-        foregroundColor: Colors.black,
+        backgroundColor:
+            isSelected ? Colors.blue[100] : const Color(0xFFF0F5F9),
+        foregroundColor: isSelected ? Colors.blue : Colors.black,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
