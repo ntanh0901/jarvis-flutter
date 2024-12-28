@@ -1,8 +1,8 @@
 
 class ReqMessengerPublish {
-  final String botToken;
-  final String pageId;
-  final String appSecret;
+  late final String botToken;
+  late final String pageId;
+  late final String appSecret;
   final String? redirect;
 
   ReqMessengerPublish({
@@ -19,6 +19,12 @@ class ReqMessengerPublish {
       appSecret: json['appSecret'] ?? '',
       redirect: json['redirect'],
     );
+  }
+
+  void setAll(String botToken, String pageId, String appSecret) {
+    this.botToken = botToken;
+    this.pageId = pageId;
+    this.appSecret = appSecret;
   }
 
   Map<String, dynamic> toJson() {

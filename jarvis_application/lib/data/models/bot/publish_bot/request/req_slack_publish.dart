@@ -1,10 +1,10 @@
 
 
 class ReqSlackPublish {
-  final String botToken;
-  final String clientId;
-  final String clientSecret;
-  final String signingSecret;
+  late final String botToken;
+  late final String clientId;
+  late final String clientSecret;
+  late final String signingSecret;
   final String? redirect;
 
   ReqSlackPublish({
@@ -23,6 +23,13 @@ class ReqSlackPublish {
       signingSecret: json['signingSecret'] ?? '',
       redirect: json['redirect'],
     );
+  }
+
+  void setAll(String botToken, String clientId, String clientSecret, String signingSecret) {
+    this.botToken = botToken;
+    this.clientId = clientId;
+    this.clientSecret = clientSecret;
+    this.signingSecret = signingSecret;
   }
 
   Map<String, dynamic> toJson() {

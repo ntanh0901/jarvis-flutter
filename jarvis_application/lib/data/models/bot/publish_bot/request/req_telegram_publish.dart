@@ -1,6 +1,6 @@
 
 class ReqTelegramPublish {
-  final String botToken;
+  late final String botToken;
   final String? redirect;
 
   ReqTelegramPublish({
@@ -13,6 +13,11 @@ class ReqTelegramPublish {
       redirect: json['redirect'],
     );
   }
+
+  void setAll(String botToken) {
+    this.botToken = botToken;
+  }
+
 
   Map<String, dynamic> toJson() {
     return {
