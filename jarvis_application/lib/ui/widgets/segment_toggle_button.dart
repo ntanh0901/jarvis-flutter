@@ -27,24 +27,26 @@ class SegmentToggleButton extends ConsumerStatefulWidget {
 
 class _SegmentToggleButtonState extends ConsumerState<SegmentToggleButton> {
   late ValueNotifier<String> controller;
+  late VoidCallback listener;
 
   @override
   void initState() {
     super.initState();
     controller = ref.read(segmentControllerProvider(widget.initialSegment));
 
-    // Add the listener only once
-    controller.addListener(() {
+    // Define and add the listener
+    listener = () {
       if (widget.onSegmentChanged != null) {
         widget.onSegmentChanged!(controller.value);
       }
-    });
+    };
+    controller.addListener(listener);
   }
 
   @override
   void dispose() {
-    // Remove listener to prevent memory leaks
-    controller.removeListener(() {});
+    // Remove the specific listener to avoid leaks
+    controller.removeListener(listener);
     super.dispose();
   }
 
