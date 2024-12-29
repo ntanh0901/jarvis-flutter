@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jarvis_application/ui/widgets/create_prompt_button.dart';
-import 'package:jarvis_application/ui/widgets/prompts_switch_button.dart';
 import 'package:jarvis_application/ui/widgets/search_text_field.dart';
 
 import '../../../data/models/prompt.dart';
 import '../../viewmodels/prompt_library_viewmodel.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/chips_widget.dart';
+import '../../widgets/segment_toggle_button.dart';
 
 class PromptLibrary extends ConsumerStatefulWidget {
   const PromptLibrary({super.key});
@@ -40,7 +40,13 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
         appBar: AppBar(
             surfaceTintColor: Colors.transparent,
             backgroundColor: Colors.white,
-            title: const Text('Prompt Library'),
+            title: const Text(
+              'Prompt Library',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             actions: [
               Padding(
                 padding: const EdgeInsets.only(right: 16.0),
@@ -64,17 +70,21 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: PromptsSwitchButton(
-                    isMyPromptSelected: state.isMyPromptSelected,
-                    onMyPromptSelected: () => ref
-                        .read(promptViewModelProvider.notifier)
-                        .togglePromptSelection(),
-                    onPublicPromptSelected: () => ref
-                        .read(promptViewModelProvider.notifier)
-                        .togglePromptSelection(),
-                  ),
-                ),
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: SegmentToggleButton(
+                      initialSegment: state.isMyPromptSelected
+                          ? 'my_prompt'
+                          : 'public_prompt',
+                      segments: const {
+                        'my_prompt': 'My Prompt',
+                        'public_prompt': 'Public Prompt',
+                      },
+                      onSegmentChanged: (selectedSegment) {
+                        ref
+                            .read(promptViewModelProvider.notifier)
+                            .togglePromptSelection();
+                      },
+                    )),
               ),
               const SizedBox(height: 16.0),
               if (!state.isMyPromptSelected) ...[

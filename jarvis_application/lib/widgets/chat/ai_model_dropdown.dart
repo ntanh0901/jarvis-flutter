@@ -98,7 +98,7 @@ class AIModelDropdown extends StatelessWidget {
                 ),
               const SizedBox(width: 8),
               Text(
-                selectedAssistant?.dto.name ?? '',
+                selectedAssistant?.dto.name ?? 'Auto',
                 style: const TextStyle(fontSize: 14),
               ),
               const SizedBox(width: 4),

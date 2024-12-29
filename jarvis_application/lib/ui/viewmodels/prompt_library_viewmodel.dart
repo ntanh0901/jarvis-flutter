@@ -216,6 +216,7 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
 
   void togglePromptSelection() {
     state = state.copyWith(isMyPromptSelected: !state.isMyPromptSelected);
+    print('isMyPromptSelected: ${state.isMyPromptSelected}');
   }
 }
 

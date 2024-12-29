@@ -46,7 +46,7 @@ class EmailViewModel extends StateNotifier<List<ConversationMessage>> {
     sender: ' ',
     receiver: ' ',
     style: AiEmailStyleDto(
-      length: 'short',
+      length: 'normal',
       formality: 'same as received email',
       tone: 'same as received email',
     ),

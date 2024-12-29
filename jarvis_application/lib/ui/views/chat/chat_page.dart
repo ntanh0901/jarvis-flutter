@@ -74,7 +74,8 @@ class _ChatPageState extends ConsumerState<ChatPage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    selectedAssistant = assistants.isNotEmpty ? assistants.first : null;
+    selectedAssistant =
+        Assistant.assistants.isNotEmpty ? Assistant.assistants.first : null;
     // initial Message  = empty
     currentMessageUser = ChatMessage.empty();
     currentMessageAI = ChatMessage.empty();
@@ -521,8 +522,8 @@ class _ChatPageState extends ConsumerState<ChatPage>
               title: const Text(
                 'Chat',
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               backgroundColor: Colors.white,
@@ -539,7 +540,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
                 ),
               ],
               bottom: PreferredSize(
-                preferredSize: Size.fromHeight(1),
+                preferredSize: const Size.fromHeight(1),
                 child: Divider(
                   color: Colors.grey[200],
                   height: 1,
@@ -550,87 +551,87 @@ class _ChatPageState extends ConsumerState<ChatPage>
             children: [
               Expanded(
                 child: messages.isEmpty
-                    ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      LogoWidget(imageType: 1),
-                      SizedBox(height: 10),
-                      GreetingText(),
-                      SizedBox(height: 10),
-                    ],
-                  ),
-                )
-                    : ListView.builder(
-                  controller: _scrollController,
-                  itemCount: messages.length + (isTyping ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index == messages.length && isTyping) {
-                      return const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: SpinKitThreeBounce(
-                            color: Colors.grey,
-                            size: 20.0,
-                          ),
-                        ),
-                      );
-                    }
-
-                    final message = messages[index];
-                    return Align(
-                      alignment: message.role == 'user'
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      child: Container(
-                        margin: message.role == 'user'
-                            ? const EdgeInsets.only(
-                            left: 30, right: 10, top: 10, bottom: 5)
-                            : const EdgeInsets.only(
-                            left: 10, right: 30, top: 20, bottom: 5),
-                        padding: const EdgeInsets.all(15),
-                        decoration: BoxDecoration(
-                          color: message.role == 'user'
-                              ? const Color(0xFF6841EA)
-                              : Colors.white,
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(
-                                message.role == 'user' ? 20 : 0),
-                            topRight: Radius.circular(
-                                message.role == 'user' ? 0 : 20),
-                            bottomLeft: const Radius.circular(20),
-                            bottomRight: const Radius.circular(20),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.2),
-                              spreadRadius: 2,
-                              blurRadius: 4,
-                              offset: const Offset(0, 3),
-                            ),
+                    ? const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            LogoWidget(imageType: 1),
+                            SizedBox(height: 10),
+                            GreetingText(),
+                            SizedBox(height: 10),
                           ],
                         ),
-                        child: Flexible(
-                          child: MarkdownBody(
-                            data: message.content!,
-                            styleSheet: MarkdownStyleSheet(
-                              p: TextStyle(
+                      )
+                    : ListView.builder(
+                        controller: _scrollController,
+                        itemCount: messages.length + (isTyping ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == messages.length && isTyping) {
+                            return const Align(
+                              alignment: Alignment.centerLeft,
+                              child: Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: SpinKitThreeBounce(
+                                  color: Colors.grey,
+                                  size: 20.0,
+                                ),
+                              ),
+                            );
+                          }
+
+                          final message = messages[index];
+                          return Align(
+                            alignment: message.role == 'user'
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
+                            child: Container(
+                              margin: message.role == 'user'
+                                  ? const EdgeInsets.only(
+                                      left: 30, right: 10, top: 10, bottom: 5)
+                                  : const EdgeInsets.only(
+                                      left: 10, right: 30, top: 20, bottom: 5),
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
                                 color: message.role == 'user'
-                                    ? Colors.white
-                                    : Colors.black,
-                                fontSize: 16,
+                                    ? const Color(0xFF6841EA)
+                                    : Colors.white,
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(
+                                      message.role == 'user' ? 20 : 0),
+                                  topRight: Radius.circular(
+                                      message.role == 'user' ? 0 : 20),
+                                  bottomLeft: const Radius.circular(20),
+                                  bottomRight: const Radius.circular(20),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.2),
+                                    spreadRadius: 2,
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Flexible(
+                                child: MarkdownBody(
+                                  data: message.content!,
+                                  styleSheet: MarkdownStyleSheet(
+                                    p: TextStyle(
+                                      color: message.role == 'user'
+                                          ? Colors.white
+                                          : Colors.black,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
               ActionRow(
-                assistants: assistants,
+                assistants: Assistant.assistants,
                 selectedAssistant: selectedAssistant,
                 onAssistantSelected: (assistant) {
                   setState(() {
@@ -649,5 +650,4 @@ class _ChatPageState extends ConsumerState<ChatPage>
       ),
     );
   }
-
 }

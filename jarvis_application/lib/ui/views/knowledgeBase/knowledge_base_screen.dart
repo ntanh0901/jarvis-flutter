@@ -13,7 +13,13 @@ class KnowledgeBase extends StatelessWidget {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Knowledge Base'),
+          title: const Text(
+            'Knowledge Base',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
         drawer: const AppDrawer(),
         body: SingleChildScrollView(
