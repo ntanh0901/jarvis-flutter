@@ -7,7 +7,7 @@ import 'icon_buttons_row.dart';
 class ActionRow extends StatelessWidget {
   final List<Assistant> assistants;
   final Assistant? selectedAssistant;
-  final ValueChanged<Assistant> onAssistantSelected;
+  final ValueChanged<Assistant?> onAssistantSelected;
   final void Function(String action) onActionSelected;
   final int remainUsage;
 

@@ -1,10 +1,13 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jarvis_application/ui/views/auth/forget_password_page.dart';
 import 'package:jarvis_application/ui/views/auth/signin_page.dart';
 import 'package:jarvis_application/ui/views/auth/signup_page.dart';
 import 'package:jarvis_application/ui/views/chat/chat_page.dart';
+import 'package:jarvis_application/ui/views/splash/splash_screen.dart';
 
 import '../data/models/bot/ai_assistant.dart';
+import '../providers/auth_notifier.dart';
 import '../ui/views/aiBots/bot_chat_page.dart';
 import '../ui/views/aiBots/bot_list_page.dart';
 import '../ui/views/aiBots/publish_page.dart';
@@ -18,7 +21,7 @@ class AppRouter {
     routes: [
       GoRoute(
         path: '/',
-        builder: (context, state) => WritingScreen(),
+        builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
         path: '/sign-in',
@@ -86,25 +89,25 @@ class AppRouter {
       ),
       GoRoute(
         path: '/email-compose',
-        builder: (context, state) => WritingScreen(),
+        builder: (context, state) => const WritingScreen(),
         name: 'Email Compose',
       ),
     ],
-    // redirect: (context, state) {
-    //   final ref = ProviderScope.containerOf(context, listen: false);
-    //   final authState = ref.read(authNotifierProvider);
-    //   final isAuthenticated = authState.isAuthenticated;
-    //   final isAuthPage = state.matchedLocation == '/sign-in' ||
-    //       state.matchedLocation == '/sign-up' ||
-    //       state.matchedLocation == '/forgot-password';
-    //
-    //   if (!isAuthenticated && !isAuthPage) {
-    //     return '/sign-in';
-    //   }
-    //   if (isAuthenticated && (state.matchedLocation == '/' || isAuthPage)) {
-    //     return '/chat';
-    //   }
-    //   return null;
-    // },
+    redirect: (context, state) {
+      final ref = ProviderScope.containerOf(context, listen: false);
+      final authState = ref.read(authNotifierProvider);
+      final isAuthenticated = authState.isAuthenticated;
+      final isAuthPage = state.matchedLocation == '/sign-in' ||
+          state.matchedLocation == '/sign-up' ||
+          state.matchedLocation == '/forgot-password';
+
+      if (!isAuthenticated && !isAuthPage) {
+        return '/sign-in';
+      }
+      if (isAuthenticated && (state.matchedLocation == '/' || isAuthPage)) {
+        return '/chat';
+      }
+      return null;
+    },
   );
 }

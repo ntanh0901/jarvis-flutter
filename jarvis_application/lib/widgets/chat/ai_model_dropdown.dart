@@ -4,7 +4,7 @@ import 'package:jarvis_application/data/models/assistant.dart';
 class AIModelDropdown extends StatelessWidget {
   final List<Assistant> assistants;
   final Assistant? selectedAssistant;
-  final ValueChanged<Assistant> onAssistantSelected;
+  final ValueChanged<Assistant?> onAssistantSelected;
 
   const AIModelDropdown({
     super.key,
@@ -71,6 +71,7 @@ class AIModelDropdown extends StatelessWidget {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Align(
       alignment: Alignment.centerLeft,
@@ -81,30 +82,52 @@ class AIModelDropdown extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.grey.shade300),
         ),
-        child: InkWell(
-          onTap: () => _showAssistantSelectionDialog(context),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (selectedAssistant != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    selectedAssistant!.imagePath,
-                    width: 24,
-                    height: 24,
-                    fit: BoxFit.cover,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (selectedAssistant != null)
+              Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      selectedAssistant!.imagePath,
+                      width: 24,
+                      height: 24,
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                ),
-              const SizedBox(width: 8),
-              Text(
-                selectedAssistant?.dto.name ?? 'Auto',
-                style: const TextStyle(fontSize: 14),
+                  const SizedBox(width: 8),
+                  Text(
+                    selectedAssistant!.dto.name,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.close,
+                      size: 20,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () {
+                      onAssistantSelected(null);
+                    },
+                    constraints: const BoxConstraints(),
+                    padding: EdgeInsets.zero,
+                  ),
+                ],
+              )
+            else
+              const Text(
+                'Auto',
+                style: TextStyle(fontSize: 14),
               ),
-              const SizedBox(width: 4),
-              const Icon(Icons.arrow_drop_down, size: 20),
-            ],
-          ),
+            const SizedBox(width: 4),
+            InkWell(
+              onTap: () => _showAssistantSelectionDialog(context),
+              child: const Icon(Icons.arrow_drop_down, size: 20),
+            ),
+          ],
         ),
       ),
     );

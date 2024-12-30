@@ -8,8 +8,16 @@ import '../../../widgets/chat/ai_model_dropdown.dart';
 import '../../viewmodels/email_viewmodel.dart';
 import '../../widgets/segment_toggle_button.dart';
 
-class WritingScreen extends ConsumerWidget {
-  WritingScreen({super.key});
+class WritingScreen extends ConsumerStatefulWidget {
+  const WritingScreen({super.key});
+
+  @override
+  ConsumerState<WritingScreen> createState() => _WritingScreenState();
+}
+
+class _WritingScreenState extends ConsumerState<WritingScreen> {
+  final TextEditingController _originalTextController = TextEditingController();
+  final TextEditingController _replyContentController = TextEditingController();
 
   final List<String> lengths = ['Auto', 'Short', 'Medium', 'Long'];
   final List<String> formalities = [
@@ -63,13 +71,15 @@ class WritingScreen extends ConsumerWidget {
     'Ukrainian',
     'Vietnamese'
   ];
-  final List<String> assistantNames =
-      Assistant.assistants.map((assistant) => assistant.dto.name).toList();
+  final List<String> assistantNames = [
+    'Auto',
+    ...Assistant.assistants.map((assistant) => assistant.dto.name),
+  ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final emailState = ref.watch(emailStateProvider);
-
+    final requestType = ref.watch(requestTypeProvider);
     return SafeArea(
       child: Material(
         color: Colors.white,
@@ -133,52 +143,54 @@ class WritingScreen extends ConsumerWidget {
                         const SizedBox(height: 8),
                         _buildTextArea(
                           'The original text to which you want to reply...',
-                          (value) {},
-                          maxLines: 7,
+                          _originalTextController,
+                          maxLines: 3,
                         ),
                         const SizedBox(height: 24),
                         _buildSection('What To Reply'),
                         const SizedBox(height: 8),
                         _buildTextArea(
                           'The general content of your reply...',
-                          (value) {},
+                          _replyContentController,
                           maxLines: 3,
                         ),
-                        const SizedBox(height: 24),
-                        _buildSection('Length'),
-                        const SizedBox(height: 8),
-                        _buildChipsSection(
-                          lengths,
-                          emailState.metadata.style!.length,
-                          (value) => ref
-                              .read(emailStateProvider.notifier)
-                              .updateStyle(length: value),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildSection('Formality'),
-                        const SizedBox(height: 8),
-                        _buildChipsSection(
-                          formalities,
-                          emailState.metadata.style!.formality,
-                          (value) => ref
-                              .read(emailStateProvider.notifier)
-                              .updateStyle(formality: value),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildSection('Tone'),
-                        const SizedBox(height: 8),
-                        _buildChipsSection(
-                          tones,
-                          emailState.metadata.style!.tone,
-                          (value) => ref
-                              .read(emailStateProvider.notifier)
-                              .updateStyle(tone: value),
-                        ),
+                        if (requestType == RequestType.response) ...[
+                          const SizedBox(height: 24),
+                          _buildSection('Length'),
+                          const SizedBox(height: 8),
+                          _buildChipsSection(
+                            lengths,
+                            emailState.metadata.style.length,
+                            (value) => ref
+                                .read(emailStateProvider.notifier)
+                                .updateStyle(length: value),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildSection('Formality'),
+                          const SizedBox(height: 8),
+                          _buildChipsSection(
+                            formalities,
+                            emailState.metadata.style.formality,
+                            (value) => ref
+                                .read(emailStateProvider.notifier)
+                                .updateStyle(formality: value),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildSection('Tone'),
+                          const SizedBox(height: 8),
+                          _buildChipsSection(
+                            tones,
+                            emailState.metadata.style.tone,
+                            (value) => ref
+                                .read(emailStateProvider.notifier)
+                                .updateStyle(tone: value),
+                          ),
+                        ],
                         const SizedBox(height: 16),
                         _buildSection('Output Language'),
                         const SizedBox(height: 8),
                         _buildLanguageDropdown(ref),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
                         _buildSection('Assistant'),
                         const SizedBox(height: 8),
                         _buildAssistantDropdown(ref),
@@ -207,7 +219,7 @@ class WritingScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTextArea(String hint, Function(String) onChanged,
+  Widget _buildTextArea(String hint, TextEditingController controller,
       {int maxLines = 1}) {
     return Container(
       decoration: BoxDecoration(
@@ -216,7 +228,7 @@ class WritingScreen extends ConsumerWidget {
         border: Border.all(color: Colors.grey.shade200),
       ),
       child: TextField(
-        onChanged: onChanged,
+        controller: controller,
         maxLines: maxLines,
         decoration: InputDecoration(
           hintText: hint,
@@ -229,14 +241,14 @@ class WritingScreen extends ConsumerWidget {
   }
 
   Widget _buildChipsSection(
-      List<String> options, String selected, Function(String) onSelected) {
+      List<String> options, String? selected, Function(String) onSelected) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: options
           .map((option) => _buildChip(
                 option,
-                selected == option,
+                selected == option || (selected == '' && option == 'Auto'),
                 () => onSelected(option),
               ))
           .toList(),
@@ -283,9 +295,9 @@ class WritingScreen extends ConsumerWidget {
         ),
         child: PopupMenuButton<String>(
           initialValue: currentLanguage,
-          onSelected: (String language) {
-            ref.read(emailStateProvider.notifier).updateLanguage(language);
-          },
+          onSelected: (String language) => ref
+              .read(emailStateProvider.notifier)
+              .updateLanguage(language != 'Auto' ? language : ''),
           itemBuilder: (BuildContext context) =>
               supportedLanguages.map((language) {
             final isSelected = language == currentLanguage;
@@ -298,20 +310,12 @@ class WritingScreen extends ConsumerWidget {
                   color:
                       isSelected ? const Color(0xFFE8F4FE) : Colors.transparent,
                 ),
-                child: GestureDetector(
-                  onTap: () {
-                    ref
-                        .read(emailStateProvider.notifier)
-                        .updateLanguage(language);
-                    Navigator.of(context).pop();
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: ListTile(
-                      title: Text(
-                        language,
-                        style: const TextStyle(fontSize: 14),
-                      ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: ListTile(
+                    title: Text(
+                      language.isNotEmpty ? language : 'Auto',
+                      style: const TextStyle(fontSize: 14),
                     ),
                   ),
                 ),
@@ -323,7 +327,7 @@ class WritingScreen extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                currentLanguage,
+                currentLanguage.isNotEmpty ? currentLanguage : 'Auto',
                 style: const TextStyle(fontSize: 14),
               ),
               const SizedBox(width: 4),
@@ -338,7 +342,6 @@ class WritingScreen extends ConsumerWidget {
   Widget _buildAssistantDropdown(WidgetRef ref) {
     final currentAssistantDto = ref.watch(emailStateProvider).assistant;
 
-    // Convert AssistantDto to Assistant by finding matching id
     final currentAssistant = currentAssistantDto != null
         ? Assistant.assistants.firstWhere(
             (assistant) => assistant.id == currentAssistantDto.id,
@@ -348,9 +351,9 @@ class WritingScreen extends ConsumerWidget {
     return AIModelDropdown(
       assistants: Assistant.assistants,
       selectedAssistant: currentAssistant,
-      onAssistantSelected: (Assistant assistant) {
+      onAssistantSelected: (Assistant? assistant) {
         ref.read(emailStateProvider.notifier).updateAssistant(
-              assistant.id!,
+              assistant?.id,
             );
       },
     );
@@ -400,33 +403,85 @@ class WritingScreen extends ConsumerWidget {
   }
 
   Widget _buildRegenerateButton() {
-    return SizedBox(
-      height: 40,
-      child: ElevatedButton(
-        onPressed: () {},
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue.shade50,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.refresh, size: 18, color: Colors.blue),
-            SizedBox(width: 8),
-            Text(
-              'Regenerate',
-              style: TextStyle(
-                color: Colors.blue,
-                fontWeight: FontWeight.w500,
+    return Consumer(
+      builder: (context, ref, child) {
+        final requestType = ref.watch(requestTypeProvider);
+        final isFirstGeneration = ref.watch(isFirstGenerationProvider);
+
+        return SizedBox(
+          height: 40,
+          child: ElevatedButton(
+            onPressed: () async {
+              final originalText = _originalTextController.text.trim();
+              final replyContent = _replyContentController.text.trim();
+
+              if (originalText.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter the original email text'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+              try {
+                final emailNotifier = ref.read(emailStateProvider.notifier);
+                emailNotifier.updateEmailContent(
+                  email: originalText,
+                  action: replyContent,
+                );
+
+                final response = await emailNotifier.generateEmail(requestType);
+
+                if (isFirstGeneration) {
+                  ref.read(isFirstGenerationProvider.notifier).state = false;
+                }
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Email generated successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error generating email: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade50,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
-          ],
-        ),
-      ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(isFirstGeneration ? Icons.create_outlined : Icons.refresh,
+                    size: 18, color: Colors.blue),
+                const SizedBox(width: 8),
+                Text(
+                  isFirstGeneration ? 'Generate' : 'Regenerate',
+                  style: const TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

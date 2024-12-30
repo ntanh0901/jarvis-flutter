@@ -7,10 +7,10 @@ class EmailContent {
   final String subject;
 
   EmailContent({
-    required this.content,
-    required this.receiver,
-    required this.sender,
-    required this.subject,
+    this.content = '',
+    this.receiver = '',
+    this.sender = '',
+    this.subject = '',
   });
 
   Map<String, dynamic> toJson() => {
@@ -27,9 +27,9 @@ class AiEmailStyle {
   final String tone;
 
   AiEmailStyle({
-    required this.formality,
-    required this.length,
-    required this.tone,
+    this.formality = '',
+    this.length = '',
+    this.tone = '',
   });
 
   AiEmailStyle copyWith({
@@ -56,7 +56,7 @@ class AiEmailMetadata {
   final String language;
   final String receiver;
   final String sender;
-  final AiEmailStyle? style;
+  final AiEmailStyle style;
   final String subject;
 
   AiEmailMetadata({
@@ -64,7 +64,7 @@ class AiEmailMetadata {
     required this.language,
     required this.receiver,
     required this.sender,
-    this.style,
+    required this.style,
     required this.subject,
   });
 
@@ -86,38 +86,42 @@ class AiEmailMetadata {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'context': context.map((e) => e.toJson()).toList(),
-        'language': language,
-        'receiver': receiver,
-        'sender': sender,
-        'style': style?.toJson(),
-        'subject': subject,
-      };
+  Map<String, dynamic> toJson() {
+    return {
+      'context': context.map((e) => e.toJson()).toList(),
+      'language': language,
+      'receiver': receiver,
+      'sender': sender,
+      'style': style?.toJson(),
+      'subject': subject,
+    }..removeWhere((key, value) => value == null);
+  }
 }
 
 class EmailGenerationRequest {
   final String action;
   final AssistantDto? assistant;
   final String email;
-  final String mainIdea;
+  final String? mainIdea;
   final AiEmailMetadata metadata;
 
   EmailGenerationRequest({
     required this.action,
     this.assistant,
     required this.email,
-    required this.mainIdea,
+    this.mainIdea,
     required this.metadata,
   });
 
-  Map<String, dynamic> toJson() => {
-        'action': action,
-        'assistant': assistant?.toJson(),
-        'email': email,
-        'mainIdea': mainIdea,
-        'metadata': metadata.toJson(),
-      };
+  Map<String, dynamic> toJson() {
+    return {
+      'action': action,
+      'assistant': assistant?.toJson(),
+      'email': email,
+      'mainIdea': mainIdea,
+      'metadata': metadata.toJson(),
+    }..removeWhere((key, value) => value == null);
+  }
 
   EmailGenerationRequest copyWith({
     AssistantDto? assistant,
@@ -127,7 +131,7 @@ class EmailGenerationRequest {
     AiEmailMetadata? metadata,
   }) {
     return EmailGenerationRequest(
-      assistant: assistant ?? this.assistant,
+      assistant: assistant,
       action: action ?? this.action,
       email: email ?? this.email,
       mainIdea: mainIdea ?? this.mainIdea,

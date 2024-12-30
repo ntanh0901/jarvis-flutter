@@ -2,39 +2,29 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/dio_provider.dart';
-import '../models/email/request_ai_email.dart';
-import '../models/email/response_ai_email.dart';
-import '../models/email/response_ai_email_ideas.dart';
+import '../models/email_models.dart';
 
-final emailApiProvider = Provider<EmailApi>((ref) {
+final emailApiProvider = Provider<EmailService>((ref) {
   final dio = ref.read(dioProvider);
-  return EmailApi(dio);
+  return EmailService(dio);
 });
 
-class EmailApi {
+class EmailService {
   final Dio _dio;
 
-  EmailApi(this._dio);
+  EmailService(this._dio);
 
-  Future<ResponseAiEmail> sendEmail(RequestAiEmail request) async {
+  Future<dynamic> generateEmail(
+      EmailGenerationRequest request, String endpoint) async {
+    final i = request.toJson();
     try {
-      final response =
-          await _dio.post('/api/v1/ai-email', data: request.toJson());
-      if (response.statusCode == 200) {
-        return ResponseAiEmail.fromJson(response.data);
-      } else {
-        throw Exception('Failed to send email: ${response.statusCode}');
-      }
-    } on Exception catch (e) {
-      // TODO: Handle the exception appropriately
-      print(e);
+      final response = await _dio.post(
+        endpoint,
+        data: request.toJson(),
+      );
+      return response.data;
+    } catch (e) {
       rethrow;
     }
-  }
-
-  Future<ResponseAiEmailIdeas> getReplyIdeas(RequestAiEmail request) async {
-    final response =
-        await _dio.post('/api/v1/ai-email/reply-ideas', data: request.toJson());
-    return ResponseAiEmailIdeas.fromJson(response.data);
   }
 }

@@ -19,7 +19,6 @@ class AssistantDto {
 
   Map<String, dynamic> toJson() => {
         "id": idValues.reverse[id],
-        "id": idValues.reverse[id],
         "model": modelValues.reverse[model],
         "name": name, // Thêm name vào toJson
       };
