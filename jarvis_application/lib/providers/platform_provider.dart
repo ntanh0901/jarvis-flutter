@@ -14,7 +14,7 @@ class PlatformProvider with ChangeNotifier {
   ];
 
   final String baseUrl = 'https://knowledge-api.jarvis.cx';
-  final String apiToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY4YzA4ZDNmLTIyMzEtNDE5Ni04ZTVmLTEzZDgwNjRlOWNkMSIsImVtYWlsIjoicXVhbmd0aGllbjEyMzRAZ21haWwuY29tIiwiaWF0IjoxNzM1MzgwMDAwLCJleHAiOjE3MzU0NjY0MDB9.JEJkIrkbVZm6NFvZqpvJk43JOSCoIOtKbYssM6zoJwQ';
+  final String apiToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY4YzA4ZDNmLTIyMzEtNDE5Ni04ZTVmLTEzZDgwNjRlOWNkMSIsImVtYWlsIjoicXVhbmd0aGllbjEyMzRAZ21haWwuY29tIiwiaWF0IjoxNzM1NTE2ODE4LCJleHAiOjE3MzU2MDMyMTh9.kjYVBDGL6rv6zzV5oUFQpQptSfpayKTmyUPo6X1Xsis';
 
   List<Platform> get platforms => _platforms;
 
