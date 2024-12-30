@@ -1,70 +1,55 @@
-import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
+
 import '../data/models/bot/ai_assistant.dart';
 import '../data/models/bot/chat_bot/message.dart';
+import 'dio_provider.dart';
 
 class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
-  AIAssistantProvider() : super([]);
+  AIAssistantProvider(this._dioKB) : super([]);
 
-  final String baseUrl = 'https://knowledge-api.jarvis.cx';
-  final String apiToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY4YzA4ZDNmLTIyMzEtNDE5Ni04ZTVmLTEzZDgwNjRlOWNkMSIsImVtYWlsIjoicXVhbmd0aGllbjEyMzRAZ21haWwuY29tIiwiaWF0IjoxNzM1NTE2ODE4LCJleHAiOjE3MzU2MDMyMTh9.kjYVBDGL6rv6zzV5oUFQpQptSfpayKTmyUPo6X1Xsis';
-
+  final DioKB _dioKB;
 
   // Fetch assistants from API
   Future<void> fetchAIAssistants() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/kb-core/v1/ai-assistant'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiToken',
-        },
-      );
-
-      print('fetchAIAssistants Response Statusssssssssss: ${response.statusCode}');
-      print('fetchAIAssistants Response Body: ${response.body}');
+      final response = await _dioKB.dio.get('/kb-core/v1/ai-assistant');
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body)['data'] as List<dynamic>;
-        state = data.map((json) => AIAssistant.fromJson(json)).toList().reversed.toList();
-      } else {
-        print('Failed to fetch assistants: ${response.statusCode}');
+        final data = response.data['data'] as List<dynamic>;
+        state = data
+            .map((json) => AIAssistant.fromJson(json))
+            .toList()
+            .reversed
+            .toList();
       }
     } catch (e) {
       print('Error fetching assistants: $e');
     }
   }
 
-
   // Create a new assistant
-  Future<void> createAIAssistant(String name, String instructions, String description) async {
+  Future<void> createAIAssistant(
+      String name, String instructions, String description) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/kb-core/v1/ai-assistant'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiToken', // Thay bằng token hợp lệ
-        },
-        body: jsonEncode({
+      final response = await _dioKB.dio.post(
+        '/kb-core/v1/ai-assistant',
+        data: {
           'assistantName': name,
           'instructions': instructions,
           'description': description,
-        }),
+        },
       );
 
       if (response.statusCode == 200) {
-        await fetchAIAssistants(); // Refresh the list
-      } else {
-        print('Failed to create assistant: ${response.statusCode}');
+        await fetchAIAssistants();
       }
     } catch (e) {
       print('Error creating assistant: $e');
+      rethrow;
     }
   }
 
-
-  // Hàm update assistant
+  // Update assistant
   Future<void> updateAIAssistant({
     required String id,
     required String name,
@@ -72,24 +57,17 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
     required String description,
   }) async {
     try {
-      final response = await http.patch(
-        Uri.parse('$baseUrl/kb-core/v1/ai-assistant/$id'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiToken',
-        },
-        body: jsonEncode({
+      final response = await _dioKB.dio.patch(
+        '/kb-core/v1/ai-assistant/$id',
+        data: {
           'assistantName': name,
           'instructions': instructions,
           'description': description,
-        }),
+        },
       );
 
       if (response.statusCode == 200) {
-        print('Assistant updated successfully');
         await fetchAIAssistants();
-      } else {
-        throw Exception('Failed to update assistant');
       }
     } catch (e) {
       print('Error updating assistant: $e');
@@ -97,7 +75,6 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
     }
   }
 
-  // Cập nhật một trợ lý trong danh sách cục bộ
   void updateAssistantLocally({
     required String id,
     required String name,
@@ -116,38 +93,26 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
     }).toList();
   }
 
-
-
-  // Hàm xóa assistant
+  // Delete assistant
   Future<void> deleteAIAssistant(String assistantId) async {
     try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/kb-core/v1/ai-assistant/$assistantId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiToken',
-        },
-      );
+      final response =
+          await _dioKB.dio.delete('/kb-core/v1/ai-assistant/$assistantId');
 
-      if(response.statusCode == 200) {
-        state = state.where((assistant) => assistant.id != assistantId).toList();
-      } else {
-        throw Exception('Failed to delete assistant');
+      if (response.statusCode == 200) {
+        removeAssistantById(assistantId);
       }
-
     } catch (e) {
       print('Error deleting assistant: $e');
       rethrow;
     }
   }
 
-
-  // delete assistant locally
+  // Local state management methods
   void removeAssistantById(String id) {
     state = state.where((assistant) => assistant.id != id).toList();
   }
 
-// re-add assistant to the list if deletion fails
   void reAddAssistant({
     required String id,
     required String name,
@@ -169,138 +134,84 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
     ];
   }
 
-
-
-
-  // Fetch a single assistant by ID
+  // Fetch single assistant
   Future<AIAssistant?> fetchAssistantById(String assistantId) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/kb-core/v1/ai-assistant/$assistantId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiToken',
-        },
-      );
+      final response =
+          await _dioKB.dio.get('/kb-core/v1/ai-assistant/$assistantId');
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return AIAssistant.fromJson(data);
-      } else {
-        print('Failed to fetch assistant: ${response.statusCode}');
-        return null;
+        return AIAssistant.fromJson(response.data);
       }
+      return null;
     } catch (e) {
       print('Error fetching assistant by ID: $e');
       return null;
     }
   }
 
-
-
-// Fetch messages of a thread by openAiThreadId
+  // Fetch messages
   Future<List<Message>> fetchMessagesByThreadId(String openAiThreadId) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/kb-core/v1/ai-assistant/thread/$openAiThreadId/messages'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiToken',
-        },
-      );
+      final response = await _dioKB.dio
+          .get('/kb-core/v1/ai-assistant/thread/$openAiThreadId/messages');
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as List<dynamic>;
+        final data = response.data as List<dynamic>;
         return data.map((json) => Message.fromJson(json)).toList();
-      } else {
-        print('Failed to fetch messages: ${response.statusCode}');
-        return [];
       }
+      return [];
     } catch (e) {
       print('Error fetching messages by thread ID: $e');
       return [];
     }
   }
 
-
-  // Send a message to an assistant
+  // Send message
   Future<String> sendMessageToAssistant(
       String assistantId, String message, String openAiThreadId) async {
     try {
-      print('Ai bot hereeeeee1');
-
-      final response = await http.post(
-        Uri.parse('$baseUrl/kb-core/v1/ai-assistant/$assistantId/ask'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiToken',
-        },
-        body: jsonEncode({
+      final response = await _dioKB.dio.post(
+        '/kb-core/v1/ai-assistant/$assistantId/ask',
+        data: {
           'message': message,
           'openAiThreadId': openAiThreadId,
           'additionalInstruction': '',
-        }),
+        },
       );
-      print('Ai bot hereeeeee2');
-      print('Response status hereeeeee3: ${response.statusCode}');
 
       if (response.statusCode == 200) {
-        print('Response body at ai botttttttttttttt: ${response.body}');
-
-        try {
-          // if it's JSON, return the JSON object
-          final data = jsonDecode(response.body);
-          print('Response body at ai botttttttttttttt2: $data');
-          return data.toString();
-        } catch (e) {
-          // if it's the raw String
-          print('Response is not JSON - raw String: ${response.body}');
-          return response.body;
-        }
-      } else {
-        print('Failed to send message: ${response.statusCode}');
-        return 'Error: ${response.statusCode}';
+        return response.data.toString();
       }
+      return 'Error: ${response.statusCode}';
     } catch (e) {
       print('Error sending message: $e');
       return 'Error: $e';
     }
   }
 
-
+  // Add knowledge to assistant
   Future<void> addKnowledgeToAssistant({
     required String assistantId,
     required String knowledgeId,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/kb-core/v1/ai-assistant/$assistantId/knowledges/$knowledgeId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiToken',
-        },
-      );
+      final response = await _dioKB.dio.post(
+          '/kb-core/v1/ai-assistant/$assistantId/knowledges/$knowledgeId');
 
-      if (response.statusCode == 200) {
-        print('Successfully linked knowledge $knowledgeId to assistant $assistantId');
-        print('Response body: ${response.body}');
-      } else {
+      if (response.statusCode != 200) {
         throw Exception(
             'Failed to link knowledge. Status code: ${response.statusCode}');
       }
     } catch (e) {
       print('Error linking knowledge to assistant: $e');
-      rethrow; // Nếu cần để xử lý lỗi ở UI
+      rethrow;
     }
   }
-
-
 }
 
-
-
-
-
-final aiAssistantProvider = StateNotifierProvider<AIAssistantProvider, List<AIAssistant>>((ref) {
-  return AIAssistantProvider();
+final aiAssistantProvider =
+    StateNotifierProvider<AIAssistantProvider, List<AIAssistant>>((ref) {
+  final dioKB = ref.read(dioKBProvider);
+  return AIAssistantProvider(dioKB);
 });

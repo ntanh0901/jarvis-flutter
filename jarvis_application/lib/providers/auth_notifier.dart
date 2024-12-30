@@ -31,7 +31,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   // Helper method to update authentication state
   void _setAuthenticatedState(Map<String, dynamic> response) {
     final tokens = response['token'];
-    _tokenManager.saveTokens(tokens); // Save tokens
+    _tokenManager.saveTokens(
+        accessToken: tokens['accessToken'],
+        refreshToken: tokens['refreshToken']);
     state = state.copyWith(isAuthenticated: true);
   }
 

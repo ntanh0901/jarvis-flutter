@@ -8,31 +8,43 @@ final tokenManagerProvider = Provider<TokenManager>((ref) {
 class TokenManager {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
-  // Define keys for access and refresh tokens
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
+  static const String _kbAccessTokenKey = 'kb_access_token';
+  static const String _kbRefreshTokenKey = 'kb_refresh_token';
 
-  // Method to get the access token
-  Future<String?> getAccessToken() async {
-    return await _secureStorage.read(key: _accessTokenKey);
+  Future<String?> getAccessToken([bool isKB = false]) async {
+    return await _secureStorage.read(
+      key: isKB ? _kbAccessTokenKey : _accessTokenKey,
+    );
   }
 
-  // Method to save tokens securely
-  // Save tokens securely
-  Future<void> saveTokens(Map<String, dynamic> tokens,
-      {bool isSaveRefreshToken = true}) async {
-    try {
-      // Store the access token
-      await _secureStorage.write(
-        key: _accessTokenKey,
-        value: tokens['accessToken'],
-      );
+  Future<String?> getRefreshToken([bool isKB = false]) async {
+    return await _secureStorage.read(
+      key: isKB ? _kbRefreshTokenKey : _refreshTokenKey,
+    );
+  }
 
-      // Store the refresh token
-      if (isSaveRefreshToken) {
+  Future<void> saveTokens({
+    String? accessToken,
+    String? refreshToken,
+    bool isKB = false,
+  }) async {
+    try {
+      final accessKey = isKB ? _kbAccessTokenKey : _accessTokenKey;
+      final refreshKey = isKB ? _kbRefreshTokenKey : _refreshTokenKey;
+
+      if (accessToken != null) {
         await _secureStorage.write(
-          key: _refreshTokenKey,
-          value: tokens['refreshToken'],
+          key: accessKey,
+          value: accessToken,
+        );
+      }
+
+      if (refreshToken != null) {
+        await _secureStorage.write(
+          key: refreshKey,
+          value: refreshToken,
         );
       }
     } catch (e) {
@@ -40,14 +52,18 @@ class TokenManager {
     }
   }
 
-  // Method to get the refresh token
-  Future<String?> getRefreshToken() async {
-    return await _secureStorage.read(key: _refreshTokenKey);
+  Future<void> deleteTokens([bool isKB = false]) async {
+    if (isKB) {
+      await _secureStorage.delete(key: _kbAccessTokenKey);
+      await _secureStorage.delete(key: _kbRefreshTokenKey);
+    } else {
+      await _secureStorage.delete(key: _accessTokenKey);
+      await _secureStorage.delete(key: _refreshTokenKey);
+    }
   }
 
-  // Method to delete tokens securely (log out)
-  Future<void> deleteTokens() async {
-    await _secureStorage.delete(key: _accessTokenKey);
-    await _secureStorage.delete(key: _refreshTokenKey);
+  Future<void> deleteAllTokens() async {
+    await deleteTokens(false);
+    await deleteTokens(true);
   }
 }
