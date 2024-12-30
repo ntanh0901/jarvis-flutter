@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:jarvis_application/data/models/assistant.dart';
 
+import 'create_assistant_dialog_chat.dart';
+
 class AIModelDropdown extends StatelessWidget {
   final List<Assistant> assistants;
   final Assistant? selectedAssistant;
@@ -25,47 +27,81 @@ class AIModelDropdown extends StatelessWidget {
         offset.dx + renderBox.size.width,
         offset.dy,
       ),
-      items: assistants.map((assistant) {
-        final isSelected = assistant == selectedAssistant;
-
-        return PopupMenuItem<Assistant>(
-          value: assistant,
-          child: Container(
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? Colors.blue.withOpacity(0.1)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-              child: ListTile(
-                leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    assistant.imagePath,
-                    width: 24,
-                    height: 24,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                title: Text(
-                  assistant.dto.name,
-                  style: const TextStyle(fontSize: 14),
-                ),
-                onTap: () {
-                  onAssistantSelected(assistant);
-                  Navigator.of(context).pop();
-                },
+      items: <PopupMenuEntry<Object>>[
+        // Mục "Create Assistant"
+        PopupMenuItem<Object>(
+          value: 'create',
+          child: ListTile(
+            leading: const Icon(Icons.add, color: Colors.blue),
+            title: const Text(
+              'Create Assistant',
+              style: TextStyle(
+                color: Colors.blue,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
               ),
             ),
+            onTap: () {
+              Navigator.of(context).pop(); // Đóng menu trước khi hiển thị dialog
+              showDialog(
+                  context: context,
+                  builder: (context) => const CreateAssistantDialogChat(
+                title: 'Preview Assistant',
+              ),
+              );
+            },
           ),
-        );
-      }).toList(),
+        ),
+        // Ngăn cách
+        const PopupMenuDivider(),
+        // Danh sách assistants
+        ...assistants.map((assistant) {
+          final isSelected = assistant == selectedAssistant;
+
+          return PopupMenuItem<Object>(
+            value: assistant,
+            child: Container(
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.blue.withOpacity(0.1)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16.0), // Thêm padding trái
+                child: ListTile(
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      assistant.imagePath,
+                      width: 24,
+                      height: 24,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  title: Text(
+                    assistant.dto.name,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isSelected ? Colors.blue : Colors.black,
+                    ),
+                  ),
+                  onTap: () {
+                    onAssistantSelected(assistant); // Gọi callback
+                    Navigator.of(context).pop(); // Đóng menu
+                  },
+                  contentPadding:
+                      const EdgeInsets.all(0), // Loại bỏ padding mặc định
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ],
       color: Colors.white,
-    ).then((selectedAssistant) {
-      if (selectedAssistant != null) {
-        onAssistantSelected(selectedAssistant);
+    ).then((selected) {
+      if (selected is Assistant) {
+        onAssistantSelected(selected);
       }
     });
   }

@@ -27,7 +27,7 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body)['data'] as List<dynamic>;
-        state = data.map((json) => AIAssistant.fromJson(json)).toList();
+        state = data.map((json) => AIAssistant.fromJson(json)).toList().reversed.toList();
       } else {
         print('Failed to fetch assistants: ${response.statusCode}');
       }

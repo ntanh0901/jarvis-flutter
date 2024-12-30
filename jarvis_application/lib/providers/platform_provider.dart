@@ -52,7 +52,19 @@ class PlatformProvider with ChangeNotifier {
 
         if (isSuccessful) {
           updateStatus('Telegram', true);
-          telegramConfig?.setAll(botToken);
+
+          if(telegramConfig == null) {
+            telegramConfig = ReqTelegramPublish(
+              botToken: botToken,
+            );
+          }
+          else {
+            telegramConfig!.setAll(botToken);
+
+          }
+
+          print('Telegram ggggggggggggggggggggggggggg: ${telegramConfig?.toJson()}');
+
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Telegram Bot verified successfully!')),
           );
@@ -95,24 +107,28 @@ class PlatformProvider with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        // final data = jsonDecode(response.body);
-        //final isSuccessful = data['ok'] ?? false;
 
-        // if (isSuccessful) {
           updateStatus('Messenger', true);
-          messengerConfig?.setAll(botToken, pageId, appSecret);
+          if (messengerConfig == null) {
+            messengerConfig = ReqMessengerPublish(
+              botToken: botToken,
+              pageId: pageId,
+              appSecret: appSecret,
+            );
+          } else {
+            messengerConfig!.setAll(
+              botToken, pageId, appSecret,
+            );
+          }
+
 
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Messenger Bot configured successfully!')),
           );
-        // } else {
-        //   ScaffoldMessenger.of(context).showSnackBar(
-        //     const SnackBar(content: Text('Configuration failed. Invalid credentials.')),
-        //   );
-        //}
+
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${response.statusCode}. ${response.body}')),
+          SnackBar(content: Text('Error: Configuration failed ${response.statusCode}. ${response.body}')),
         );
       }
     } catch (e) {
@@ -148,8 +164,17 @@ class PlatformProvider with ChangeNotifier {
 
       if (response.statusCode == 200) {
         updateStatus('Slack', true);
-        slackConfig?.setAll(botToken, clientId, clientSecret, signingSecret);
-        ScaffoldMessenger.of(context).showSnackBar(
+        if (slackConfig == null) {
+          slackConfig = ReqSlackPublish(
+            botToken: botToken,
+            clientId: clientId,
+            clientSecret: clientSecret,
+            signingSecret: signingSecret,
+          );
+        } else {
+          slackConfig!.setAll(botToken, clientId, clientSecret, signingSecret,
+          );
+        }        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Slack Bot configured successfully!')),
         );
       } else {
