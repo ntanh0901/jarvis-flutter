@@ -52,7 +52,7 @@ class BotResult {
     required this.hasMainWebApp,
   });
 
-  factory BotResult.fromJson(Map<String, dynamic> json) {
+    factory BotResult.fromJson(Map<String, dynamic> json) {
     return BotResult(
       id: json['id'] ?? 0,
       isBot: json['is_bot'] ?? false,

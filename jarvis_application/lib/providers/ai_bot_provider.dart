@@ -8,7 +8,7 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
   AIAssistantProvider() : super([]);
 
   final String baseUrl = 'https://knowledge-api.jarvis.cx';
-  final String apiToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY4YzA4ZDNmLTIyMzEtNDE5Ni04ZTVmLTEzZDgwNjRlOWNkMSIsImVtYWlsIjoicXVhbmd0aGllbjEyMzRAZ21haWwuY29tIiwiaWF0IjoxNzM0ODUyMzA0LCJleHAiOjE3MzQ5Mzg3MDR9.eMNKK-ZhHFuxwzsy-cweORTgRNmsIuihNnx-pNzOFzc';
+  final String apiToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY4YzA4ZDNmLTIyMzEtNDE5Ni04ZTVmLTEzZDgwNjRlOWNkMSIsImVtYWlsIjoicXVhbmd0aGllbjEyMzRAZ21haWwuY29tIiwiaWF0IjoxNzM1NTE2ODE4LCJleHAiOjE3MzU2MDMyMTh9.kjYVBDGL6rv6zzV5oUFQpQptSfpayKTmyUPo6X1Xsis';
 
 
   // Fetch assistants from API
@@ -27,7 +27,7 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body)['data'] as List<dynamic>;
-        state = data.map((json) => AIAssistant.fromJson(json)).toList();
+        state = data.map((json) => AIAssistant.fromJson(json)).toList().reversed.toList();
       } else {
         print('Failed to fetch assistants: ${response.statusCode}');
       }
