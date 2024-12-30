@@ -97,10 +97,10 @@ class _ChatPageState extends ConsumerState<ChatPage>
     super.dispose();
   }
 
-  Future<void> _sendMessage(String content, Assistant currAssistant) async {
+  Future<void> _sendMessage(String content, Assistant? currAssistant) async {
     // Add message to the local list
     messages.add(ChatMessage(
-      assistant: currAssistant.dto,
+      assistant: currAssistant?.dto,
       role: 'user',
       content: content,
     ));
@@ -117,9 +117,10 @@ class _ChatPageState extends ConsumerState<ChatPage>
       // Set up the request data
       if (metadata.conversation.id == "") {
         // First-time request
-        final requestBody = requestAiChat
-          ..setContent(content)
-          ..setAssistant(currAssistant.dto);
+        final requestBody = requestAiChat.copyWith(
+          content: content,
+          assistant: currAssistant?.dto,
+        );
 
         response = await _dio.post(
           '/api/v1/ai-chat',
@@ -129,10 +130,12 @@ class _ChatPageState extends ConsumerState<ChatPage>
         print("Meta Req First Time: ${metadata.toJson()}");
       } else {
         // Subsequent messages
-        final requestBody = requestAiChat
-          ..setContent(content)
-          ..setAssistant(currAssistant.dto)
-          ..setMetadata(metadata);
+        // copyWith is used to create a new instance of RequestAiChat
+        final requestBody = requestAiChat.copyWith(
+          content: content,
+          assistant: currAssistant?.dto,
+          metadata: metadata,
+        );
 
         response = await _dio.post(
           '/api/v1/ai-chat/messages',
@@ -152,7 +155,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
         final remainingUsage = responseAIChat['remainingUsage'];
 
         messages.add(ChatMessage(
-          assistant: currAssistant.dto,
+          assistant: currAssistant?.dto,
           role: 'model',
           content: messageAI,
         ));
@@ -165,13 +168,13 @@ class _ChatPageState extends ConsumerState<ChatPage>
         currentMessageUser.setValues(
           newRole: 'user',
           newContent: content,
-          newAssistant: currAssistant.dto,
+          newAssistant: currAssistant?.dto,
         );
 
         currentMessageAI.setValues(
           newRole: 'model',
           newContent: messageAI,
-          newAssistant: currAssistant.dto,
+          newAssistant: currAssistant?.dto,
         );
         metadata.setConversationID(conversationID);
         metadata.addMessage(currentMessageUser);
@@ -371,8 +374,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
   Widget _buildChatInput() {
     return GestureDetector(
       onTap: () {
-        FocusScope.of(context)
-            .unfocus(); // Dismiss keyboard when tapping outside
+        FocusScope.of(context).unfocus();
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
@@ -401,7 +403,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
                 onPressed: () {
                   final text = messageController.text.trim();
                   if (text.isNotEmpty) {
-                    _sendMessage(text, selectedAssistant!);
+                    _sendMessage(text, selectedAssistant);
                     messageController.clear();
                     FocusScope.of(context).unfocus();
                   }

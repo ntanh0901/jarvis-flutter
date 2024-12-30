@@ -12,6 +12,9 @@ final requestTypeProvider = StateProvider<RequestType>((ref) {
   return RequestType.response;
 });
 final isFirstGenerationProvider = StateProvider<bool>((ref) => true);
+final currentIndexProvider = StateProvider<int>((ref) => 0);
+final generatedContentProvider = StateProvider<List<String>>((ref) => []);
+final isLoadingProvider = StateProvider((ref) => false);
 
 final emailStateProvider =
     StateNotifierProvider<EmailNotifier, EmailGenerationRequest>((ref) {
@@ -83,10 +86,11 @@ class EmailNotifier extends StateNotifier<EmailGenerationRequest> {
     );
   }
 
-  Future<dynamic> generateEmail(RequestType type) async {
+  Future<dynamic> generateEmail(RequestType type, WidgetRef ref) async {
     if (type == RequestType.replyIdeas) {
       state = state.copyWith(
         mainIdea: null,
+        action: state.action.isEmpty ? 'Auto detect action' : null,
         metadata: state.metadata.copyWith(
           style: null,
         ),
@@ -103,9 +107,24 @@ class EmailNotifier extends StateNotifier<EmailGenerationRequest> {
         : ApiEndpoints.suggestReplyIdeas;
 
     try {
-      return await _emailService.generateEmail(state, endpoint);
+      final response = await _emailService.generateEmail(state, endpoint);
+      _updateGeneratedContent(ref, response, type);
     } catch (e) {
       rethrow;
     }
+  }
+
+  void _updateGeneratedContent(
+      WidgetRef ref, dynamic response, RequestType type) {
+    List<String> contents = [];
+
+    if (type == RequestType.replyIdeas) {
+      contents = response;
+    } else {
+      contents = [response];
+    }
+
+    ref.read(generatedContentProvider.notifier).state = contents;
+    ref.read(currentIndexProvider.notifier).state = 0;
   }
 }

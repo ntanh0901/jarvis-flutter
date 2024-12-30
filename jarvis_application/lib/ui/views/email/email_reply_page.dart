@@ -1,6 +1,8 @@
 // lib/views/writing_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:jarvis_application/ui/widgets/app_drawer.dart';
 
 import '../../../data/models/assistant.dart';
@@ -16,6 +18,7 @@ class WritingScreen extends ConsumerStatefulWidget {
 }
 
 class _WritingScreenState extends ConsumerState<WritingScreen> {
+  bool _isLoading = false;
   final TextEditingController _originalTextController = TextEditingController();
   final TextEditingController _replyContentController = TextEditingController();
 
@@ -130,77 +133,81 @@ class _WritingScreenState extends ConsumerState<WritingScreen> {
                 ),
               ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSection('Original Text'),
-                        const SizedBox(height: 8),
-                        _buildTextArea(
-                          'The original text to which you want to reply...',
-                          _originalTextController,
-                          maxLines: 3,
-                        ),
-                        const SizedBox(height: 24),
-                        _buildSection('What To Reply'),
-                        const SizedBox(height: 8),
-                        _buildTextArea(
-                          'The general content of your reply...',
-                          _replyContentController,
-                          maxLines: 3,
-                        ),
-                        if (requestType == RequestType.response) ...[
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSection('Original Text'),
+                          const SizedBox(height: 8),
+                          _buildTextArea(
+                            'The original text to which you want to reply...',
+                            _originalTextController,
+                            maxLines: 3,
+                          ),
                           const SizedBox(height: 24),
-                          _buildSection('Length'),
+                          _buildSection('What To Reply'),
                           const SizedBox(height: 8),
-                          _buildChipsSection(
-                            lengths,
-                            emailState.metadata.style.length,
-                            (value) => ref
-                                .read(emailStateProvider.notifier)
-                                .updateStyle(length: value),
+                          _buildTextArea(
+                            'The general content of your reply...',
+                            _replyContentController,
+                            maxLines: 3,
                           ),
+                          if (requestType == RequestType.response) ...[
+                            const SizedBox(height: 24),
+                            _buildSection('Length'),
+                            const SizedBox(height: 8),
+                            _buildChipsSection(
+                              lengths,
+                              emailState.metadata.style.length,
+                              (value) => ref
+                                  .read(emailStateProvider.notifier)
+                                  .updateStyle(length: value),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildSection('Formality'),
+                            const SizedBox(height: 8),
+                            _buildChipsSection(
+                              formalities,
+                              emailState.metadata.style.formality,
+                              (value) => ref
+                                  .read(emailStateProvider.notifier)
+                                  .updateStyle(formality: value),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildSection('Tone'),
+                            const SizedBox(height: 8),
+                            _buildChipsSection(
+                              tones,
+                              emailState.metadata.style.tone,
+                              (value) => ref
+                                  .read(emailStateProvider.notifier)
+                                  .updateStyle(tone: value),
+                            ),
+                          ],
                           const SizedBox(height: 16),
-                          _buildSection('Formality'),
+                          _buildSection('Output Language'),
                           const SizedBox(height: 8),
-                          _buildChipsSection(
-                            formalities,
-                            emailState.metadata.style.formality,
-                            (value) => ref
-                                .read(emailStateProvider.notifier)
-                                .updateStyle(formality: value),
-                          ),
+                          _buildLanguageDropdown(ref),
                           const SizedBox(height: 16),
-                          _buildSection('Tone'),
+                          _buildSection('Assistant'),
                           const SizedBox(height: 8),
-                          _buildChipsSection(
-                            tones,
-                            emailState.metadata.style.tone,
-                            (value) => ref
-                                .read(emailStateProvider.notifier)
-                                .updateStyle(tone: value),
-                          ),
+                          _buildAssistantDropdown(ref),
+                          const SizedBox(height: 16),
+                          _buildPreviewWidget(),
                         ],
-                        const SizedBox(height: 16),
-                        _buildSection('Output Language'),
-                        const SizedBox(height: 8),
-                        _buildLanguageDropdown(ref),
-                        const SizedBox(height: 16),
-                        _buildSection('Assistant'),
-                        const SizedBox(height: 8),
-                        _buildAssistantDropdown(ref),
-                        const SizedBox(height: 24),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-                _buildBottomBar(),
-              ],
+                  _buildBottomBar(),
+                ],
+              ),
             ),
           ),
         ),
@@ -361,7 +368,7 @@ class _WritingScreenState extends ConsumerState<WritingScreen> {
 
   Widget _buildBottomBar() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
@@ -407,53 +414,23 @@ class _WritingScreenState extends ConsumerState<WritingScreen> {
       builder: (context, ref, child) {
         final requestType = ref.watch(requestTypeProvider);
         final isFirstGeneration = ref.watch(isFirstGenerationProvider);
+        final isLoading = ref.watch(isLoadingProvider);
 
         return SizedBox(
           height: 40,
           child: ElevatedButton(
-            onPressed: () async {
-              final originalText = _originalTextController.text.trim();
-              final replyContent = _replyContentController.text.trim();
-
-              if (originalText.isEmpty) {
+            onPressed: () {
+              if (isLoading) {
+                // Stop the ongoing request
+                ref.read(isLoadingProvider.notifier).state = false;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Please enter the original email text'),
-                    backgroundColor: Colors.red,
+                    content: Text('Request discarded'),
+                    backgroundColor: Colors.orange,
                   ),
                 );
-                return;
-              }
-              try {
-                final emailNotifier = ref.read(emailStateProvider.notifier);
-                emailNotifier.updateEmailContent(
-                  email: originalText,
-                  action: replyContent,
-                );
-
-                final response = await emailNotifier.generateEmail(requestType);
-
-                if (isFirstGeneration) {
-                  ref.read(isFirstGenerationProvider.notifier).state = false;
-                }
-
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Email generated successfully'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error generating email: ${e.toString()}'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
+              } else {
+                _handleGenerateEmail(ref, requestType, isFirstGeneration);
               }
             },
             style: ElevatedButton.styleFrom(
@@ -461,24 +438,256 @@ class _WritingScreenState extends ConsumerState<WritingScreen> {
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(isFirstGeneration ? Icons.create_outlined : Icons.refresh,
-                    size: 18, color: Colors.blue),
-                const SizedBox(width: 8),
-                Text(
-                  isFirstGeneration ? 'Generate' : 'Regenerate',
-                  style: const TextStyle(
-                    color: Colors.blue,
-                    fontWeight: FontWeight.w500,
+                if (isLoading)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors
+                          .red.shade100,
+                      borderRadius: BorderRadius.circular(
+                          16), // Rounded corners for aesthetics
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Stop action icon
+                        SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: Icon(
+                            Icons.stop_circle_outlined,
+                            color:
+                                Colors.red.shade600,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Stop',
+                          style: TextStyle(
+                            color:
+                                Colors.red.shade600,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Row(
+                    children: [
+                      Icon(
+                        isFirstGeneration
+                            ? Icons.create_outlined
+                            : Icons.refresh,
+                        size: 18,
+                        color: Colors.blue,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        isFirstGeneration ? 'Generate' : 'Regenerate',
+                        style: const TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
               ],
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _handleGenerateEmail(
+      WidgetRef ref, RequestType requestType, bool isFirstGeneration) async {
+    ref.read(isLoadingProvider.notifier).state = true;
+
+    try {
+      final originalText = _originalTextController.text.trim();
+      final replyContent = _replyContentController.text.trim();
+
+      if (originalText.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please enter the original email text'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final emailNotifier = ref.read(emailStateProvider.notifier);
+      emailNotifier.updateEmailContent(
+        email: originalText,
+        action: replyContent,
+      );
+      await emailNotifier.generateEmail(requestType, ref);
+
+      if (isFirstGeneration) {
+        ref.read(isFirstGenerationProvider.notifier).state = false;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Email generated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      ref.read(isLoadingProvider.notifier).state = false;
+    }
+  }
+
+  Widget _buildPreviewWidget() {
+    return Consumer(
+      builder: (context, ref, child) {
+        final requestType = ref.watch(requestTypeProvider);
+        final currentIndex = ref.watch(currentIndexProvider);
+        final contents = ref.watch(generatedContentProvider);
+        final isFirstGeneration = ref.watch(isFirstGenerationProvider);
+        final isLoading = ref.watch(isLoadingProvider);
+
+        // Hide content if it's the first generation
+        if (isFirstGeneration) {
+          return const SizedBox.shrink();
+        }
+
+        // For response type, only show if the last generated content was a response
+        if (requestType == RequestType.response && contents.length > 1) {
+          return const SizedBox.shrink();
+        }
+
+        // For reply ideas, only show if the last generated content was reply ideas
+        if (requestType == RequestType.replyIdeas && contents.length == 1) {
+          return const SizedBox.shrink();
+        }
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  // Type text
+                  _buildSection(requestType == RequestType.replyIdeas
+                      ? 'Reply Ieas'
+                      : 'Response'),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.copy_outlined, size: 16),
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(
+                        text: contents[currentIndex],
+                      ));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Copied to clipboard'),
+                          duration: Duration(seconds: 1),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    },
+                    color: Colors.grey.shade700,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    tooltip: 'Copy to clipboard',
+                  ),
+                  if (requestType == RequestType.replyIdeas) ...[
+                    // Navigation icons for reply ideas
+                    GestureDetector(
+                      onTap: currentIndex > 0
+                          ? () =>
+                              ref.read(currentIndexProvider.notifier).state--
+                          : null,
+                      child: Icon(
+                        Icons.chevron_left,
+                        size: 16,
+                        color: currentIndex > 0
+                            ? Colors.grey.shade700
+                            : Colors.grey.shade400,
+                      ),
+                    ),
+                    Text(
+                      ' ${currentIndex + 1}/${contents.length}',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 13,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: currentIndex < contents.length - 1
+                          ? () =>
+                              ref.read(currentIndexProvider.notifier).state++
+                          : null,
+                      child: Icon(
+                        Icons.chevron_right,
+                        size: 16,
+                        color: currentIndex < contents.length - 1
+                            ? Colors.grey.shade700
+                            : Colors.grey.shade400,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              // Content display
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8),
+                    isLoading
+                        ? const Center(
+                            child: SpinKitThreeBounce(
+                              color: Colors.blue,
+                              size: 24.0,
+                            ),
+                          )
+                        : Text(
+                            contents[currentIndex],
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                              height: 1.5,
+                            ),
+                          ),
+                  ],
+                ),
+              ),
+            ],
           ),
         );
       },

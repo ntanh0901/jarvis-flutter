@@ -39,24 +39,45 @@ class AIModelDropdown extends StatelessWidget {
             ),
             child: Padding(
               padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-              child: ListTile(
-                leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    assistant.imagePath,
-                    width: 24,
-                    height: 24,
-                    fit: BoxFit.cover,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.asset(
+                          assistant.imagePath,
+                          width: 24,
+                          height: 24,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      title: Text(
+                        assistant.dto.name,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      onTap: () {
+                        onAssistantSelected(assistant);
+                        Navigator.of(context).pop();
+                      },
+                    ),
                   ),
-                ),
-                title: Text(
-                  assistant.dto.name,
-                  style: const TextStyle(fontSize: 14),
-                ),
-                onTap: () {
-                  onAssistantSelected(assistant);
-                  Navigator.of(context).pop();
-                },
+                  if (isSelected)
+                    IconButton(
+                      icon: const Icon(
+                        Icons.close,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        onAssistantSelected(null);
+                        Navigator.of(context).pop();
+                      },
+                      constraints: const BoxConstraints(),
+                      padding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                ],
               ),
             ),
           ),
@@ -70,7 +91,6 @@ class AIModelDropdown extends StatelessWidget {
     });
   }
 
-  @override
   @override
   Widget build(BuildContext context) {
     return Align(
@@ -102,24 +122,11 @@ class AIModelDropdown extends StatelessWidget {
                     selectedAssistant!.dto.name,
                     style: const TextStyle(fontSize: 14),
                   ),
-                  const SizedBox(width: 4),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.close,
-                      size: 20,
-                      color: Colors.grey,
-                    ),
-                    onPressed: () {
-                      onAssistantSelected(null);
-                    },
-                    constraints: const BoxConstraints(),
-                    padding: EdgeInsets.zero,
-                  ),
                 ],
               )
             else
               const Text(
-                'Auto',
+                'Select AI Model',
                 style: TextStyle(fontSize: 14),
               ),
             const SizedBox(width: 4),
