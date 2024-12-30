@@ -1,19 +1,24 @@
-// lib/ui/viewmodels/auth_viewmodel.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../providers/auth_notifier.dart';
+import '../../data/services/auth_service.dart';
+
+final authViewModelProvider =
+    StateNotifierProvider<AuthViewModel, AsyncValue<void>>((ref) {
+  final authService = ref.read(authProvider.notifier);
+  return AuthViewModel(authService);
+});
 
 class AuthViewModel extends StateNotifier<AsyncValue<void>> {
-  final AuthNotifier _authNotifier;
+  final AuthService _authService;
 
-  AuthViewModel(this._authNotifier) : super(const AsyncData(null));
+  AuthViewModel(this._authService) : super(const AsyncData(null));
 
-  String? get errorMessage => _authNotifier.state.errorMessage;
+  String? get errorMessage => _authService.state.errorMessage;
 
   Future<void> signIn(String email, String password) async {
     state = const AsyncLoading();
     try {
-      await _authNotifier.signIn(email, password);
+      await _authService.signIn(email, password);
       state = const AsyncData(null);
     } catch (e, stackTrace) {
       state = AsyncError(e, stackTrace);
@@ -23,54 +28,39 @@ class AuthViewModel extends StateNotifier<AsyncValue<void>> {
   Future<void> signUp(String username, String email, String password) async {
     state = const AsyncLoading();
     try {
-      await _authNotifier.signUp(username, email, password);
+      await _authService.signUp(username, email, password);
       state = const AsyncData(null);
     } catch (e, stackTrace) {
       state = AsyncError(e, stackTrace);
     }
-  }
-
-  void logout() {
-    _authNotifier.signOut();
-    state = const AsyncData(null);
   }
 
   Future<void> signInWithGoogle() async {
     state = const AsyncLoading();
     try {
-      await _authNotifier.signInWithGoogle();
+      await _authService.signInWithGoogle();
       state = const AsyncData(null);
     } catch (e, stackTrace) {
       state = AsyncError(e, stackTrace);
     }
-  }
-
-  Future<void> googleSignUp() async {
-    //   TODO: Implement sign up with Google
   }
 
   Future<void> getCurrentUser() async {
     state = const AsyncLoading();
     try {
-      await _authNotifier.getCurrentUser();
+      await _authService.getCurrentUser();
       state = const AsyncData(null);
     } catch (e, stackTrace) {
       state = AsyncError(e, stackTrace);
     }
   }
 
-  // sign out
   Future<void> signOut() async {
     try {
-      await _authNotifier.signOut();
+      await _authService.signOut();
+      state = const AsyncData(null);
     } catch (e, stackTrace) {
       state = AsyncError(e, stackTrace);
     }
   }
 }
-
-final authViewModelProvider =
-    StateNotifierProvider<AuthViewModel, AsyncValue<void>>((ref) {
-  final authNotifier = ref.read(authNotifierProvider.notifier);
-  return AuthViewModel(authNotifier);
-});

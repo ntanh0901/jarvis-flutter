@@ -22,9 +22,7 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(promptViewModelProvider.notifier).signInAndFetchPrompts();
-    });
+    ref.read(promptViewModelProvider.notifier).init();
   }
 
   @override
@@ -91,6 +89,7 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: SearchTextField(
+                    id: 'searchPrompt',
                     onChange: (query) {
                       viewModel.changeSearchQuery(query);
                     },

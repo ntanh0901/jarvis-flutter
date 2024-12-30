@@ -18,9 +18,9 @@ class WritingScreen extends ConsumerStatefulWidget {
 }
 
 class _WritingScreenState extends ConsumerState<WritingScreen> {
-  bool _isLoading = false;
   final TextEditingController _originalTextController = TextEditingController();
   final TextEditingController _replyContentController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   final List<String> lengths = ['Auto', 'Short', 'Medium', 'Long'];
   final List<String> formalities = [
@@ -83,6 +83,29 @@ class _WritingScreenState extends ConsumerState<WritingScreen> {
   Widget build(BuildContext context) {
     final emailState = ref.watch(emailStateProvider);
     final requestType = ref.watch(requestTypeProvider);
+
+    ref.listen<bool>(isLoadingProvider, (previous, current) {
+      if (previous == true && current == false) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients) {
+            if (_originalTextController.text.isEmpty) {
+              _scrollController.animateTo(
+                0.0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+            } else {
+              _scrollController.animateTo(
+                _scrollController.position.maxScrollExtent,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+            }
+          }
+        });
+      }
+    });
+
     return SafeArea(
       child: Material(
         color: Colors.white,
@@ -93,7 +116,7 @@ class _WritingScreenState extends ConsumerState<WritingScreen> {
             elevation: 0,
             iconTheme: const IconThemeData(color: Colors.black),
             title: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
@@ -140,6 +163,7 @@ class _WritingScreenState extends ConsumerState<WritingScreen> {
                 children: [
                   Expanded(
                     child: SingleChildScrollView(
+                      controller: _scrollController,
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -390,7 +414,6 @@ class _WritingScreenState extends ConsumerState<WritingScreen> {
   Widget _buildToggleRequestTypeButtons() {
     return Consumer(
       builder: (context, ref, child) {
-        // Watch the current RequestType value
         final selectedRequestType = ref.watch(requestTypeProvider);
 
         return SegmentToggleButton(
@@ -400,9 +423,9 @@ class _WritingScreenState extends ConsumerState<WritingScreen> {
             RequestType.replyIdeas.name: 'Reply Ideas',
           },
           onSegmentChanged: (selectedSegment) {
-            // Update the RequestType state
-            ref.read(requestTypeProvider.notifier).state =
+            final newState =
                 RequestType.values.firstWhere((e) => e.name == selectedSegment);
+            ref.read(requestTypeProvider.notifier).state = newState;
           },
         );
       },
@@ -423,19 +446,14 @@ class _WritingScreenState extends ConsumerState<WritingScreen> {
               if (isLoading) {
                 // Stop the ongoing request
                 ref.read(isLoadingProvider.notifier).state = false;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Request discarded'),
-                    backgroundColor: Colors.orange,
-                  ),
-                );
               } else {
                 _handleGenerateEmail(ref, requestType, isFirstGeneration);
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue.shade50,
-              foregroundColor: Colors.white,
+              backgroundColor:
+                  isLoading ? Colors.red.shade100 : Colors.blue.shade50,
+              foregroundColor: isLoading ? Colors.red.shade600 : Colors.blue,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -444,62 +462,24 @@ class _WritingScreenState extends ConsumerState<WritingScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (isLoading)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors
-                          .red.shade100,
-                      borderRadius: BorderRadius.circular(
-                          16), // Rounded corners for aesthetics
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Stop action icon
-                        SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: Icon(
-                            Icons.stop_circle_outlined,
-                            color:
-                                Colors.red.shade600,
-                            size: 18,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Stop',
-                          style: TextStyle(
-                            color:
-                                Colors.red.shade600,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  Row(
-                    children: [
-                      Icon(
-                        isFirstGeneration
-                            ? Icons.create_outlined
-                            : Icons.refresh,
-                        size: 18,
-                        color: Colors.blue,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        isFirstGeneration ? 'Generate' : 'Regenerate',
-                        style: const TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                Icon(
+                  isLoading
+                      ? Icons.stop_circle_outlined
+                      : (isFirstGeneration
+                          ? Icons.create_outlined
+                          : Icons.refresh),
+                  size: 18,
+                  color: isLoading ? Colors.red.shade600 : Colors.blue,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  isLoading
+                      ? 'Stop'
+                      : (isFirstGeneration ? 'Generate' : 'Regenerate'),
+                  style: TextStyle(
+                    fontWeight: isLoading ? FontWeight.bold : FontWeight.w500,
                   ),
+                ),
               ],
             ),
           ),
@@ -521,6 +501,7 @@ class _WritingScreenState extends ConsumerState<WritingScreen> {
           const SnackBar(
             content: Text('Please enter the original email text'),
             backgroundColor: Colors.red,
+            duration: Duration(seconds: 1),
           ),
         );
         return;
@@ -532,16 +513,6 @@ class _WritingScreenState extends ConsumerState<WritingScreen> {
         action: replyContent,
       );
       await emailNotifier.generateEmail(requestType, ref);
-
-      if (isFirstGeneration) {
-        ref.read(isFirstGenerationProvider.notifier).state = false;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email generated successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -560,11 +531,9 @@ class _WritingScreenState extends ConsumerState<WritingScreen> {
         final requestType = ref.watch(requestTypeProvider);
         final currentIndex = ref.watch(currentIndexProvider);
         final contents = ref.watch(generatedContentProvider);
-        final isFirstGeneration = ref.watch(isFirstGenerationProvider);
         final isLoading = ref.watch(isLoadingProvider);
 
-        // Hide content if it's the first generation
-        if (isFirstGeneration) {
+        if (contents.isEmpty) {
           return const SizedBox.shrink();
         }
 

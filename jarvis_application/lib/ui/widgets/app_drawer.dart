@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:jarvis_application/data/services/auth_service.dart';
 
-import '../../providers/auth_notifier.dart';
 import 'app_logo.dart';
 
 final drawerProvider = StateNotifierProvider<DrawerNotifier, int>((ref) {
@@ -116,7 +116,7 @@ class AppDrawer extends ConsumerWidget {
                 context.go('/email-compose');
                 break;
               case 5:
-                await ref.read(authNotifierProvider.notifier).signOut();
+                await ref.read(authProvider.notifier).signOut();
 
                 ref.read(drawerProvider.notifier).selectItem(0);
 

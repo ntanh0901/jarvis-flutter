@@ -5,6 +5,7 @@ import '../../../providers/ai_bot_provider.dart';
 import '../../../widgets/bot/assistant_item.dart';
 import '../../../widgets/bot/create_assistant_dialog.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/search_text_field.dart';
 import 'bot_chat_page.dart';
 
 class BotListPage extends ConsumerStatefulWidget {
@@ -99,13 +100,9 @@ class _BotListPageState extends ConsumerState<BotListPage> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.all(16.0),
-                        child: TextField(
-                          decoration: const InputDecoration(
-                            labelText: 'Search AI Assistants',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.search),
-                          ),
-                          onChanged: (query) {
+                        child: SearchTextField(
+                          id: 'search_ai_assistants',
+                          onChange: (query) {
                             setState(() {
                               _searchQuery = query;
                             });

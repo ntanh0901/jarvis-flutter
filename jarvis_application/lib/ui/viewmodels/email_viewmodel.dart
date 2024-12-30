@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/api_endpoints.dart';
@@ -11,13 +13,17 @@ enum RequestType { response, replyIdeas }
 final requestTypeProvider = StateProvider<RequestType>((ref) {
   return RequestType.response;
 });
-final isFirstGenerationProvider = StateProvider<bool>((ref) => true);
-final currentIndexProvider = StateProvider<int>((ref) => 0);
-final generatedContentProvider = StateProvider<List<String>>((ref) => []);
-final isLoadingProvider = StateProvider((ref) => false);
+
+final isFirstGenerationProvider =
+    StateProvider.autoDispose<bool>((ref) => true);
+final currentIndexProvider = StateProvider.autoDispose<int>((ref) => 0);
+final generatedContentProvider =
+    StateProvider.autoDispose<List<String>>((ref) => []);
+final isLoadingProvider = StateProvider.autoDispose<bool>((ref) => false);
 
 final emailStateProvider =
-    StateNotifierProvider<EmailNotifier, EmailGenerationRequest>((ref) {
+    StateNotifierProvider.autoDispose<EmailNotifier, EmailGenerationRequest>(
+        (ref) {
   final emailService = ref.read(emailApiProvider);
   return EmailNotifier(emailService);
 });
@@ -107,9 +113,31 @@ class EmailNotifier extends StateNotifier<EmailGenerationRequest> {
         : ApiEndpoints.suggestReplyIdeas;
 
     try {
-      final response = await _emailService.generateEmail(state, endpoint);
-      _updateGeneratedContent(ref, response, type);
+      final loadingNotifier = ref.read(isLoadingProvider.notifier);
+
+      final completer = Completer<dynamic>();
+
+      try {
+        if (loadingNotifier.state) {
+          final response = await _emailService.generateEmail(state, endpoint);
+          completer.complete(response);
+          _updateGeneratedContent(ref, response, type);
+        }
+      } catch (error) {
+        if (loadingNotifier.state) {
+          completer.completeError(error);
+        }
+      }
+
+      try {
+        return await completer.future;
+      } catch (e) {
+        rethrow;
+      } finally {
+        loadingNotifier.state = false;
+      }
     } catch (e) {
+      ref.read(isLoadingProvider.notifier).state = false;
       rethrow;
     }
   }

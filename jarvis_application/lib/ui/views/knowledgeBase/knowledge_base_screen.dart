@@ -20,6 +20,13 @@ class KnowledgeBase extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Divider(
+              color: Colors.grey[200],
+              height: 1,
+            ),
+          ),
         ),
         drawer: const AppDrawer(),
         body: SingleChildScrollView(
@@ -29,15 +36,14 @@ class KnowledgeBase extends StatelessWidget {
                 margin: const EdgeInsets.all(16.0),
                 child: const Row(
                   children: <Widget>[
-                    Expanded(child: SearchTextField()),
+                    Expanded(
+                        child: SearchTextField(
+                      id: 'searchKb',
+                    )),
                     SizedBox(width: 16.0),
                     CreateKBButton(),
                   ],
                 ),
-              ),
-              const Divider(
-                indent: 10,
-                endIndent: 10,
               ),
               const KnowledgeBaseListView(),
             ],

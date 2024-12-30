@@ -1,10 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../views/prompts/api_prompts.dart';
+import '../../data/services/prompt_service.dart';
 
 final createPromptViewmodelProvider =
     StateNotifierProvider<PromptFormNotifier, PromptFormState>((ref) {
-  return PromptFormNotifier();
+  final promptService = ref.watch(promptServiceProvider);
+  return PromptFormNotifier(promptService);
 });
 
 class PromptFormState {
@@ -44,20 +45,22 @@ class PromptFormState {
 }
 
 class PromptFormNotifier extends StateNotifier<PromptFormState> {
-  PromptFormNotifier()
+  final PromptService _promptService;
+
+  PromptFormNotifier(this._promptService)
       : super(PromptFormState(
           title: '',
           description: '',
           content: '',
           isPublic: false,
           language: 'English',
-          category: 'other',
+          category: 'OTHER',
         ));
 
   Future<void> createPrompt() async {
     try {
-      await ApiService.createPrompt(
-        category: state.isPublic ? state.category : 'other',
+      await _promptService.createPrompt(
+        category: state.isPublic ? state.category : 'OTHER',
         content: state.content,
         description: state.isPublic ? state.description : 'nothing',
         isPublic: state.isPublic,
@@ -66,14 +69,14 @@ class PromptFormNotifier extends StateNotifier<PromptFormState> {
       );
 
       state = PromptFormState(
-          title: '',
-          description: '',
-          content: '',
-          isPublic: false,
-          language: 'English',
-          category: 'other');
+        title: '',
+        description: '',
+        content: '',
+        isPublic: false,
+        language: 'English',
+        category: 'OTHER',
+      );
     } catch (e) {
-      // Handle error
       print('Failed to create prompt: $e');
     }
   }

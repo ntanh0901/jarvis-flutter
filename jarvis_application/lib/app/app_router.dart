@@ -7,7 +7,7 @@ import 'package:jarvis_application/ui/views/chat/chat_page.dart';
 import 'package:jarvis_application/ui/views/splash/splash_screen.dart';
 
 import '../data/models/bot/ai_assistant.dart';
-import '../providers/auth_notifier.dart';
+import '../data/services/auth_service.dart';
 import '../ui/views/aiBots/bot_chat_page.dart';
 import '../ui/views/aiBots/bot_list_page.dart';
 import '../ui/views/aiBots/publish_page.dart';
@@ -95,7 +95,7 @@ class AppRouter {
     ],
     redirect: (context, state) {
       final ref = ProviderScope.containerOf(context, listen: false);
-      final authState = ref.read(authNotifierProvider);
+      final authState = ref.read(authProvider);
       final isAuthenticated = authState.isAuthenticated;
       final isAuthPage = state.matchedLocation == '/sign-in' ||
           state.matchedLocation == '/sign-up' ||

@@ -21,20 +21,6 @@ class _CreateNewPromptState extends ConsumerState<CreateNewPrompt> {
     'Japanese',
   ];
 
-  final List<String> categories = [
-    'other',
-    'career',
-    'business',
-    'writing',
-    'productivity',
-    'coding',
-    'marketing',
-    'seo',
-    'education',
-    'chatbot',
-    'fun',
-  ];
-
   @override
   Widget build(BuildContext context) {
     final viewModel = ref.watch(createPromptViewmodelProvider.notifier);
@@ -147,41 +133,27 @@ class _CreateNewPromptState extends ConsumerState<CreateNewPrompt> {
                           // Show fields only if the prompt is public
                           if (promptState.isPublic) ...[
                             // Language Field
-                            const Text('Prompt Language',
-                                style: TextStyle(fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 8),
-                            IntrinsicWidth(
-                              child: DropdownButtonFormField<String>(
-                                value: promptState.language,
-                                isExpanded:
-                                    true, // Ensures the dropdown expands fully
-                                decoration: const InputDecoration(
-                                  enabledBorder: normalBorder,
-                                  focusedBorder: focusedBorder,
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 8.0, vertical: 0.0),
-                                ),
-                                items: languages.map((String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(value),
-                                  );
-                                }).toList(),
-                                onChanged: (value) {
-                                  viewModel.state = viewModel.state
-                                      .copyWith(language: value!);
-                                },
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 14,
-                                ),
+                            const Text(
+                              'Prompt Language',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
                               ),
                             ),
+                            const SizedBox(height: 8),
+                            _buildLanguageDropdown(ref),
                           ],
                           const SizedBox(height: 16),
                           // Name Field
-                          const Text('Name',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          const Text(
+                            'Name',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black87,
+                            ),
+                          ),
                           const SizedBox(height: 8),
                           CustomTextField(
                             hintText: 'Name of the prompt',
@@ -193,41 +165,25 @@ class _CreateNewPromptState extends ConsumerState<CreateNewPrompt> {
                           if (promptState.isPublic) ...[
                             const SizedBox(height: 16),
                             // Category Field
-                            const Text('Category',
-                                style: TextStyle(fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 8),
-                            IntrinsicWidth(
-                              child: DropdownButtonFormField<String>(
-                                value: promptState.category,
-                                decoration: const InputDecoration(
-                                  enabledBorder: normalBorder,
-                                  focusedBorder: focusedBorder,
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 8.0, vertical: 0.0),
-                                ),
-                                items: categories.map((String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(0.0),
-                                      child: Text(value),
-                                    ),
-                                  );
-                                }).toList(),
-                                onChanged: (value) {
-                                  viewModel.state = viewModel.state
-                                      .copyWith(category: value!);
-                                },
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 14,
-                                ),
+                            const Text(
+                              'Category',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
                               ),
                             ),
+                            const SizedBox(height: 8),
+                            _buildCategoryDropdown(ref),
                             const SizedBox(height: 16),
-
-                            const Text('Description (Optional)',
-                                style: TextStyle(fontWeight: FontWeight.bold)),
+                            const Text(
+                              'Description (Optional)',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                            ),
                             const SizedBox(height: 8),
                             CustomTextField(
                               hintText:
@@ -241,8 +197,14 @@ class _CreateNewPromptState extends ConsumerState<CreateNewPrompt> {
                           ],
                           const SizedBox(height: 16),
                           // Prompt Field
-                          const Text('Prompt',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          const Text(
+                            'Prompt',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black87,
+                            ),
+                          ),
                           const SizedBox(height: 8),
                           Container(
                             decoration: BoxDecoration(
@@ -348,42 +310,174 @@ class _CreateNewPromptState extends ConsumerState<CreateNewPrompt> {
       ),
     );
   }
+
+  Widget _buildLanguageDropdown(WidgetRef ref) {
+    final currentLanguage = ref.watch(createPromptViewmodelProvider).language;
+    final supportedLanguages = languages;
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: PopupMenuButton<String>(
+          initialValue: currentLanguage,
+          onSelected: (String language) {
+            ref.read(createPromptViewmodelProvider.notifier).state =
+                ref.read(createPromptViewmodelProvider.notifier).state.copyWith(
+                      language: language != 'Auto' ? language : 'English',
+                    );
+          },
+          itemBuilder: (BuildContext context) =>
+              supportedLanguages.map((language) {
+            final isSelected = language == currentLanguage;
+
+            return PopupMenuItem<String>(
+              padding: EdgeInsets.zero,
+              value: language,
+              child: Container(
+                decoration: BoxDecoration(
+                  color:
+                      isSelected ? const Color(0xFFE8F4FE) : Colors.transparent,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: ListTile(
+                    title: Text(
+                      language.isNotEmpty ? language : 'Auto',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+          color: Colors.white,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                currentLanguage.isNotEmpty ? currentLanguage : 'Auto',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.arrow_drop_down, size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryDropdown(WidgetRef ref) {
+    final currentCategory = ref.watch(createPromptViewmodelProvider).category;
+    final List<String> categories = [
+      'other',
+      'career',
+      'business',
+      'writing',
+      'productivity',
+      'coding',
+      'marketing',
+      'seo',
+      'education',
+      'chatbot',
+      'fun',
+    ];
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: PopupMenuButton<String>(
+          initialValue: currentCategory,
+          onSelected: (String category) {
+            ref.read(createPromptViewmodelProvider.notifier).state =
+                ref.read(createPromptViewmodelProvider.notifier).state.copyWith(
+                      category: category != 'Auto' ? category : 'Other',
+                    );
+          },
+          itemBuilder: (BuildContext context) => categories.map((category) {
+            final isSelected = category == currentCategory;
+
+            return PopupMenuItem<String>(
+              padding: EdgeInsets.zero,
+              value: category,
+              child: Container(
+                decoration: BoxDecoration(
+                  color:
+                      isSelected ? const Color(0xFFE8F4FE) : Colors.transparent,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: ListTile(
+                    title: Text(
+                      category.isNotEmpty ? category : 'Auto',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+          color: Colors.white,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                currentCategory.isNotEmpty ? currentCategory : 'Auto',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.arrow_drop_down, size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class CustomTextField extends StatelessWidget {
   final String hintText;
   final int maxLines;
   final ValueChanged<String> onChanged;
+  final TextEditingController? controller;
 
   const CustomTextField({
     super.key,
     required this.hintText,
     this.maxLines = 1,
     required this.onChanged,
+    this.controller,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      onChanged: onChanged,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        hintText: hintText,
-        hintStyle: const TextStyle(
-          color: Colors.grey,
-          fontWeight: FontWeight.w300,
-        ),
-        enabledBorder: const OutlineInputBorder(
-          borderSide: BorderSide(
-            color: Colors.grey,
-            width: 0.5,
-          ),
-        ),
-        focusedBorder: const OutlineInputBorder(
-          borderSide: BorderSide(
-            color: Colors.black,
-            width: 1,
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: TextField(
+        controller: controller,
+        maxLines: maxLines,
+        onChanged: onChanged,
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: TextStyle(color: Colors.grey.shade400),
+          contentPadding: const EdgeInsets.all(16),
+          border: InputBorder.none,
         ),
       ),
     );
