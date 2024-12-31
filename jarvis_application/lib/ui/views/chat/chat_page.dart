@@ -22,6 +22,7 @@ import '../../../widgets/chat/image_picker_helper.dart';
 import '../../../widgets/chat/logo_widget.dart';
 import '../../../widgets/chat/upload_dialog.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/scroll_arrows.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
   static const String routeName = '/chat';
@@ -394,6 +395,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
               suffixIcon: IconButton(
                 icon: const Icon(Icons.send, color: Colors.blue),
                 onPressed: () {
+                  _scrollToBottom();
                   final text = messageController.text.trim();
                   if (text.isNotEmpty) {
                     _sendMessage(text, selectedAssistant);
@@ -542,105 +544,114 @@ class _ChatPageState extends ConsumerState<ChatPage>
                 ),
               )),
           drawer: const AppDrawer(),
-          body: Column(
-            children: [
-              Expanded(
-                child: messages.isEmpty
-                    ? const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            LogoWidget(imageType: 1),
-                            SizedBox(height: 10),
-                            GreetingText(),
-                            SizedBox(height: 10),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        itemCount: messages.length + (isTyping ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == messages.length && isTyping) {
-                            return const Align(
-                              alignment: Alignment.centerLeft,
-                              child: Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: SpinKitThreeBounce(
-                                  color: Colors.grey,
-                                  size: 20.0,
-                                ),
-                              ),
-                            );
-                          }
-
-                          final message = messages[index];
-                          return Align(
-                            alignment: message.role == 'user'
-                                ? Alignment.centerRight
-                                : Alignment.centerLeft,
-                            child: Container(
-                              margin: message.role == 'user'
-                                  ? const EdgeInsets.only(
-                                      left: 30, right: 10, top: 10, bottom: 5)
-                                  : const EdgeInsets.only(
-                                      left: 10, right: 30, top: 20, bottom: 5),
-                              padding: const EdgeInsets.all(15),
-                              decoration: BoxDecoration(
-                                color: message.role == 'user'
-                                    ? const Color(0xFF6841EA)
-                                    : Colors.white,
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(
-                                      message.role == 'user' ? 20 : 0),
-                                  topRight: Radius.circular(
-                                      message.role == 'user' ? 0 : 20),
-                                  bottomLeft: const Radius.circular(20),
-                                  bottomRight: const Radius.circular(20),
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey.withOpacity(0.2),
-                                    spreadRadius: 2,
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 3),
+          body: Stack(children: [
+            Column(
+              children: [
+                Expanded(
+                  child: messages.isEmpty
+                      ? const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              LogoWidget(imageType: 1),
+                              SizedBox(height: 10),
+                              GreetingText(),
+                              SizedBox(height: 10),
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          itemCount: messages.length + (isTyping ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index == messages.length && isTyping) {
+                              return const Align(
+                                alignment: Alignment.centerLeft,
+                                child: Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: SpinKitThreeBounce(
+                                    color: Colors.grey,
+                                    size: 20.0,
                                   ),
-                                ],
-                              ),
-                              child: Flexible(
-                                child: MarkdownBody(
-                                  data: message.content!,
-                                  styleSheet: MarkdownStyleSheet(
-                                    p: TextStyle(
-                                      color: message.role == 'user'
-                                          ? Colors.white
-                                          : Colors.black,
-                                      fontSize: 16,
+                                ),
+                              );
+                            }
+
+                            final message = messages[index];
+                            return Align(
+                              alignment: message.role == 'user'
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                              child: Container(
+                                margin: message.role == 'user'
+                                    ? const EdgeInsets.only(
+                                        left: 30, right: 10, top: 10, bottom: 5)
+                                    : const EdgeInsets.only(
+                                        left: 10,
+                                        right: 30,
+                                        top: 20,
+                                        bottom: 5),
+                                padding: const EdgeInsets.all(15),
+                                decoration: BoxDecoration(
+                                  color: message.role == 'user'
+                                      ? const Color(0xFF6841EA)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(
+                                        message.role == 'user' ? 20 : 0),
+                                    topRight: Radius.circular(
+                                        message.role == 'user' ? 0 : 20),
+                                    bottomLeft: const Radius.circular(20),
+                                    bottomRight: const Radius.circular(20),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.2),
+                                      spreadRadius: 2,
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Flexible(
+                                  child: MarkdownBody(
+                                    data: message.content!,
+                                    styleSheet: MarkdownStyleSheet(
+                                      p: TextStyle(
+                                        color: message.role == 'user'
+                                            ? Colors.white
+                                            : Colors.black,
+                                        fontSize: 16,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                          );
-                        },
-                      ),
-              ),
-              ActionRow(
-                assistants: Assistant.assistants,
-                selectedAssistant: selectedAssistant,
-                onAssistantSelected: (assistant) {
-                  setState(() {
-                    selectedAssistant = assistant;
-                  });
-                },
-                onActionSelected: (action) {
-                  _handleAction(action, context);
-                },
-                remainUsage: remainUsage,
-              ),
-              _buildChatInput(),
-            ],
-          ),
+                            );
+                          },
+                        ),
+                ),
+                ActionRow(
+                  assistants: Assistant.assistants,
+                  selectedAssistant: selectedAssistant,
+                  onAssistantSelected: (assistant) {
+                    setState(() {
+                      selectedAssistant = assistant;
+                    });
+                  },
+                  onActionSelected: (action) {
+                    _handleAction(action, context);
+                  },
+                  remainUsage: remainUsage,
+                ),
+                _buildChatInput(),
+              ],
+            ),
+            ScrollArrows(
+              scrollController: _scrollController,
+              onScrollToBottom: _scrollToBottom,
+            ),
+          ]),
         ),
       ),
     );
