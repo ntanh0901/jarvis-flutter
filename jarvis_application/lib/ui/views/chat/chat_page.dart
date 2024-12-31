@@ -607,6 +607,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
                   remainUsage: remainUsage,
                 ),
                 _buildChatInput(),
+                const SizedBox(height: 10),
               ],
             ),
             ScrollArrows(

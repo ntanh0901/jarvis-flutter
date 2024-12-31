@@ -11,46 +11,42 @@ class CreatePromptButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      child: Center(
-        child: Ink(
-          width: 36.0,
-          height: 36.0,
-          decoration: const ShapeDecoration(
-            color: Color(0xff6841EA),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(8.0)),
-            ),
+      child: Container(
+        width: 36.0,
+        height: 36.0,
+        decoration: const ShapeDecoration(
+          color: Color(0xff6841EA),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8.0)),
           ),
-          child: Center(
-            child: IconButton(
-              icon: const Icon(
-                Icons.add,
-                size: 24,
-              ),
-              color: Colors.white,
-              onPressed: () async {
-                // Add new prompt
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const CreateNewPrompt()),
-                );
+        ),
+        child: IconButton(
+          icon: const Icon(
+            Icons.add,
+            size: 24,
+          ),
+          color: Colors.white,
+          padding: EdgeInsets.zero, // Remove default padding
+          constraints: const BoxConstraints(), // Remove constraints
+          onPressed: () async {
+            // Add new prompt
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CreateNewPrompt()),
+            );
 
-                if (result == true) {
-                  // A new prompt was created, refresh the prompts
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Prompt created successfully')),
-                  );
-                  // Call a method to refresh the prompts
-                  if (context.findAncestorStateOfType<PromptLibraryState>() !=
-                      null) {
-                    onPromptCreated();
-                  }
-                }
-              },
-            ),
-          ),
+            if (result == true) {
+              // A new prompt was created, refresh the prompts
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Prompt created successfully')),
+              );
+              // Call a method to refresh the prompts
+              if (context.findAncestorStateOfType<PromptLibraryState>() !=
+                  null) {
+                onPromptCreated();
+              }
+            }
+          },
         ),
       ),
     );

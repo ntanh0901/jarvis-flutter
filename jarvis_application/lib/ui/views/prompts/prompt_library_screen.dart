@@ -130,6 +130,21 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                                     !(prompt.isPublic ?? false))
                                   IconButton(
                                     icon: const Icon(
+                                      Icons.delete,
+                                      size: 20,
+                                      color: Color(0xff697079),
+                                    ),
+                                    onPressed: () {
+                                      ref
+                                          .read(
+                                              promptViewModelProvider.notifier)
+                                          .deletePrompt(prompt.id);
+                                    },
+                                  ),
+                                if (state.isMyPromptSelected &&
+                                    !(prompt.isPublic ?? false))
+                                  IconButton(
+                                    icon: const Icon(
                                       Icons.edit,
                                       size: 20,
                                       color: Color(0xff697079),
@@ -243,7 +258,7 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                   controller: titleController,
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: Colors.grey[200],
+                    fillColor: const Color(0xFFF1F5F9),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
                       borderSide: BorderSide.none,
@@ -267,6 +282,8 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                       controller: contentController,
                       maxLines: 8,
                       decoration: const InputDecoration(
+                        filled: true,
+                        fillColor: Color(0xFFF1F5F9),
                         contentPadding: EdgeInsets.all(16.0),
                         border: InputBorder.none,
                         hintText: 'Enter prompt details',
@@ -278,26 +295,13 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
             ),
           ),
           actions: <Widget>[
-            TextButton.icon(
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.red,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.0),
-                ),
-              ),
-              icon: const Icon(
-                Icons.delete,
-                color: Colors.white,
-                size: 20.0,
-              ),
-              label: const Text(
-                'Delete',
-                style: TextStyle(color: Colors.white),
+            TextButton(
+              child: const Text(
+                'Cancel',
+                style:
+                    TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
               ),
               onPressed: () {
-                ref
-                    .read(promptViewModelProvider.notifier)
-                    .deletePrompt(prompt.id);
                 Navigator.of(context).pop();
               },
             ),
@@ -311,9 +315,9 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                 ),
               ),
               icon: const Icon(
-                Icons.check,
+                Icons.edit,
                 color: Colors.white,
-                size: 20.0,
+                size: 16.0,
               ),
               label: const Text(
                 'Update',

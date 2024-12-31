@@ -107,6 +107,7 @@ class EmailNotifier extends StateNotifier<EmailGenerationRequest> {
         mainIdea: 'Auto detect main idea',
       );
     }
+    final i = state;
 
     final endpoint = type == RequestType.response
         ? ApiEndpoints.responseEmail

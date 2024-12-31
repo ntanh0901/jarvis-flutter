@@ -142,6 +142,23 @@ class _WritingScreenState extends ConsumerState<WritingScreen> {
                 ],
               ),
             ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  // Update the navigation stack to reset the screen
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => const WritingScreen(),
+                    ),
+                  );
+                },
+                child: Text(
+                  'Reset',
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+              ),
+              const SizedBox(width: 16),
+            ],
           ),
           drawer: const AppDrawer(),
           body: Container(

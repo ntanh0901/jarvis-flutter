@@ -57,7 +57,7 @@ class _SearchTextFieldState extends ConsumerState<SearchTextField> {
       },
       decoration: InputDecoration(
         filled: true,
-        fillColor: const Color(0xFFF1F2F3),
+        fillColor: const Color(0xFFF1F5F9),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,

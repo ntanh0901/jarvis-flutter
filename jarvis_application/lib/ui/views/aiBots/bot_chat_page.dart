@@ -156,6 +156,8 @@ class _BotChatPageState extends ConsumerState<BotChatPage> {
             minLines: 1,
             controller: messageController,
             decoration: InputDecoration(
+              filled: true,
+              fillColor: const Color(0xFFF1F5F9),
               prefixIcon: IconButton(
                 icon: const Icon(Icons.add_circle_outline, color: Colors.blue),
                 onPressed: () {},
