@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:go_router/go_router.dart';
 import 'package:jarvis_application/ui/widgets/app_drawer.dart';
 
 import '../../../data/models/assistant.dart';
@@ -145,12 +146,9 @@ class _WritingScreenState extends ConsumerState<WritingScreen> {
             actions: [
               TextButton(
                 onPressed: () {
-                  // Update the navigation stack to reset the screen
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => const WritingScreen(),
-                    ),
-                  );
+                  // call reset function
+                  resetAllProviders(ref);
+                  context.go('/email-compose');
                 },
                 child: Text(
                   'Reset',
@@ -678,5 +676,16 @@ class _WritingScreenState extends ConsumerState<WritingScreen> {
         );
       },
     );
+  }
+
+  void resetAllProviders(WidgetRef ref) {
+    ref.invalidate(requestTypeProvider);
+    ref.invalidate(isFirstGenerationProvider);
+    ref.invalidate(currentIndexProvider);
+    ref.invalidate(generatedContentProvider);
+    ref.invalidate(isLoadingProvider);
+    ref.invalidate(emailStateProvider);
+    _originalTextController.clear();
+    _replyContentController.clear();
   }
 }

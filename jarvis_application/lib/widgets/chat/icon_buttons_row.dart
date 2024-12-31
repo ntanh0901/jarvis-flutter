@@ -40,7 +40,7 @@ class IconButtonsRow extends StatelessWidget {
               Text(
                 '$remainUsage',
                 style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.blueAccent),
               ),
