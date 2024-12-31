@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../views/prompts/create_new_prompt_screen.dart';
+import '../views/prompts/create_prompt_sheet.dart';
 import '../views/prompts/prompt_library_screen.dart';
 
 class CreatePromptButton extends StatelessWidget {
@@ -26,25 +26,29 @@ class CreatePromptButton extends StatelessWidget {
             size: 24,
           ),
           color: Colors.white,
-          padding: EdgeInsets.zero, // Remove default padding
-          constraints: const BoxConstraints(), // Remove constraints
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
           onPressed: () async {
-            // Add new prompt
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const CreateNewPrompt()),
+            final result = await showModalBottomSheet<bool>(
+              context: context,
+              isScrollControlled: true,
+              useRootNavigator: true,
+              builder: (context) => const CreatePromptSheet(),
             );
-
+            // if result empty
+            if (result == null) return;
             if (result == true) {
-              // A new prompt was created, refresh the prompts
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Prompt created successfully')),
               );
-              // Call a method to refresh the prompts
               if (context.findAncestorStateOfType<PromptLibraryState>() !=
                   null) {
                 onPromptCreated();
               }
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Prompt creation failed')),
+              );
             }
           },
         ),

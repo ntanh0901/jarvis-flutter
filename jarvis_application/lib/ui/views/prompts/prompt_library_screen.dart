@@ -105,7 +105,17 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
               ],
               Expanded(
                 child: state.isLoading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const Center(
+                        child: SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.blue),
+                          backgroundColor: Colors.grey, // Background color
+                        ),
+                      ))
                     : ListView.separated(
                         itemCount: prompts.length,
                         itemBuilder: (context, index) {
@@ -264,6 +274,7 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                       borderSide: BorderSide.none,
                     ),
                     hintText: 'Enter title',
+                    hintStyle: const TextStyle(color: Color(0xFF89929D)),
                   ),
                 ),
                 const SizedBox(height: 16.0),
@@ -287,6 +298,7 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                         contentPadding: EdgeInsets.all(16.0),
                         border: InputBorder.none,
                         hintText: 'Enter prompt details',
+                        hintStyle: const TextStyle(color: Color(0xFF89929D)),
                       ),
                     ),
                   ),
@@ -305,7 +317,7 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                 Navigator.of(context).pop();
               },
             ),
-            TextButton.icon(
+            TextButton(
               style: TextButton.styleFrom(
                 backgroundColor: const Color(0xFF6841EA),
                 padding:
@@ -314,19 +326,43 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                   borderRadius: BorderRadius.circular(16.0),
                 ),
               ),
-              icon: const Icon(
-                Icons.edit,
-                color: Colors.white,
-                size: 16.0,
-              ),
-              label: const Text(
-                'Update',
+              child: const Text(
+                'Save',
                 style: TextStyle(color: Colors.white),
               ),
               onPressed: () {
+                if (titleController.text.isEmpty ||
+                    contentController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Title and content cannot be empty'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                // if title and content not change
+                if (titleController.text == prompt.title &&
+                    contentController.text == prompt.content) {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('No changes made'),
+                      backgroundColor: Colors.grey,
+                    ),
+                  );
+                  return;
+                }
                 ref.read(promptViewModelProvider.notifier).updatePrompt(
                     prompt, titleController.text, contentController.text);
                 Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Prompt updated successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
               },
             ),
           ],

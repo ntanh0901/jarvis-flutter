@@ -130,7 +130,10 @@ class _BotChatPageState extends ConsumerState<BotChatPage> {
           );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Knowledge $knowledgeId linked successfully.')),
+        SnackBar(
+          content: Text('Knowledge $knowledgeId linked successfully.'),
+          backgroundColor: Colors.green,
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

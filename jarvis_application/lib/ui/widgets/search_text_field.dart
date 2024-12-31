@@ -63,9 +63,9 @@ class _SearchTextFieldState extends ConsumerState<SearchTextField> {
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(
-            color: Color(0xFFD1D1D1),
+            color: Colors.blue,
             width: 1.0,
           ),
         ),
@@ -73,7 +73,7 @@ class _SearchTextFieldState extends ConsumerState<SearchTextField> {
         hintStyle: const TextStyle(
           color: Colors.grey,
         ),
-        prefixIcon: const Icon(Icons.search),
+        prefixIcon: const Icon(Icons.search, color: Colors.grey),
         suffixIcon: text.isNotEmpty
             ? IconButton(
                 icon: const Icon(Icons.clear),
