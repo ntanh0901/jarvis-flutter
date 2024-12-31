@@ -120,10 +120,11 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                   : () => _handleSubmit(authViewModel),
               child: authState is AsyncLoading
                   ? const SizedBox(
-                      width: 24,
-                      height: 24,
+                      width: 18,
+                      height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
                       ),
                     )
                   : const Text('Sign in'),

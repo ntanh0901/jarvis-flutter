@@ -131,7 +131,7 @@ class EmailGenerationRequest {
     AiEmailMetadata? metadata,
   }) {
     return EmailGenerationRequest(
-      assistant: assistant,
+      assistant: assistant ?? this.assistant,
       action: action ?? this.action,
       email: email ?? this.email,
       mainIdea: mainIdea ?? this.mainIdea,

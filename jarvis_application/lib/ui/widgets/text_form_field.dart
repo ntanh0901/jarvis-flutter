@@ -54,7 +54,7 @@ class CustomFormBuilderTextField extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   borderSide: const BorderSide(
                     color: Colors.blue,
-                    width: 2.0,
+                    width: 1.0,
                   ),
                 ),
                 suffixIcon: isPasswordField
