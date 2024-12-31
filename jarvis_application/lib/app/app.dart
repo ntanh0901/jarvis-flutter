@@ -3,11 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:jarvis_application/app/app_router.dart';
 import 'package:jarvis_application/app/app_theme.dart';
-import 'package:jarvis_application/ui/viewmodels/email_compose_view_model.dart';
 import 'package:jarvis_application/ui/viewmodels/image_handler_view_model.dart';
 import 'package:provider/provider.dart';
 
-import '../data/services/mock_ai_service.dart';
 import '../providers/platform_provider.dart';
 
 class MyApp extends StatelessWidget {
@@ -17,8 +15,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-            create: (context) => EmailComposeViewModel(MockAIService())),
         ChangeNotifierProvider(create: (context) => ImageHandlerViewModel()),
         ChangeNotifierProvider(create: (_) => PlatformProvider()),
       ],

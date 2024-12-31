@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -114,8 +112,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
     try {
       Response response;
 
-      // Set up the request data
-      if (metadata.conversation.id == "") {
+      if (metadata.conversation.id!.isEmpty) {
         // First-time request
         final requestBody = requestAiChat.copyWith(
           content: content,
@@ -126,11 +123,8 @@ class _ChatPageState extends ConsumerState<ChatPage>
           '/api/v1/ai-chat',
           data: requestBody.toJsonFirstTime(),
         );
-
-        print("Meta Req First Time: ${metadata.toJson()}");
       } else {
-        // Subsequent messages
-        // copyWith is used to create a new instance of RequestAiChat
+        // Subsequent messages - use existing conversation ID
         final requestBody = requestAiChat.copyWith(
           content: content,
           assistant: currAssistant?.dto,
@@ -142,18 +136,21 @@ class _ChatPageState extends ConsumerState<ChatPage>
           data: requestBody.toJson(),
           options: Options(headers: {'x-jarvis-guid': ''}),
         );
-
-        print("Meta Req Next Time: ${metadata.toJson()}");
       }
 
-      // Handle response
       if (response.statusCode == 200) {
         final responseAIChat = response.data;
 
-        conversationID = responseAIChat['conversationId'];
+        // Update conversation ID only if this is a new conversation
+        if (metadata.conversation.id!.isEmpty) {
+          conversationID = responseAIChat['conversationId'];
+          metadata.setConversationID(conversationID);
+        }
+
         final messageAI = responseAIChat['message'];
         final remainingUsage = responseAIChat['remainingUsage'];
 
+        // Add the AI response to messages
         messages.add(ChatMessage(
           assistant: currAssistant?.dto,
           role: 'model',
@@ -165,6 +162,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
         });
         _scrollToBottom();
 
+        // Update current messages and metadata
         currentMessageUser.setValues(
           newRole: 'user',
           newContent: content,
@@ -176,15 +174,9 @@ class _ChatPageState extends ConsumerState<ChatPage>
           newContent: messageAI,
           newAssistant: currAssistant?.dto,
         );
-        metadata.setConversationID(conversationID);
+
         metadata.addMessage(currentMessageUser);
         metadata.addMessage(currentMessageAI);
-
-        print("Meta Result: ${metadata.toJson()}");
-      } else {
-        String errorMessage =
-            "Request failed with status: ${response.statusCode}\nReason: ${response.statusMessage}";
-        _showErrorDialog(context, "Error", errorMessage);
       }
     } catch (e) {
       _showErrorDialog(context, "Error", "An error occurred: $e");
@@ -253,6 +245,9 @@ class _ChatPageState extends ConsumerState<ChatPage>
   }
 
   Future<void> _fetchConversationHistory(String newConversationID) async {
+    metadata.setConversationID(newConversationID);
+    conversationID = newConversationID; // Update the current conversationID
+
     // Create query parameters
     ConversationsQueryParams queryParams = ConversationsQueryParams(
       cursor: '',
@@ -278,18 +273,14 @@ class _ChatPageState extends ConsumerState<ChatPage>
       );
 
       if (response.statusCode == 200) {
-        // Parse response
         var responseData = response.data;
-        print(
-            "successsssssssssssssssssssssssssssssssssssssssssss data: $responseData");
-
         ConversationHistoryRes conversationHistory =
             ConversationHistoryRes.fromJson(responseData);
-        print("Historyyyyyyyyyyyyyy: $conversationHistory");
 
         setState(() {
           cursor = conversationHistory.cursor;
           messages.clear();
+
           for (var i in conversationHistory.items!) {
             messages.add(ChatMessage(
               assistant: selectedAssistant?.dto,
@@ -301,21 +292,23 @@ class _ChatPageState extends ConsumerState<ChatPage>
               role: 'model',
               content: i.answer,
             ));
+
+            // Update current messages
             currentMessageUser.setValues(
-                newRole: 'user',
-                newContent: i.query,
-                newAssistant: selectedAssistant?.dto);
+              newRole: 'user',
+              newContent: i.query,
+              newAssistant: selectedAssistant?.dto,
+            );
 
             currentMessageAI.setValues(
-                newRole: 'model',
-                newContent: i.answer,
-                newAssistant: selectedAssistant?.dto);
+              newRole: 'model',
+              newContent: i.answer,
+              newAssistant: selectedAssistant?.dto,
+            );
 
-            metadata.setConversationID(conversationID);
+            // Add messages to metadata
             metadata.addMessage(currentMessageUser);
             metadata.addMessage(currentMessageAI);
-            conversationID = newConversationID;
-            print("Meta Historyyyyyyyy: ${jsonEncode(metadata.toJson())}");
           }
         });
       } else {
