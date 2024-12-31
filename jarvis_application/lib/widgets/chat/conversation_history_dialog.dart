@@ -211,12 +211,14 @@ class _ConversationHistoryDialogState
                         final item = filteredItems[index];
                         return ListTile(
                           title: Text(
-                            item['title'],
+                            item['title']?.trim(),
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                               color: Colors.black87,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           subtitle: Text(
                             _formatDate(item['createdAt']),

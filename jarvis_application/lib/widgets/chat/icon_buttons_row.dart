@@ -34,6 +34,8 @@ class IconButtonsRow extends StatelessWidget {
                 height: 16,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                  backgroundColor: Colors.grey, // Background color
                 ),
               )
             else

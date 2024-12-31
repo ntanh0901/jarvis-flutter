@@ -6,7 +6,7 @@ import '../../core/constants/api_endpoints.dart';
 import '../../data/models/assistant.dart';
 import '../../data/models/assistant_dto.dart';
 import '../../data/models/email_models.dart';
-import '../../data/services/email_api.dart';
+import '../../data/services/email_service.dart';
 
 enum RequestType { response, replyIdeas }
 
