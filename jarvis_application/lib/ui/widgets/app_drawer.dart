@@ -82,13 +82,13 @@ class AppDrawer extends ConsumerWidget {
         child: ListTile(
           leading: Icon(
             icon,
-            color: Colors.black,
+            color: isSelected ? const Color(0xFF3257A0) : Colors.grey,
           ),
           title: Text(
             title,
             style: TextStyle(
-              color: Colors.black,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected ? const Color(0xFF3257A0) : Colors.grey,
+              fontWeight: FontWeight.bold,
             ),
           ),
           tileColor: isSelected ? Colors.blue[700] : Colors.transparent,

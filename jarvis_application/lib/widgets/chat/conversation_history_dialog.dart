@@ -1,15 +1,21 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ConversationHistoryDialog extends StatefulWidget {
-  final List<Map<String, dynamic>> initialItems;
+import '../../core/constants/api_endpoints.dart';
+import '../../data/models/assistant_dto.dart';
+import '../../data/models/conversations_query_params.dart';
+import '../../data/models/conversations_res.dart';
+import '../../providers/dio_provider.dart';
+import '../../ui/widgets/error_dialog.dart';
+
+class ConversationHistoryDialog extends ConsumerStatefulWidget {
   final String? cursor;
-  final ValueChanged<List<Map<String, dynamic>>> onItemsUpdated;
-  final ValueChanged<String>  onItemSelected;
+  final ValueChanged<String> onItemSelected;
+
   const ConversationHistoryDialog({
     super.key,
-    required this.initialItems,
     required this.cursor,
-    required this.onItemsUpdated,
     required this.onItemSelected,
   });
 
@@ -18,26 +24,87 @@ class ConversationHistoryDialog extends StatefulWidget {
       _ConversationHistoryDialogState();
 }
 
-class _ConversationHistoryDialogState extends State<ConversationHistoryDialog> {
+class _ConversationHistoryDialogState
+    extends ConsumerState<ConversationHistoryDialog> {
   late List<Map<String, dynamic>> items;
-  String? currentCursor;
   late List<Map<String, dynamic>> filteredItems;
+  String? currentCursor;
+  bool isLoading = true;
+  late Dio dio;
 
   @override
   void initState() {
     super.initState();
-    items = List.from(widget.initialItems); // copy list
-    filteredItems = List.from(items); // copy for filtering
+    items = [];
+    filteredItems = [];
     currentCursor = widget.cursor;
+    dio = ref.read(dioProvider);
+    _fetchConversations();
   }
 
-  void _deleteItem(int index) {
+  Future<void> _fetchConversations() async {
     setState(() {
-      filteredItems.removeAt(index); // delete item
+      isLoading = true;
     });
+    ConversationsQueryParams queryParams = ConversationsQueryParams(
+      cursor: '',
+      limit: 100,
+      assistantId: Id.CLAUDE_3_HAIKU_20240307,
+      assistantModel: Model.DIFY,
+    );
 
-    // return updating for ChatPage
-    widget.onItemsUpdated(filteredItems);
+    try {
+      // Send request
+      final response = await dio.get(
+        ApiEndpoints.getConversations,
+        queryParameters: queryParams.toJson(),
+      );
+
+      if (response.statusCode == 200) {
+        // Parse response
+        var responseData = response.data;
+
+        ConversationsRes conversations =
+            ConversationsRes.fromJson(responseData);
+
+        setState(() {
+          items = List<Map<String, dynamic>>.from(
+            conversations.items.map((item) => {
+                  'title': item.title ?? '',
+                  'id': item.id ?? '',
+                  'createdAt': item.createdAt ?? 0,
+                }),
+          );
+          filteredItems = List.from(items);
+          currentCursor = conversations.cursor;
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        String errorMessage =
+            "Request failed with status: ${response.statusCode}\nReason: ${response.statusMessage}";
+        _showErrorDialog(context, "Error", errorMessage);
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      _showErrorDialog(context, "Error", "An error occurred: $e");
+    }
+  }
+
+  void _showErrorDialog(BuildContext context, String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return ErrorDialog(
+          title: title,
+          message: message,
+        );
+      },
+    );
   }
 
   String _formatDate(int timestamp) {
@@ -48,12 +115,11 @@ class _ConversationHistoryDialogState extends State<ConversationHistoryDialog> {
   void _filterItems(String query) {
     setState(() {
       if (query.isEmpty) {
-        filteredItems = List.from(items); // Hiển thị lại tất cả nếu không có query
+        filteredItems = List.from(items); // Show all if no query
       } else {
         filteredItems = items
-            .where((item) => item['title']
-            .toLowerCase()
-            .contains(query.toLowerCase())) // Lọc theo title
+            .where((item) =>
+                item['title'].toLowerCase().contains(query.toLowerCase()))
             .toList();
       }
     });
@@ -80,27 +146,27 @@ class _ConversationHistoryDialogState extends State<ConversationHistoryDialog> {
       children: [
         Expanded(
           child: Container(
-            height: 40,
             decoration: BoxDecoration(
               color: Colors.grey[200],
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Row(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Icon(Icons.search, color: Colors.grey),
-                ),
-                Expanded(
-                  child: TextField(
-                    onChanged: _filterItems, // Lọc danh sách khi nhập
-                    decoration: const InputDecoration(
-                      hintText: 'Search',
-                      border: InputBorder.none,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                children: [
+                  const Icon(Icons.search, color: Colors.grey),
+                  Expanded(
+                    child: TextField(
+                      onChanged: _filterItems,
+                      decoration: const InputDecoration(
+                        hintText: 'Search',
+                        border: InputBorder.none,
+                        hintStyle: TextStyle(color: Colors.grey),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -117,38 +183,57 @@ class _ConversationHistoryDialogState extends State<ConversationHistoryDialog> {
       child: Container(
         height: 500,
         width: MediaQuery.of(context).size.width * 0.8,
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildDialogHeader(context, 'Conversation History'),
+            const SizedBox(height: 8),
             _buildSearchBarWithIcons(),
-            Expanded(
-              child: ListView.builder(
-                itemCount: filteredItems.length,
-                itemBuilder: (context, index) {
-                  final item = filteredItems[index];
-                  return ListTile(
-                    title: Text(
-                      item['title'],
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+            const SizedBox(height: 16),
+            isLoading
+                ? const Expanded(
+                    child: Center(
+                    child: SizedBox(
+                      width: 30,
+                      height: 30,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                        backgroundColor: Colors.grey, // Background color
+                      ),
                     ),
-                    subtitle: Text(_formatDate(item['createdAt'])),
-                    isThreeLine: false,
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _deleteItem(index), // Xóa conversation
+                  ))
+                : Expanded(
+                    child: ListView.builder(
+                      itemCount: filteredItems.length,
+                      itemBuilder: (context, index) {
+                        final item = filteredItems[index];
+                        return ListTile(
+                          title: Text(
+                            item['title'],
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          subtitle: Text(
+                            _formatDate(item['createdAt']),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          onTap: () {
+                            widget.onItemSelected(item['id'] as String);
+                            Navigator.of(context).pop();
+                          },
+                        );
+                      },
                     ),
-                    onTap: (){
-                      widget.onItemSelected(
-                        item['id'] as String,
-                      );
-                      Navigator.of(context).pop();
-                    }
-                  );
-                },
-              ),
-            ),
+                  ),
           ],
         ),
       ),

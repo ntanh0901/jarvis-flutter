@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/services/prompt_service.dart';
 
 final createPromptViewmodelProvider =
-    StateNotifierProvider<PromptFormNotifier, PromptFormState>((ref) {
+    StateNotifierProvider.autoDispose<PromptFormNotifier, PromptFormState>(
+        (ref) {
   final promptService = ref.watch(promptServiceProvider);
   return PromptFormNotifier(promptService);
 });
@@ -15,6 +16,7 @@ class PromptFormState {
   final bool isPublic;
   final String language;
   final String category;
+  final String? error;
 
   PromptFormState({
     required this.title,
@@ -23,6 +25,7 @@ class PromptFormState {
     required this.isPublic,
     required this.language,
     required this.category,
+    this.error,
   });
 
   PromptFormState copyWith({
@@ -32,6 +35,7 @@ class PromptFormState {
     bool? isPublic,
     String? language,
     String? category,
+    String? error,
   }) {
     return PromptFormState(
       title: title ?? this.title,
@@ -40,6 +44,7 @@ class PromptFormState {
       isPublic: isPublic ?? this.isPublic,
       language: language ?? this.language,
       category: category ?? this.category,
+      error: error ?? this.error,
     );
   }
 }
@@ -77,7 +82,11 @@ class PromptFormNotifier extends StateNotifier<PromptFormState> {
         category: 'OTHER',
       );
     } catch (e) {
-      print('Failed to create prompt: $e');
+      state = state.copyWith(error: 'Failed to create prompt: $e');
     }
+  }
+
+  bool isFormValid() {
+    return state.title.isNotEmpty && state.content.isNotEmpty;
   }
 }

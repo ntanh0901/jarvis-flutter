@@ -77,8 +77,15 @@ class _BotListPageState extends ConsumerState<BotListPage> {
         drawer: const AppDrawer(),
         body: _isLoading
             ? const Center(
-                child: CircularProgressIndicator(),
-              )
+                child: SizedBox(
+                width: 30,
+                height: 30,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                  backgroundColor: Colors.grey, // Background color
+                ),
+              ))
             : _errorMessage != null
                 ? Center(
                     child: Column(

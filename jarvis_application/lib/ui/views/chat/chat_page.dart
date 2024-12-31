@@ -13,7 +13,6 @@ import '../../../data/models/assistant_dto.dart';
 import '../../../data/models/chat_message.dart';
 import '../../../data/models/conversation_history_res.dart';
 import '../../../data/models/conversations_query_params.dart';
-import '../../../data/models/conversations_res.dart';
 import '../../../data/models/request_ai_chat.dart';
 import '../../../providers/dio_provider.dart';
 import '../../../widgets/chat/action_row.dart';
@@ -75,16 +74,16 @@ class _ChatPageState extends ConsumerState<ChatPage>
     WidgetsBinding.instance.addObserver(this);
     selectedAssistant =
         Assistant.assistants.isNotEmpty ? Assistant.assistants.first : null;
-    // initial Message  = empty
     currentMessageUser = ChatMessage.empty();
     currentMessageAI = ChatMessage.empty();
-    remainUsage = 0;
+    remainUsage = -1;
     requestAiChat = RequestAiChat(
       assistant: selectedAssistant!.dto,
       content: '',
       metadata: metadata,
     );
     _dio = ref.read(dioProvider);
+    _initializeUsage();
   }
 
   @override
@@ -92,8 +91,27 @@ class _ChatPageState extends ConsumerState<ChatPage>
     WidgetsBinding.instance.removeObserver(this);
     _scrollController.dispose();
     messageController.dispose();
-    messageFocusNode.dispose(); // Dispose the focus node
+    messageFocusNode.dispose();
     super.dispose();
+  }
+
+  void _initializeUsage() async {
+    try {
+      // Get initial usage from API
+      final response = await _dio.get(ApiEndpoints.getUsage);
+
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+        setState(() {
+          remainUsage = responseData['availableTokens'] ?? 0;
+        });
+      }
+    } catch (e) {
+      print("Error fetching initial usage: $e");
+      setState(() {
+        remainUsage = 0;
+      });
+    }
   }
 
   Future<void> _sendMessage(String content, Assistant? currAssistant) async {
@@ -194,57 +212,6 @@ class _ChatPageState extends ConsumerState<ChatPage>
     return content.replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 
-  Future<void> _fetchConversations() async {
-    // Create query parameters
-    ConversationsQueryParams queryParams = ConversationsQueryParams(
-      cursor: '',
-      limit: 100,
-      assistantId: selectedAssistant?.dto.id,
-      assistantModel: selectedAssistant?.dto.model,
-    );
-
-    try {
-      // Build request URL
-      final queryParameters = {
-        'assistantId': idValues.reverse[queryParams.assistantId],
-        'assistantModel': 'dify',
-      };
-
-      // Get Dio instance
-
-      // Send request
-      final response = await _dio.get(
-        ApiEndpoints.getConversations,
-        queryParameters: queryParameters,
-      );
-
-      if (response.statusCode == 200) {
-        // Parse response
-        var responseData = response.data;
-
-        ConversationsRes conversations =
-            ConversationsRes.fromJson(responseData);
-
-        setState(() {
-          items = List<Map<String, dynamic>>.from(
-            conversations.items.map((item) => {
-                  'title': item.title ?? '',
-                  'id': item.id ?? '',
-                  'createdAt': item.createdAt ?? 0,
-                }),
-          );
-          cursor = conversations.cursor;
-        });
-      } else {
-        String errorMessage =
-            "Request failed with status: ${response.statusCode}\nReason: ${response.statusMessage}";
-        _showErrorDialog(context, "Error", errorMessage);
-      }
-    } catch (e) {
-      _showErrorDialog(context, "Error", "An error occurred: $e");
-    }
-  }
-
   Future<void> _fetchConversationHistory(String newConversationID) async {
     metadata.setConversationID(newConversationID);
     conversationID = newConversationID; // Update the current conversationID
@@ -312,6 +279,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
             metadata.addMessage(currentMessageAI);
           }
         });
+        _scrollToBottom(animated: false);
       } else {
         String errorMessage =
             "Request failed with status: ${response.statusCode}\nReason: ${response.statusMessage}";
@@ -353,14 +321,18 @@ class _ChatPageState extends ConsumerState<ChatPage>
     );
   }
 
-  void _scrollToBottom() {
+  void _scrollToBottom({bool animated = true}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
+        if (animated) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        } else {
+          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        }
       }
     });
   }
@@ -429,7 +401,6 @@ class _ChatPageState extends ConsumerState<ChatPage>
   Future<void> resetConversation() async {
     setState(() {
       messages.clear();
-      remainUsage = 0;
     });
 
     await Future.delayed(const Duration(milliseconds: 200));
@@ -452,7 +423,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
 
   Future<void> _handleAction(String action, BuildContext context) async {
     switch (action) {
-      case 'add_comment':
+      case 'new_chat':
         await resetConversation();
         break;
       case 'upload_pdf':
@@ -483,21 +454,12 @@ class _ChatPageState extends ConsumerState<ChatPage>
     );
   }
 
-  void _showConversationHistoryDialog(BuildContext context) async {
-    // fetch conversations
-    await _fetchConversations();
-
+  void _showConversationHistoryDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) {
         return ConversationHistoryDialog(
-          initialItems: items,
           cursor: cursor,
-          onItemsUpdated: (updatedItems) {
-            setState(() {
-              items = updatedItems; // Update the local list
-            });
-          },
           onItemSelected: (conversationID) {
             _fetchConversationHistory(conversationID);
           },

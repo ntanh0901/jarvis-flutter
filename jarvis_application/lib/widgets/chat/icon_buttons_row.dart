@@ -18,7 +18,7 @@ class IconButtonsRow extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildIconButton(Icons.add_comment, 'add_comment'),
+            _buildIconButton(Icons.add_comment, 'new_chat'),
             _buildIconButton(Icons.picture_as_pdf, 'upload_pdf'),
             _buildIconButton(Icons.access_time, 'view_history'),
           ],
@@ -28,17 +28,30 @@ class IconButtonsRow extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              '$remainUsage',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            if (remainUsage == -1)
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                ),
+              )
+            else
+              Text(
+                '$remainUsage',
+                style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blueAccent),
+              ),
+            const SizedBox(width: 4),
             const Icon(
               Icons.local_fire_department_sharp,
               size: 22,
               color: Colors.blueAccent,
             ),
           ],
-        ),
+        )
       ],
     );
   }

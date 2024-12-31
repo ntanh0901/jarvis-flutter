@@ -1,10 +1,11 @@
 import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:jarvis_application/ui/viewmodels/image_handler_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 
 import '../../styles/chat_screen_styles.dart';
-import 'package:jarvis_application/ui/viewmodels/image_handler_view_model.dart';
 
 class ImagePickerHelper {
   static void showImagePickerOptions(
@@ -35,16 +36,6 @@ class ImagePickerHelper {
                   () =>
                       Provider.of<ImageHandlerViewModel>(context, listen: false)
                           .takePhoto(),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.screenshot),
-                title: const Text('Take a screenshot'),
-                onTap: () => _handleImageOptionTap(
-                  context,
-                  () =>
-                      Provider.of<ImageHandlerViewModel>(context, listen: false)
-                          .takeScreenshot(screenshotController),
                 ),
               ),
             ],

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:go_router/go_router.dart';
 import 'package:jarvis_application/ui/views/aiBots/publish_page.dart';
+
 import '../../../data/models/bot/ai_assistant.dart';
 import '../../../data/models/bot/chat_bot/message.dart';
 import '../../../providers/ai_bot_provider.dart';
@@ -84,7 +84,6 @@ class _BotChatPageState extends ConsumerState<BotChatPage> {
       ));
     });
 
-    // scroll to bottom when user sends a message
     _scrollToBottom();
 
     final response =
@@ -123,13 +122,12 @@ class _BotChatPageState extends ConsumerState<BotChatPage> {
     });
   }
 
-
   Future<void> _addKnowledge(String knowledgeId) async {
     try {
       await ref.read(aiAssistantProvider.notifier).addKnowledgeToAssistant(
-        assistantId: widget.currentAssistant.id,
-        knowledgeId: knowledgeId,
-      );
+            assistantId: widget.currentAssistant.id,
+            knowledgeId: knowledgeId,
+          );
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Knowledge $knowledgeId linked successfully.')),
@@ -140,15 +138,6 @@ class _BotChatPageState extends ConsumerState<BotChatPage> {
       );
     }
   }
-
-  // IconButton(
-  // icon: const Icon(Icons.link, color: Colors.blue),
-  // onPressed: () {
-  // _addKnowledge('knowledge-id');
-  // },
-  // ),
-
-
 
   Widget _buildChatInput() {
     return GestureDetector(
@@ -206,119 +195,144 @@ class _BotChatPageState extends ConsumerState<BotChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Bot Assistant"),
-        centerTitle: true,
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PublishingPlatformPage(
-                    currentAssistant: widget.currentAssistant,
-                  ),
-                ),
-              );
-            },
-            child: const Text(
-              'Publish',
-              style: TextStyle(color: Colors.blue, fontSize: 16),
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          surfaceTintColor: Colors.transparent,
+          title: Text(
+            widget.currentAssistant.assistantName,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
           ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Divider(
+              color: Colors.grey[200],
+              height: 1,
+            ),
+          ),
+          centerTitle: true,
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PublishingPlatformPage(
+                      currentAssistant: widget.currentAssistant,
+                    ),
+                  ),
+                );
+              },
+              child: const Text(
+                'Publish',
+                style: TextStyle(color: Colors.blue, fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: SizedBox(
+                      width: 30,
+                      height: 30,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                        backgroundColor: Colors.grey, // Background color
+                      ),
+                    ))
+                  : messages.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const LogoWidget(imageType: 2),
+                              const SizedBox(height: 10),
+                              GreetingText(
+                                  assistantName:
+                                      widget.currentAssistant.assistantName),
+                              const SizedBox(height: 10),
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          itemCount: messages.length + (isTyping ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index == messages.length && isTyping) {
+                              return const Align(
+                                alignment: Alignment.centerLeft,
+                                child: Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: SpinKitThreeBounce(
+                                    color: Colors.grey,
+                                    size: 20.0,
+                                  ),
+                                ),
+                              );
+                            }
 
+                            final message = messages[index];
+                            final isUser = message.role == 'user';
+                            final content = message.content.first.text.value;
 
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(),
-                  )
-                : messages.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const LogoWidget(imageType: 2),
-                            const SizedBox(height: 10),
-                            GreetingText(
-                                assistantName:
-                                    widget.currentAssistant.assistantName),
-                            const SizedBox(height: 10),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        itemCount: messages.length + (isTyping ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == messages.length && isTyping) {
-                            return const Align(
-                              alignment: Alignment.centerLeft,
-                              child: Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: SpinKitThreeBounce(
-                                  color: Colors.grey,
-                                  size: 20.0,
+                            return Align(
+                              alignment: isUser
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                              child: Container(
+                                margin: isUser
+                                    ? const EdgeInsets.only(
+                                        left: 30, right: 10, top: 10, bottom: 5)
+                                    : const EdgeInsets.only(
+                                        left: 10,
+                                        right: 30,
+                                        top: 20,
+                                        bottom: 5),
+                                padding: const EdgeInsets.all(15),
+                                decoration: BoxDecoration(
+                                  color: isUser
+                                      ? const Color(0xFF6841EA)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(isUser ? 20 : 0),
+                                    topRight: Radius.circular(isUser ? 0 : 20),
+                                    bottomLeft: const Radius.circular(20),
+                                    bottomRight: const Radius.circular(20),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.2),
+                                      spreadRadius: 2,
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: MarkdownBody(
+                                  data: content,
+                                  styleSheet: MarkdownStyleSheet(
+                                    p: TextStyle(
+                                      color:
+                                          isUser ? Colors.white : Colors.black,
+                                      fontSize: 16,
+                                    ),
+                                  ),
                                 ),
                               ),
                             );
-                          }
-
-                          final message = messages[index];
-                          final isUser = message.role == 'user';
-                          final content = message.content.first.text.value;
-
-                          return Align(
-                            alignment: isUser
-                                ? Alignment.centerRight
-                                : Alignment.centerLeft,
-                            child: Container(
-                              margin: isUser
-                                  ? const EdgeInsets.only(
-                                      left: 30, right: 10, top: 10, bottom: 5)
-                                  : const EdgeInsets.only(
-                                      left: 10, right: 30, top: 20, bottom: 5),
-                              padding: const EdgeInsets.all(15),
-                              decoration: BoxDecoration(
-                                color: isUser
-                                    ? const Color(0xFF6841EA)
-                                    : Colors.white,
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(isUser ? 20 : 0),
-                                  topRight: Radius.circular(isUser ? 0 : 20),
-                                  bottomLeft: const Radius.circular(20),
-                                  bottomRight: const Radius.circular(20),
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey.withOpacity(0.2),
-                                    spreadRadius: 2,
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
-                              ),
-                              child: MarkdownBody(
-                                data: content,
-                                styleSheet: MarkdownStyleSheet(
-                                  p: TextStyle(
-                                    color: isUser ? Colors.white : Colors.black,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-          ),
-          _buildChatInput(),
-        ],
+                          },
+                        ),
+            ),
+            _buildChatInput(),
+          ],
+        ),
       ),
     );
   }

@@ -45,37 +45,46 @@ class PromptService {
         },
       );
 
-      if (response.statusCode == 200) {
-        final data = response.data['items'] as List;
-        print('Prompts fetched successfully: ${data.length}');
-        return data.map((item) => Prompt.fromJson(item)).toList();
-      } else {
-        throw Exception('Failed to load prompts');
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Failed to load prompts. Status: ${response.statusCode}');
       }
+
+      if (response.data == null || !response.data.containsKey('items')) {
+        throw Exception('Invalid response format');
+      }
+
+      final data = response.data['items'] as List;
+      return data.map((item) => Prompt.fromJson(item)).toList();
     } catch (e) {
-      print('Error fetching prompts: $e');
       rethrow;
     }
   }
 
   Future<void> favoritePrompt(String id) async {
     try {
-      await _dio.post(
+      final response = await _dio.post(
         ApiEndpoints.addFavoritePrompt.replaceFirst('{id}', id),
       );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception(
+            'Failed to favorite prompt. Status: ${response.statusCode}');
+      }
     } catch (e) {
-      print('Error favoriting prompt: $e');
       rethrow;
     }
   }
 
   Future<void> unfavoritePrompt(String id) async {
     try {
-      await _dio.delete(
+      final response = await _dio.delete(
         ApiEndpoints.removeFromFavorites.replaceFirst('{id}', id),
       );
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception(
+            'Failed to unfavorite prompt. Status: ${response.statusCode}');
+      }
     } catch (e) {
-      print('Error unfavoriting prompt: $e');
       rethrow;
     }
   }
@@ -89,10 +98,14 @@ class PromptService {
     required String title,
   }) async {
     try {
-      await _dio.post(
+      if (!categories.contains(category.toUpperCase())) {
+        throw Exception('Invalid category provided');
+      }
+
+      final response = await _dio.post(
         ApiEndpoints.createPrompt,
         data: {
-          'category': category,
+          'category': category.toLowerCase(),
           'content': content,
           'description': description,
           'isPublic': isPublic,
@@ -100,9 +113,11 @@ class PromptService {
           'title': title,
         },
       );
-      print('Prompt created successfully.');
+      if (response.statusCode != 201 && response.statusCode != 200) {
+        throw Exception(
+            'Failed to create prompt. Status: ${response.statusCode}');
+      }
     } catch (e) {
-      print('Error creating prompt: $e');
       rethrow;
     }
   }
@@ -113,26 +128,31 @@ class PromptService {
     required String content,
   }) async {
     try {
-      await _dio.patch(
+      final response = await _dio.patch(
         ApiEndpoints.updatePrompt.replaceFirst('{id}', id),
         data: {
           'title': title,
           'content': content,
         },
       );
-      print('Prompt updated successfully.');
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Failed to update prompt. Status: ${response.statusCode}');
+      }
     } catch (e) {
-      print('Error updating prompt: $e');
       rethrow;
     }
   }
 
   Future<void> deletePrompt(String id) async {
     try {
-      await _dio.delete(
+      final response = await _dio.delete(
         ApiEndpoints.deletePrompt.replaceFirst('{id}', id),
       );
-      print('Prompt deleted successfully.');
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception(
+            'Failed to delete prompt. Status: ${response.statusCode}');
+      }
     } catch (e) {
       print('Error deleting prompt: $e');
       rethrow;

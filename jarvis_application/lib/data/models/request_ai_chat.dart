@@ -1,6 +1,5 @@
 import 'ai_chat_metadata.dart';
 import 'assistant_dto.dart';
-import 'chat_message.dart';
 
 class RequestAiChat {
   final AssistantDto? assistant;

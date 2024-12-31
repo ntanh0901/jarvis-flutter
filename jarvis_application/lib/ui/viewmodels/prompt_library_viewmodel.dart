@@ -213,7 +213,8 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
 }
 
 final promptViewModelProvider =
-    StateNotifierProvider<PromptNotifier, PromptLibraryState>((ref) {
+    StateNotifierProvider.autoDispose<PromptNotifier, PromptLibraryState>(
+        (ref) {
   final promptService = ref.watch(promptServiceProvider);
   return PromptNotifier(promptService);
 });

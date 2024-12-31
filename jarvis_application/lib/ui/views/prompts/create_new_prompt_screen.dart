@@ -26,19 +26,6 @@ class _CreateNewPromptState extends ConsumerState<CreateNewPrompt> {
     final viewModel = ref.watch(createPromptViewmodelProvider.notifier);
     final promptState = ref.watch(createPromptViewmodelProvider);
 
-    const normalBorder = OutlineInputBorder(
-      borderSide: BorderSide(
-        color: Colors.grey,
-        width: 0.5,
-      ),
-    );
-
-    const focusedBorder = OutlineInputBorder(
-      borderSide: BorderSide(
-        color: Colors.black,
-        width: 1,
-      ),
-    );
     return SafeArea(
       child: Scaffold(
         body: Stack(
@@ -277,8 +264,27 @@ class _CreateNewPromptState extends ConsumerState<CreateNewPrompt> {
                                   backgroundColor: Colors.deepPurple,
                                 ),
                                 onPressed: () async {
-                                  await viewModel.createPrompt();
-                                  Navigator.pop(context);
+                                  if (viewModel.isFormValid()) {
+                                    await viewModel.createPrompt();
+                                    if (promptState.error == null) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                              'Prompt created successfully!'),
+                                          backgroundColor: Colors.green,
+                                        ),
+                                      );
+                                      Navigator.pop(context, true);
+                                    }
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                            'Please fill in all required fields.'),
+                                      ),
+                                    );
+                                  }
                                 },
                                 child: const Text(
                                   'Create',

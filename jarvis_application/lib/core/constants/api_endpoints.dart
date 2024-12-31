@@ -7,6 +7,8 @@ class ApiEndpoints {
   static const String refreshToken = '/api/v1/auth/refresh';
   static const String googleSignIn = '/api/v1/auth/google-sign-in';
 
+  // Token
+  static const String getUsage = '/api/v1/tokens/usage';
   // Chat
   static const String getConversations = '/api/v1/ai-chat/conversations';
 
