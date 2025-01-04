@@ -39,6 +39,7 @@ class ChatPage extends ConsumerStatefulWidget {
 class _ChatPageState extends ConsumerState<ChatPage>
     with WidgetsBindingObserver {
   final TextEditingController messageController = TextEditingController();
+  final GlobalKey _chatInputKey = GlobalKey();
   final ScreenshotController screenshotController = ScreenshotController();
   final ScrollController _scrollController = ScrollController();
 
@@ -83,13 +84,26 @@ class _ChatPageState extends ConsumerState<ChatPage>
     messageController.addListener(() {
       final text = messageController.text;
       if (text.endsWith('/')) {
-        showModalBottomSheetPrompts(
-          context: context,
-          ref: ref,
-          onPromptSelected: (prompt) {
-            _showPromptInfoDialog(prompt);
-          },
-        );
+        final chatInputBox =
+            _chatInputKey.currentContext?.findRenderObject() as RenderBox?;
+        final overlay =
+            Overlay.of(context).context.findRenderObject() as RenderBox;
+        if (chatInputBox != null) {
+          // Calculate position above the input
+          final position = chatInputBox.localToGlobal(
+            Offset(0, -chatInputBox.size.height - 150),
+            ancestor: overlay,
+          );
+
+          showPromptMenu(
+            context: context,
+            ref: ref,
+            onPromptSelected: (prompt) {
+              _showPromptInfoDialog(prompt);
+            },
+            position: position,
+          );
+        }
       }
     });
 
@@ -384,6 +398,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
         child: Container(
+          key: _chatInputKey,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20.0),

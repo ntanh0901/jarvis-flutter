@@ -181,6 +181,7 @@ class DioKB {
 
       if (response.statusCode == 200 && response.data?['token'] != null) {
         final token = response.data['token'];
+        print(token['accessToken']);
         _tokenManager.saveTokens(
             accessToken: token['accessToken'],
             refreshToken: token['refreshToken'],

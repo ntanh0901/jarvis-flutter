@@ -1,7 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:jarvis_application/ui/viewmodels/knowledge_base_viewmodel.dart';
 
-class WebsiteScreen extends StatelessWidget {
-  const WebsiteScreen({super.key});
+class WebsiteScreen extends ConsumerStatefulWidget {
+  final String knowledgeBaseId;
+
+  const WebsiteScreen({super.key, required this.knowledgeBaseId});
+
+  @override
+  _WebsiteScreenState createState() => _WebsiteScreenState();
+}
+
+class _WebsiteScreenState extends ConsumerState<WebsiteScreen> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _urlController = TextEditingController();
+  bool _isSubmitting = false;
+
+  Future<void> _addWebsiteUnit() async {
+    final name = _nameController.text;
+    final url = _urlController.text;
+
+    if (name.isEmpty || url.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Name and URL cannot be empty'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await ref.read(kbViewModelProvider.notifier).addWebsiteUnit(
+            widget.knowledgeBaseId,
+            name,
+            url,
+          );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Website unit added successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error adding website unit: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isSubmitting = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,8 +92,9 @@ class WebsiteScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16.0),
-            const TextField(
-              decoration: InputDecoration(
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Name',
               ),
@@ -46,8 +105,9 @@ class WebsiteScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16.0),
-            const TextField(
-              decoration: InputDecoration(
+            TextField(
+              controller: _urlController,
+              decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'URL',
               ),
@@ -55,10 +115,12 @@ class WebsiteScreen extends StatelessWidget {
             const SizedBox(height: 32.0),
             Center(
               child: ElevatedButton(
-                onPressed: () {
-                  // Handle connect action
-                },
-                child: const Text('Connect'),
+                onPressed: _isSubmitting ? null : _addWebsiteUnit,
+                child: _isSubmitting
+                    ? const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      )
+                    : const Text('Connect'),
               ),
             ),
           ],

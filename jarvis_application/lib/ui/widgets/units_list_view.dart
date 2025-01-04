@@ -1,45 +1,25 @@
 import 'package:flutter/material.dart';
-
-import 'enable_unit_switch.dart';
+import '../../data/models/kb_unit.dart';
+import '../widgets/enable_unit_switch.dart';
 
 class UnitsListView extends StatelessWidget {
-  const UnitsListView({super.key});
+  final List<Unit> units;
+
+  const UnitsListView({super.key, required this.units});
+
+  String _formatSize(int sizeInBytes) {
+    final sizeInMB = sizeInBytes / (1024 * 1024);
+    return '${sizeInMB.toStringAsFixed(1)}MB';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> unitItems = [
-      {
-        'icon': Icons.folder,
-        'name': 'Unit 1',
-        'source': 'Local File',
-        'size': '500KB',
-        'createTime': '2023-10-01',
-        'latestUpdate': '2023-10-01'
-      },
-      {
-        'icon': Icons.folder,
-        'name': 'Unit 2',
-        'source': 'Local File',
-        'size': '1.2MB',
-        'createTime': '2023-09-25',
-        'latestUpdate': '2023-09-25'
-      },
-      {
-        'icon': Icons.folder,
-        'name': 'Unit 3',
-        'source': 'Local File',
-        'size': '750KB',
-        'createTime': '2023-09-20',
-        'latestUpdate': '2023-09-20'
-      },
-      // Add more items here
-    ];
-
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: unitItems.length,
+      itemCount: units.length,
       itemBuilder: (context, index) {
+        final unit = units[index];
         return ListTile(
           leading: Container(
             padding: const EdgeInsets.all(8.0),
@@ -48,16 +28,17 @@ class UnitsListView extends StatelessWidget {
               shape: BoxShape.rectangle,
               borderRadius: BorderRadius.all(Radius.circular(10.0)),
             ),
-            child: Icon(
-              unitItems[index]['icon'],
+            child: const Icon(
+              Icons.folder,
               color: Colors.white, // Icon color
             ),
           ),
-          title: Text(unitItems[index]['name']),
+          title: Text(unit.name),
+          subtitle: Text('Source: ${unit.type}'),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              const EnableUnitSwitch(),
+              //const EnableUnitSwitch(),
               IconButton(
                 icon: const Icon(Icons.more_vert),
                 onPressed: () {
@@ -65,7 +46,7 @@ class UnitsListView extends StatelessWidget {
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                        title: Text(unitItems[index]['name']),
+                        title: Text(unit.name),
                         content: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment
@@ -73,22 +54,19 @@ class UnitsListView extends StatelessWidget {
                           children: <Widget>[
                             Align(
                               alignment: Alignment.centerLeft,
-                              child:
-                                  Text('Source: ${unitItems[index]['source']}'),
+                              child: Text('Source: ${unit.type}'),
                             ),
                             Align(
                               alignment: Alignment.centerLeft,
-                              child: Text('Size: ${unitItems[index]['size']}'),
+                              child: Text('Size: ${_formatSize(unit.size)}'),
                             ),
                             Align(
                               alignment: Alignment.centerLeft,
-                              child: Text(
-                                  'Create Time: ${unitItems[index]['createTime']}'),
+                              child: Text('Create Time: ${unit.createdAt}'),
                             ),
                             Align(
                               alignment: Alignment.centerLeft,
-                              child: Text(
-                                  'Latest Update: ${unitItems[index]['latestUpdate']}'),
+                              child: Text('Latest Update: ${unit.updatedAt}'),
                             ),
                           ],
                         ),
@@ -105,12 +83,12 @@ class UnitsListView extends StatelessWidget {
                   );
                 },
               ),
-              IconButton(
-                icon: const Icon(Icons.delete),
-                onPressed: () {
-                  // Handle delete button press
-                },
-              ),
+              // IconButton(
+              //   icon: const Icon(Icons.delete),
+              //   onPressed: () {
+              //     // Handle delete button press
+              //   },
+              // ),
             ],
           ),
         );

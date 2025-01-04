@@ -1,15 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jarvis_application/ui/widgets/app_drawer.dart';
 
+import '../../viewmodels/knowledge_base_viewmodel.dart';
 import '../../widgets/create_kb_button.dart';
 import '../../widgets/knowledge_base_list_view.dart';
 import '../../widgets/search_text_field.dart';
 
-class KnowledgeBase extends StatelessWidget {
+class KnowledgeBase extends ConsumerStatefulWidget {
   const KnowledgeBase({super.key});
 
   @override
+  _KnowledgeBaseState createState() => _KnowledgeBaseState();
+}
+
+class _KnowledgeBaseState extends ConsumerState<KnowledgeBase> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch knowledge bases when the widget is initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(kbViewModelProvider.notifier).init();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final kbState = ref.watch(kbViewModelProvider);
+
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -34,18 +52,27 @@ class KnowledgeBase extends StatelessWidget {
             children: <Widget>[
               Container(
                 margin: const EdgeInsets.all(16.0),
-                child: const Row(
+                child: Row(
                   children: <Widget>[
                     Expanded(
-                        child: SearchTextField(
-                      id: 'searchKb',
-                    )),
-                    SizedBox(width: 16.0),
-                    CreateKBButton(),
+                      child: SearchTextField(
+                        id: 'searchKb',
+                        onChange: (query) {
+                          ref
+                              .read(kbViewModelProvider.notifier)
+                              .changeSearchQuery(query);
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 16.0),
+                    const CreateKBButton(),
                   ],
                 ),
               ),
-              const KnowledgeBaseListView(),
+              kbState.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : KnowledgeBaseListView(
+                      knowledgeBases: kbState.filteredKnowledgeBases),
             ],
           ),
         ),

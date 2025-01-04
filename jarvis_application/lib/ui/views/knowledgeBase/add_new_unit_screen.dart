@@ -7,7 +7,9 @@ import 'units/slack_screen.dart';
 import 'units/website_screen.dart';
 
 class AddNewUnit extends StatefulWidget {
-  const AddNewUnit({super.key});
+  final String knowledgeBaseId;
+
+  const AddNewUnit({super.key, required this.knowledgeBaseId});
 
   @override
   _AddNewUnitState createState() => _AddNewUnitState();
@@ -28,11 +30,6 @@ class _AddNewUnitState extends State<AddNewUnit> {
       'description': 'Connect Website to get data'
     },
     {
-      'icon': 'assets/google_drive.png', // Path to the image asset
-      'name': 'Google Drive',
-      'description': 'Connect Google Drive to get data'
-    },
-    {
       'icon': 'assets/slack.png', // Path to the image asset
       'name': 'Slack',
       'description': 'Connect Slack to get data'
@@ -49,31 +46,33 @@ class _AddNewUnitState extends State<AddNewUnit> {
       case 0:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const LocalFilesScreen()),
+          MaterialPageRoute(
+              builder: (context) =>
+                  LocalFilesScreen(knowledgeBaseId: widget.knowledgeBaseId)),
         );
         break;
       case 1:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const WebsiteScreen()),
+          MaterialPageRoute(
+              builder: (context) =>
+                  WebsiteScreen(knowledgeBaseId: widget.knowledgeBaseId)),
         );
         break;
       case 2:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const GoogleDriveScreen()),
+          MaterialPageRoute(
+              builder: (context) =>
+                  SlackScreen(knowledgeBaseId: widget.knowledgeBaseId)),
         );
         break;
       case 3:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const SlackScreen()),
-        );
-        break;
-      case 4:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ConfluenceScreen()),
+          MaterialPageRoute(
+              builder: (context) =>
+                  ConfluenceScreen(knowledgeBaseId: widget.knowledgeBaseId)),
         );
         break;
     }

@@ -1,5 +1,6 @@
 /// KnowledgeResDto Model
 class KnowledgeResDto {
+  final String id;
   final DateTime createdAt;
   final String? createdBy;
   final String description;
@@ -7,8 +8,12 @@ class KnowledgeResDto {
   final DateTime? updatedAt;
   final String? updatedBy;
   final String userId;
+  final DateTime? deletedAt;
+  final int numUnits;
+  final int totalSize;
 
   KnowledgeResDto({
+    required this.id,
     required this.createdAt,
     this.createdBy,
     required this.description,
@@ -16,9 +21,13 @@ class KnowledgeResDto {
     this.updatedAt,
     this.updatedBy,
     required this.userId,
+    this.deletedAt,
+    required this.numUnits,
+    required this.totalSize,
   });
 
   KnowledgeResDto copyWith({
+    String? id,
     DateTime? createdAt,
     String? createdBy,
     String? description,
@@ -26,8 +35,12 @@ class KnowledgeResDto {
     DateTime? updatedAt,
     String? updatedBy,
     String? userId,
+    DateTime? deletedAt,
+    int? numUnits,
+    int? totalSize,
   }) {
     return KnowledgeResDto(
+      id: id ?? this.id,
       createdAt: createdAt ?? this.createdAt,
       createdBy: createdBy ?? this.createdBy,
       description: description ?? this.description,
@@ -35,11 +48,15 @@ class KnowledgeResDto {
       updatedAt: updatedAt ?? this.updatedAt,
       updatedBy: updatedBy ?? this.updatedBy,
       userId: userId ?? this.userId,
+      deletedAt: deletedAt ?? this.deletedAt,
+      numUnits: numUnits ?? this.numUnits,
+      totalSize: totalSize ?? this.totalSize,
     );
   }
 
   factory KnowledgeResDto.fromJson(Map<String, dynamic> json) {
     return KnowledgeResDto(
+      id: json['id'] ?? '',
       createdAt: DateTime.parse(json['createdAt']),
       createdBy: json['createdBy'],
       description: json['description'] ?? '',
@@ -48,11 +65,16 @@ class KnowledgeResDto {
           json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
       updatedBy: json['updatedBy'],
       userId: json['userId'] ?? '',
+      deletedAt:
+          json['deletedAt'] != null ? DateTime.parse(json['deletedAt']) : null,
+      numUnits: json['numUnits'] ?? 0,
+      totalSize: json['totalSize'] ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'createdAt': createdAt.toIso8601String(),
       'createdBy': createdBy,
       'description': description,
@@ -60,12 +82,15 @@ class KnowledgeResDto {
       'updatedAt': updatedAt?.toIso8601String(),
       'updatedBy': updatedBy,
       'userId': userId,
+      'deletedAt': deletedAt?.toIso8601String(),
+      'numUnits': numUnits,
+      'totalSize': totalSize,
     };
   }
 
   @override
   String toString() {
-    return 'KnowledgeResDto{createdAt: $createdAt, createdBy: $createdBy, description: $description, knowledgeName: $knowledgeName, updatedAt: $updatedAt, updatedBy: $updatedBy, userId: $userId}';
+    return 'KnowledgeResDto{id: $id, createdAt: $createdAt, createdBy: $createdBy, description: $description, knowledgeName: $knowledgeName, updatedAt: $updatedAt, updatedBy: $updatedBy, userId: $userId, deletedAt: $deletedAt, numUnits: $numUnits, totalSize: $totalSize}';
   }
 }
 

@@ -265,10 +265,11 @@ Future<void> showPromptInfoDialog({
   });
 }
 
-Future<void> showModalBottomSheetPrompts({
+Future<void> showPromptMenu({
   required BuildContext context,
   required WidgetRef ref,
   required void Function(Prompt prompt) onPromptSelected,
+  required Offset position,
 }) async {
   final promptNotifier = ref.read(promptViewModelProvider.notifier);
   await promptNotifier.fetchPublicPrompts();
@@ -277,23 +278,34 @@ Future<void> showModalBottomSheetPrompts({
 
   final prompts = ref.read(promptViewModelProvider).publicPrompts;
 
-  showModalBottomSheet(
+  final selectedPrompt = await showMenu<Prompt>(
     context: context,
-    builder: (context) {
-      return SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: prompts.map((prompt) {
-            return ListTile(
-              title: Text(prompt.title),
-              onTap: () {
-                Navigator.pop(context);
-                onPromptSelected(prompt);
-              },
-            );
-          }).toList(),
+    position: RelativeRect.fromLTRB(
+        position.dx, position.dy, position.dx, position.dy),
+    items: [
+      PopupMenuItem<Prompt>(
+        enabled: false,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: 200), // Limit the height
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: prompts.map((prompt) {
+                return ListTile(
+                  title: Text(prompt.title),
+                  onTap: () {
+                    Navigator.pop(context, prompt);
+                  },
+                );
+              }).toList(),
+            ),
+          ),
         ),
-      );
-    },
+      ),
+    ],
   );
+
+  if (selectedPrompt != null) {
+    onPromptSelected(selectedPrompt);
+  }
 }
