@@ -34,6 +34,8 @@ class PromptService {
     String? category,
     String? query,
     bool? isPublic,
+    int limit = 20,
+    int offset = 0,
   }) async {
     try {
       final response = await _dio.get(
@@ -42,6 +44,8 @@ class PromptService {
           if (category != null) 'category': category,
           if (query != null) 'query': query,
           if (isPublic != null) 'isPublic': isPublic,
+          'limit': limit,
+          'offset': offset,
         },
       );
 

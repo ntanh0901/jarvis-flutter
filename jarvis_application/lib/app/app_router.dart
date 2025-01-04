@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:jarvis_application/data/models/prompt.dart';
 import 'package:jarvis_application/ui/views/auth/forget_password_page.dart';
 import 'package:jarvis_application/ui/views/auth/signin_page.dart';
 import 'package:jarvis_application/ui/views/auth/signup_page.dart';
@@ -37,8 +38,11 @@ class AppRouter {
       ),
       GoRoute(
         path: '/chat',
-        builder: (context, state) => const ChatPage(),
         name: 'Chat',
+        builder: (context, state) {
+          final prompt = state.extra as Prompt?; // cast from state.extra
+          return ChatPage(initialPrompt: prompt);
+        },
       ),
       GoRoute(
         path: '/bot-list',

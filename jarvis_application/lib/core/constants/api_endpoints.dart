@@ -26,4 +26,13 @@ class ApiEndpoints {
 
   // Knowledge Base
   static const String kbSignIn = "/kb-core/v1/auth/external-sign-in";
+  static const String createKB = "/kb-core/v1/knowledge";
+  static const String getKB = "/kb-core/v1/knowledge";
+  static const String updateKB = "/kb-core/v1/knowledge/{id}";
+  static const String deleteKB = "/kb-core/v1/knowledge/{id}";
+  static const String getKBUnits = "/kb-core/v1/knowledge/{id}/units";
+  static const String localFile = "/kb-core/v1/knowledge/{id}/local-file";
+  static const String website = "/kb-core/v1/knowledge/{id}/web";
+  static const String slack = "/kb-core/v1/knowledge/{id}/slack";
+  static const String confluence = "/kb-core/v1/knowledge/{id}/confluence";
 }

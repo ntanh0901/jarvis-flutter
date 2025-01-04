@@ -59,12 +59,16 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
     ]);
   }
 
-  Future<void> fetchMyPrompts() async {
+  Future<void> fetchMyPrompts({int limit = 20, int offset = 0}) async {
     try {
-      final privatePrompts = await _promptService.getPrompts(isPublic: false);
-      final favoritePrompts = await _promptService.getPrompts(isPublic: true);
+      final privatePrompts = await _promptService.getPrompts(
+          isPublic: false, limit: limit, offset: offset);
+      final favoritePrompts = await _promptService.getPrompts(
+          isPublic: true, limit: limit, offset: offset);
+      if (!mounted) return;
       state = state.copyWith(
         myPrompts: [
+          ...state.myPrompts,
           ...privatePrompts,
           ...favoritePrompts.where((prompt) => prompt.isFavorite == true),
         ],
@@ -74,23 +78,47 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
     }
   }
 
-  Future<void> fetchPublicPrompts() async {
+  Future<void> fetchPublicPrompts({int limit = 20, int offset = 0}) async {
     try {
-      final fetchedPrompts = await _promptService.getPrompts(isPublic: true);
+      final fetchedPrompts = await _promptService.getPrompts(
+          isPublic: true, limit: limit, offset: offset);
       final fetchedCategories = fetchedPrompts
           .map((prompt) => prompt.category)
           .whereType<String>()
           .toSet()
           .toList();
+
+      // Update categories only if there are new categories
+      final newCategories = fetchedCategories
+          .where((category) => !state.categories.contains(category))
+          .toList();
+      final updatedCategories = state.categories.contains('All')
+          ? [...state.categories, ...newCategories]
+          : ['All', ...state.categories, ...newCategories];
+
+      if (!mounted) return;
       state = state.copyWith(
-        publicPrompts: fetchedPrompts,
-        filteredPrompts: fetchedPrompts,
-        categories: ['All', ...fetchedCategories],
-        selectedCategories: ['All'],
+        publicPrompts: [
+          ...state.publicPrompts,
+          ...fetchedPrompts,
+        ],
+        filteredPrompts: [
+          ...state.filteredPrompts,
+          ...fetchedPrompts,
+        ],
+        categories: updatedCategories,
         isLoading: false,
       );
     } catch (e) {
       print('Error fetching public prompts: $e');
+    }
+  }
+
+  Future<void> loadMorePrompts() async {
+    if (state.isMyPromptSelected) {
+      await fetchMyPrompts(limit: 20, offset: state.myPrompts.length);
+    } else {
+      await fetchPublicPrompts(limit: 20, offset: state.publicPrompts.length);
     }
   }
 
@@ -110,21 +138,44 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
   Future<void> toggleFavorite(Prompt prompt) async {
     try {
       final newFavoriteStatus = !(prompt.isFavorite ?? false);
+
       if (newFavoriteStatus) {
         await _promptService.favoritePrompt(prompt.id);
       } else {
         await _promptService.unfavoritePrompt(prompt.id);
       }
 
+      // Update local prompt object
       prompt.isFavorite = newFavoriteStatus;
-      await refreshPrompts();
 
+      // 1) Update myPrompts in memory
+      //    - Add prompt if it is now a favorite and isPublic == true
+      //    - Remove prompt from myPrompts if it’s no longer a favorite
+      final updatedMyPrompts = [...state.myPrompts];
+      if (newFavoriteStatus && !updatedMyPrompts.contains(prompt)) {
+        updatedMyPrompts.add(prompt);
+      } else if (!newFavoriteStatus && updatedMyPrompts.contains(prompt)) {
+        updatedMyPrompts.remove(prompt);
+      }
+
+      // 2) Update publicPrompts in memory
+      final updatedPublicPrompts = [...state.publicPrompts];
+      final publicIndex =
+          updatedPublicPrompts.indexWhere((p) => p.id == prompt.id);
+      if (publicIndex != -1) {
+        updatedPublicPrompts[publicIndex] = prompt;
+      }
+
+      // 3) Write back to state: you can also update filteredPrompts if necessary
       state = state.copyWith(
-        myPrompts: [...state.myPrompts],
-        publicPrompts: [...state.publicPrompts],
+        myPrompts: updatedMyPrompts,
+        publicPrompts: updatedPublicPrompts,
       );
+
+      // 4) Filter again if needed
+      filterPrompts();
     } catch (e) {
-      print('Error favoriting prompt: $e');
+      print('Error toggling favorite: $e');
     }
   }
 
@@ -140,6 +191,7 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
       prompt.title = newTitle;
       prompt.content = newContent;
 
+      if (!mounted) return;
       state = state.copyWith(
         publicPrompts: [...state.publicPrompts],
         myPrompts: [...state.myPrompts],
@@ -161,7 +213,8 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
               false);
     }
 
-    if (state.selectedCategories.contains('All')) {
+    if (state.selectedCategories.isEmpty ||
+        state.selectedCategories.contains('All')) {
       state = state.copyWith(
         filteredPrompts: state.publicPrompts.where(matchesQuery).toList(),
       );
@@ -193,6 +246,10 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
       }
     }
 
+    if (updatedCategories.isEmpty) {
+      updatedCategories.add('All');
+    }
+
     state = state.copyWith(selectedCategories: updatedCategories);
     filterPrompts();
   }
@@ -213,8 +270,7 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
 }
 
 final promptViewModelProvider =
-    StateNotifierProvider.autoDispose<PromptNotifier, PromptLibraryState>(
-        (ref) {
+    StateNotifierProvider<PromptNotifier, PromptLibraryState>((ref) {
   final promptService = ref.watch(promptServiceProvider);
   return PromptNotifier(promptService);
 });

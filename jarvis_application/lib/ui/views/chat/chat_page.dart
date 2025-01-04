@@ -4,6 +4,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:jarvis_application/core/constants/api_endpoints.dart';
+import 'package:jarvis_application/data/models/prompt.dart';
 import 'package:jarvis_application/widgets/chat/greeting_text.dart';
 import 'package:screenshot/screenshot.dart';
 
@@ -22,11 +23,14 @@ import '../../../widgets/chat/logo_widget.dart';
 import '../../../widgets/chat/upload_dialog.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/scroll_arrows.dart';
+import '../prompts/prompt_dialog.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
   static const String routeName = '/chat';
 
-  const ChatPage({super.key});
+  final Prompt? initialPrompt;
+
+  const ChatPage({Key? key, this.initialPrompt}) : super(key: key);
 
   @override
   ConsumerState<ChatPage> createState() => _ChatPageState();
@@ -71,6 +75,28 @@ class _ChatPageState extends ConsumerState<ChatPage>
   @override
   void initState() {
     super.initState();
+    if (widget.initialPrompt != null) {
+      messageController.text = widget.initialPrompt!.content;
+    }
+
+    // Listen for '/' to display prompt selection
+    messageController.addListener(() {
+      final text = messageController.text;
+      if (text.endsWith('/')) {
+        showModalBottomSheetPrompts(
+          context: context,
+          ref: ref,
+          onPromptSelected: (prompt) {
+            _showPromptInfoDialog(prompt);
+          },
+        );
+      }
+    });
+
+    // If there's an initial prompt...
+    if (widget.initialPrompt != null) {
+      messageController.text = widget.initialPrompt!.content;
+    }
     WidgetsBinding.instance.addObserver(this);
     selectedAssistant =
         Assistant.assistants.isNotEmpty ? Assistant.assistants.first : null;
@@ -93,6 +119,19 @@ class _ChatPageState extends ConsumerState<ChatPage>
     messageController.dispose();
     messageFocusNode.dispose();
     super.dispose();
+  }
+
+  void _showPromptInfoDialog(Prompt prompt) {
+    showPromptInfoDialog(
+      context: context,
+      prompt: prompt,
+      ref: ref,
+      onUsePrompt: (content) {
+        setState(() {
+          messageController.text = content;
+        });
+      },
+    );
   }
 
   void _initializeUsage() async {

@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:jarvis_application/ui/views/chat/chat_page.dart';
 import 'package:jarvis_application/ui/widgets/create_prompt_button.dart';
 import 'package:jarvis_application/ui/widgets/search_text_field.dart';
 
@@ -10,6 +12,7 @@ import '../../viewmodels/prompt_library_viewmodel.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/chips_widget.dart';
 import '../../widgets/segment_toggle_button.dart';
+import 'prompt_dialog.dart';
 
 class PromptLibrary extends ConsumerStatefulWidget {
   const PromptLibrary({super.key});
@@ -19,47 +22,64 @@ class PromptLibrary extends ConsumerStatefulWidget {
 }
 
 class PromptLibraryState extends ConsumerState<PromptLibrary> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     ref.read(promptViewModelProvider.notifier).init();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
+      ref.read(promptViewModelProvider.notifier).loadMorePrompts();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(promptViewModelProvider);
     final viewModel = ref.watch(promptViewModelProvider.notifier);
-    final prompts = ref.watch(promptViewModelProvider).isMyPromptSelected
-        ? state.myPrompts
-        : state.filteredPrompts;
+    final prompts =
+        state.isMyPromptSelected ? state.myPrompts : state.filteredPrompts;
 
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-            surfaceTintColor: Colors.transparent,
-            backgroundColor: Colors.white,
-            title: const Text(
-              'Prompt Library',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
+          surfaceTintColor: Colors.transparent,
+          backgroundColor: Colors.white,
+          title: const Text(
+            'Prompt Library',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: CreatePromptButton(
+                onPromptCreated: viewModel.refreshPrompts,
               ),
             ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: CreatePromptButton(
-                  onPromptCreated: viewModel.refreshPrompts,
-                ),
-              ),
-            ],
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(1),
-              child: Divider(
-                color: Colors.grey[200],
-                height: 1,
-              ),
-            )),
+          ],
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Divider(
+              color: Colors.grey[200],
+              height: 1,
+            ),
+          ),
+        ),
         drawer: const AppDrawer(),
         body: Padding(
           padding: const EdgeInsets.all(8.0),
@@ -68,21 +88,22 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
-                    child: SegmentToggleButton(
-                      initialSegment: state.isMyPromptSelected
-                          ? 'my_prompt'
-                          : 'public_prompt',
-                      segments: const {
-                        'my_prompt': 'My Prompt',
-                        'public_prompt': 'Public Prompt',
-                      },
-                      onSegmentChanged: (selectedSegment) {
-                        ref
-                            .read(promptViewModelProvider.notifier)
-                            .togglePromptSelection();
-                      },
-                    )),
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: SegmentToggleButton(
+                    initialSegment: state.isMyPromptSelected
+                        ? 'my_prompt'
+                        : 'public_prompt',
+                    segments: const {
+                      'my_prompt': 'My Prompt',
+                      'public_prompt': 'Public Prompt',
+                    },
+                    onSegmentChanged: (selectedSegment) {
+                      ref
+                          .read(promptViewModelProvider.notifier)
+                          .togglePromptSelection();
+                    },
+                  ),
+                ),
               ),
               const SizedBox(height: 16.0),
               if (!state.isMyPromptSelected) ...[
@@ -107,25 +128,29 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                 child: state.isLoading
                     ? const Center(
                         child: SizedBox(
-                        width: 30,
-                        height: 30,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 3,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.blue),
-                          backgroundColor: Colors.grey, // Background color
+                          width: 30,
+                          height: 30,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.blue),
+                            backgroundColor: Colors.grey, // Background color
+                          ),
                         ),
-                      ))
+                      )
                     : ListView.separated(
+                        controller: _scrollController,
                         itemCount: prompts.length,
                         itemBuilder: (context, index) {
                           final prompt = prompts[index];
                           return ListTile(
                             key: ValueKey(prompt.id),
-                            title: Text(prompt.title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                )),
+                            title: Text(
+                              prompt.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             subtitle: state.isMyPromptSelected
                                 ? null
                                 : Text(
@@ -190,7 +215,7 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                                     icon: const Icon(Icons.info_outline,
                                         size: 20, color: Color(0xff697079)),
                                     onPressed: () {
-                                      showPromptInfoDialog(prompt);
+                                      showPromptInfoDialogWrapper(prompt);
                                     },
                                   ),
                                 ]
@@ -371,200 +396,11 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
     );
   }
 
-  void showPromptInfoDialog(Prompt prompt) {
-    final ScrollController scrollController = ScrollController();
-    double verticalPadding = 16.0;
-
-    showDialog(
+  void showPromptInfoDialogWrapper(Prompt prompt) {
+    showPromptInfoDialog(
       context: context,
-      builder: (BuildContext context) {
-        final maxDialogHeight = MediaQuery.of(context).size.height * 0.5;
-        final minDialogWidth = MediaQuery.of(context).size.width * 0.7;
-
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          contentPadding: const EdgeInsets.all(16.0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-          content: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: maxDialogHeight,
-              minWidth: minDialogWidth,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        prompt.title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20.0,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          style: const ButtonStyle(
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                          icon: Icon(
-                            (prompt.isFavorite ?? false)
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            color: (prompt.isFavorite ?? false)
-                                ? Colors.red
-                                : Colors.grey,
-                            size: 20,
-                          ),
-                          onPressed: () async {
-                            await ref
-                                .read(promptViewModelProvider.notifier)
-                                .toggleFavorite(prompt);
-                            (context as Element).markNeedsBuild();
-                          },
-                        ),
-                        const SizedBox(width: 15.0),
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          style: const ButtonStyle(
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                          icon: const Icon(Icons.close,
-                              color: Colors.grey, size: 20),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16.0),
-                ListBody(
-                  children: <Widget>[
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          const TextSpan(
-                            text: 'Description: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(text: prompt.description ?? 'N/A'),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8.0),
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          const TextSpan(
-                            text: 'Category: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(text: prompt.category ?? 'N/A'),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8.0),
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          const TextSpan(
-                            text: 'Language: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(text: prompt.language ?? 'N/A'),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Content:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.content_copy,
-                        size: 15,
-                        color: Color(0xff697079),
-                      ),
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: prompt.content));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Content copied to clipboard')),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                Flexible(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16.0),
-                      color: const Color(0xffF1F2F3),
-                    ),
-                    child: SingleChildScrollView(
-                      controller: scrollController,
-                      padding: EdgeInsets.symmetric(
-                        vertical: verticalPadding,
-                        horizontal: 16.0,
-                      ),
-                      child: Text(
-                        prompt.content,
-                        softWrap: true,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton.icon(
-              style: TextButton.styleFrom(
-                backgroundColor: const Color(0xFF6841EA),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.0),
-                ),
-              ),
-              icon: const Icon(
-                CupertinoIcons.conversation_bubble,
-                color: Colors.white,
-                size: 20.0,
-              ),
-              label: const Text(
-                'Use Prompt',
-                style: TextStyle(color: Colors.white),
-              ),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            )
-          ],
-        );
-      },
+      prompt: prompt,
+      ref: ref,
     );
-
-    scrollController.addListener(() {
-      verticalPadding = scrollController.offset > 0 ? 0.0 : 16.0;
-    });
   }
 }
