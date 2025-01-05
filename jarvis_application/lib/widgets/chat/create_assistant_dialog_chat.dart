@@ -1,9 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/bot/ai_assistant.dart';
+import '../../providers/dio_provider.dart';
 import '../../ui/views/aiBots/bot_chat_page.dart';
 
 class CreateAssistantDialogChat extends ConsumerStatefulWidget {
@@ -15,13 +14,13 @@ class CreateAssistantDialogChat extends ConsumerStatefulWidget {
       onUpdate;
 
   const CreateAssistantDialogChat({
-    Key? key,
+    super.key,
     required this.title,
     this.initialName,
     this.initialInstructions,
     this.initialDescription,
     this.onUpdate,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<CreateAssistantDialogChat> createState() =>
@@ -33,41 +32,36 @@ class _CreateAssistantDialogChatState
   late final TextEditingController _nameController;
   late final TextEditingController _instructionsController;
   late final TextEditingController _descriptionController;
-  final String baseUrl = 'https://knowledge-api.jarvis.cx';
-  final String apiToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY4YzA4ZDNmLTIyMzEtNDE5Ni04ZTVmLTEzZDgwNjRlOWNkMSIsImVtYWlsIjoicXVhbmd0aGllbjEyMzRAZ21haWwuY29tIiwiaWF0IjoxNzM1NTE2ODE4LCJleHAiOjE3MzU2MDMyMTh9.kjYVBDGL6rv6zzV5oUFQpQptSfpayKTmyUPo6X1Xsis';
 
   AIAssistant? currentAssistant;
 
   @override
   void initState() {
     super.initState();
-
-    _nameController = TextEditingController();
-    _instructionsController = TextEditingController();
-    _descriptionController = TextEditingController();
+    _nameController = TextEditingController(text: widget.initialName);
+    _instructionsController =
+        TextEditingController(text: widget.initialInstructions);
+    _descriptionController =
+        TextEditingController(text: widget.initialDescription);
   }
 
-  Future<void> createAIAssistant(String name, String instructions, String description) async {
+  Future<void> createAIAssistant(
+      String name, String instructions, String description) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/kb-core/v1/ai-assistant'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiToken',
-        },
-        body: jsonEncode({
+      final dioKB = ref.read(dioKBProvider);
+
+      final response = await dioKB.dio.post(
+        '/kb-core/v1/ai-assistant',
+        data: {
           'assistantName': name,
           'instructions': instructions,
           'description': description,
-        }),
+        },
       );
 
       if (response.statusCode == 201) {
-        // Parse response JSON và tạo instance của AIAssistant
-        final Map<String, dynamic> responseData = jsonDecode(response.body);
-        currentAssistant = AIAssistant.fromJson(responseData);
+        currentAssistant = AIAssistant.fromJson(response.data);
 
-        // Chuyển tới BotChatPage
         if (currentAssistant != null) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
@@ -80,7 +74,9 @@ class _CreateAssistantDialogChatState
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create assistant: ${response.statusCode}')),
+          SnackBar(
+              content:
+                  Text('Failed to create assistant: ${response.statusCode}')),
         );
       }
     } catch (e) {
@@ -105,7 +101,15 @@ class _CreateAssistantDialogChatState
     await createAIAssistant(name, instructions, description);
   }
 
-  Future<void> _updateAssistant() async {}
+  Future<void> _updateAssistant() async {
+    if (widget.onUpdate != null) {
+      widget.onUpdate!(
+        _nameController.text.trim(),
+        _instructionsController.text.trim(),
+        _descriptionController.text.trim(),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -160,5 +164,13 @@ class _CreateAssistantDialogChatState
         ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _instructionsController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
   }
 }

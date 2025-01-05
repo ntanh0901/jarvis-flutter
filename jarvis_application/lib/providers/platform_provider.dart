@@ -1,81 +1,66 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../data/models/bot/publish_bot/platform.dart';
 import '../data/models/bot/publish_bot/request/req_messenger_publish.dart';
 import '../data/models/bot/publish_bot/request/req_slack_publish.dart';
 import '../data/models/bot/publish_bot/request/req_telegram_publish.dart';
+import 'dio_provider.dart';
+
+final platformProvider = ChangeNotifierProvider((ref) => PlatformProvider(ref));
 
 class PlatformProvider with ChangeNotifier {
+  final Ref _ref;
+
+  PlatformProvider(this._ref);
+
   final List<Platform> _platforms = [
     Platform(name: "Slack", icon: 'assets/slack.png', status: false),
-    Platform(name: "Telegram", icon: 'assets/images/telegram.png', status: false),
-    Platform(name: "Messenger", icon: 'assets/images/messenger.png', status: false),
+    Platform(
+        name: "Telegram", icon: 'assets/images/telegram.png', status: false),
+    Platform(
+        name: "Messenger", icon: 'assets/images/messenger.png', status: false),
   ];
-
-  final String baseUrl = 'https://knowledge-api.jarvis.cx';
-  final String apiToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY4YzA4ZDNmLTIyMzEtNDE5Ni04ZTVmLTEzZDgwNjRlOWNkMSIsImVtYWlsIjoicXVhbmd0aGllbjEyMzRAZ21haWwuY29tIiwiaWF0IjoxNzM1NTE2ODE4LCJleHAiOjE3MzU2MDMyMTh9.kjYVBDGL6rv6zzV5oUFQpQptSfpayKTmyUPo6X1Xsis';
 
   List<Platform> get platforms => _platforms;
 
-  // Add these variables to hold metadata for each platform.
   ReqTelegramPublish? telegramConfig;
   ReqSlackPublish? slackConfig;
   ReqMessengerPublish? messengerConfig;
 
-  // Cập nhật trạng thái của một platform
   void updateStatus(String platformName, bool newStatus) {
-    final index = _platforms.indexWhere((platform) => platform.name == platformName);
+    final index =
+        _platforms.indexWhere((platform) => platform.name == platformName);
     if (index != -1) {
       _platforms[index].status = newStatus;
       notifyListeners();
     }
   }
 
-  // Gửi yêu cầu xác thực Telegram Bot
   Future<void> verifyTelegramBot(String botToken, BuildContext context) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/kb-core/v1/bot-integration/telegram/validation'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiToken',
-        },
-        body: jsonEncode({
-          'botToken': botToken,
-        }),
+      final dioKB = _ref.read(dioKBProvider);
+      final response = await dioKB.dio.post(
+        '/kb-core/v1/bot-integration/telegram/validation',
+        data: {'botToken': botToken},
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final isSuccessful = data['ok'] ?? false;
+      final isSuccessful = response.data['ok'] ?? false;
 
-        if (isSuccessful) {
-          updateStatus('Telegram', true);
-
-          if(telegramConfig == null) {
-            telegramConfig = ReqTelegramPublish(
-              botToken: botToken,
-            );
-          }
-          else {
-            telegramConfig!.setAll(botToken);
-
-          }
-
-          print('Telegram ggggggggggggggggggggggggggg: ${telegramConfig?.toJson()}');
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Telegram Bot verified successfully!')),
-          );
+      if (isSuccessful) {
+        updateStatus('Telegram', true);
+        if (telegramConfig == null) {
+          telegramConfig = ReqTelegramPublish(botToken: botToken);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Verification failed. Invalid Bot.')),
-          );
+          telegramConfig!.setAll(botToken);
         }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Telegram Bot verified successfully!')),
+        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${response.statusCode}. ${response.body}')),
+          const SnackBar(content: Text('Verification failed. Invalid Bot.')),
         );
       }
     } catch (e) {
@@ -85,7 +70,6 @@ class PlatformProvider with ChangeNotifier {
     }
   }
 
-  // Gửi yêu cầu xác thực Messenger Bot
   Future<void> verifyMessengerBot({
     required String botToken,
     required String pageId,
@@ -93,44 +77,30 @@ class PlatformProvider with ChangeNotifier {
     required BuildContext context,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/kb-core/v1/bot-integration/messenger/validation'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiToken',
-        },
-        body: jsonEncode({
+      final dioKB = _ref.read(dioKBProvider);
+      await dioKB.dio.post(
+        '/kb-core/v1/bot-integration/messenger/validation',
+        data: {
           'botToken': botToken,
           'pageId': pageId,
           'appSecret': appSecret,
-        }),
+        },
       );
 
-      if (response.statusCode == 200) {
-
-          updateStatus('Messenger', true);
-          if (messengerConfig == null) {
-            messengerConfig = ReqMessengerPublish(
-              botToken: botToken,
-              pageId: pageId,
-              appSecret: appSecret,
-            );
-          } else {
-            messengerConfig!.setAll(
-              botToken, pageId, appSecret,
-            );
-          }
-
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Messenger Bot configured successfully!')),
-          );
-
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: Configuration failed ${response.statusCode}. ${response.body}')),
+      updateStatus('Messenger', true);
+      if (messengerConfig == null) {
+        messengerConfig = ReqMessengerPublish(
+          botToken: botToken,
+          pageId: pageId,
+          appSecret: appSecret,
         );
+      } else {
+        messengerConfig!.setAll(botToken, pageId, appSecret);
       }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Messenger Bot configured successfully!')),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
@@ -138,8 +108,6 @@ class PlatformProvider with ChangeNotifier {
     }
   }
 
-
-  // Gửi yêu cầu xác thực Slack Bot
   Future<void> verifySlackBot({
     required String botToken,
     required String clientId,
@@ -148,40 +116,29 @@ class PlatformProvider with ChangeNotifier {
     required BuildContext context,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/kb-core/v1/bot-integration/slack/validation'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiToken',
-        },
-        body: jsonEncode(ReqSlackPublish(
-          botToken: botToken,
-          clientId: clientId,
-          clientSecret: clientSecret,
-          signingSecret: signingSecret,
-        ).toJson()),
+      final dioKB = _ref.read(dioKBProvider);
+      final slackData = ReqSlackPublish(
+        botToken: botToken,
+        clientId: clientId,
+        clientSecret: clientSecret,
+        signingSecret: signingSecret,
       );
 
-      if (response.statusCode == 200) {
-        updateStatus('Slack', true);
-        if (slackConfig == null) {
-          slackConfig = ReqSlackPublish(
-            botToken: botToken,
-            clientId: clientId,
-            clientSecret: clientSecret,
-            signingSecret: signingSecret,
-          );
-        } else {
-          slackConfig!.setAll(botToken, clientId, clientSecret, signingSecret,
-          );
-        }        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Slack Bot configured successfully!')),
-        );
+      await dioKB.dio.post(
+        '/kb-core/v1/bot-integration/slack/validation',
+        data: slackData.toJson(),
+      );
+
+      updateStatus('Slack', true);
+      if (slackConfig == null) {
+        slackConfig = slackData;
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${response.statusCode}. ${response.body}')),
-        );
+        slackConfig!.setAll(botToken, clientId, clientSecret, signingSecret);
       }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Slack Bot configured successfully!')),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
@@ -191,65 +148,48 @@ class PlatformProvider with ChangeNotifier {
 
   Future<void> fetchPlatformConfigurations(String assistantId) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/kb-core/v1/bot-integration/$assistantId/configurations'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiToken',
-        },
+      final dioKB = _ref.read(dioKBProvider);
+      final response = await dioKB.dio.get(
+        '/kb-core/v1/bot-integration/$assistantId/configurations',
       );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
+      final List<dynamic> data = response.data;
 
-        for (var platformConfig in data) {
-          final type = platformConfig['type'];
-          final metadata = platformConfig['metadata'];
+      for (var platformConfig in data) {
+        final type = platformConfig['type'];
+        final metadata = platformConfig['metadata'];
 
-          if (type == 'telegram' && metadata != null) {
-            updateStatus('Telegram', true);
-            telegramConfig = ReqTelegramPublish.fromJson(metadata);
-          } else if (type == 'slack' && metadata != null) {
-            updateStatus('Slack', true);
-            slackConfig = ReqSlackPublish.fromJson(metadata);
-          } else if (type == 'messenger' && metadata != null) {
-            updateStatus('Messenger', true);
-            messengerConfig = ReqMessengerPublish.fromJson(metadata);
-          }
+        if (type == 'telegram' && metadata != null) {
+          updateStatus('Telegram', true);
+          telegramConfig = ReqTelegramPublish.fromJson(metadata);
+        } else if (type == 'slack' && metadata != null) {
+          updateStatus('Slack', true);
+          slackConfig = ReqSlackPublish.fromJson(metadata);
+        } else if (type == 'messenger' && metadata != null) {
+          updateStatus('Messenger', true);
+          messengerConfig = ReqMessengerPublish.fromJson(metadata);
         }
-      } else {
-        throw Exception('Failed to fetch platform configurations. Status code: ${response.statusCode}');
       }
     } catch (e) {
       throw Exception('Error fetching platform configurations: $e');
     }
   }
 
-// Publish Telegram Bot
   Future<Map<String, String>> publishTelegramBot({
     required String assistantId,
     required BuildContext context,
   }) async {
-    final url = '$baseUrl/kb-core/v1/bot-integration/telegram/publish/$assistantId';
-
     try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiToken',
-        },
-        body: jsonEncode(telegramConfig?.toJson()),
+      final dioKB = _ref.read(dioKBProvider);
+      final response = await dioKB.dio.post(
+        '/kb-core/v1/bot-integration/telegram/publish/$assistantId',
+        data: telegramConfig?.toJson(),
       );
-      print('Telegram publish requestttttt: ${telegramConfig?.toJson()}');
-      print('Telegram publish responseeeeee: ${response.body}');
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return {'platform': 'Telegram', 'redirect': data['redirect']};
-      } else {
-        throw Exception('Telegram publish failed: ${response.body}');
-      }
+      return {
+        'platform': 'Telegram',
+        'redirect': response.data['redirect'],
+      };
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error publishing Telegram: $e')),
@@ -258,32 +198,21 @@ class PlatformProvider with ChangeNotifier {
     }
   }
 
-  // Publish Slack Bot
   Future<Map<String, String>> publishSlackBot({
     required String assistantId,
     required BuildContext context,
   }) async {
-    final url = '$baseUrl/kb-core/v1/bot-integration/slack/publish/$assistantId';
-
     try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiToken',
-        },
-        body: jsonEncode(slackConfig?.toJson()),
+      final dioKB = _ref.read(dioKBProvider);
+      final response = await dioKB.dio.post(
+        '/kb-core/v1/bot-integration/slack/publish/$assistantId',
+        data: slackConfig?.toJson(),
       );
 
-      print('Slack publish responseeeeee: ${response.body}');
-
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return {'platform': 'Slack', 'redirect': data['redirect']};
-      } else {
-        throw Exception('Slack publish failed: ${response.body}');
-      }
+      return {
+        'platform': 'Slack',
+        'redirect': response.data['redirect'],
+      };
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error publishing Slack: $e')),
@@ -292,32 +221,21 @@ class PlatformProvider with ChangeNotifier {
     }
   }
 
-  // Publish Messenger Bot
   Future<Map<String, String>> publishMessengerBot({
     required String assistantId,
     required BuildContext context,
   }) async {
-    final url = '$baseUrl/kb-core/v1/bot-integration/messenger/publish/$assistantId';
-
     try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiToken',
-        },
-        body: jsonEncode(messengerConfig?.toJson()),
+      final dioKB = _ref.read(dioKBProvider);
+      final response = await dioKB.dio.post(
+        '/kb-core/v1/bot-integration/messenger/publish/$assistantId',
+        data: messengerConfig?.toJson(),
       );
 
-      print('Messenger publish responseeeeee: ${response.body}');
-
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return {'platform': 'Messenger', 'redirect': data['redirect']};
-      } else {
-        throw Exception('Messenger publish failed: ${response.body}');
-      }
+      return {
+        'platform': 'Messenger',
+        'redirect': response.data['redirect'],
+      };
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error publishing Messenger: $e')),
@@ -326,7 +244,3 @@ class PlatformProvider with ChangeNotifier {
     }
   }
 }
-
-
-
-
