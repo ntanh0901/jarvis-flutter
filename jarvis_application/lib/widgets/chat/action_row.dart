@@ -7,7 +7,7 @@ import 'icon_buttons_row.dart';
 class ActionRow extends StatelessWidget {
   final List<Assistant> assistants;
   final Assistant? selectedAssistant;
-  final ValueChanged<Assistant> onAssistantSelected;
+  final ValueChanged<Assistant?> onAssistantSelected;
   final void Function(String action) onActionSelected;
   final int remainUsage;
 
@@ -26,15 +26,14 @@ class ActionRow extends StatelessWidget {
       builder: (context, constraints) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
               AIModelDropdown(
                 assistants: assistants,
                 selectedAssistant: selectedAssistant,
                 onAssistantSelected: onAssistantSelected,
               ),
-              const SizedBox(height: 3.0),
+              const Spacer(),
               IconButtonsRow(
                 onIconPressed: onActionSelected,
                 remainUsage: remainUsage,
@@ -43,17 +42,6 @@ class ActionRow extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildIconButton(IconData icon, String action) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 1.0),
-      child: IconButton(
-        icon: Icon(icon),
-        iconSize: 18,
-        onPressed: () => onActionSelected(action), // Gửi action đến ActionRow
-      ),
     );
   }
 }

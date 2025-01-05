@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../views/prompts/api_prompts.dart';
+import '../../data/services/prompt_service.dart';
 
 final createPromptViewmodelProvider =
-    StateNotifierProvider<PromptFormNotifier, PromptFormState>((ref) {
-  return PromptFormNotifier();
+    StateNotifierProvider.autoDispose<PromptFormNotifier, PromptFormState>(
+        (ref) {
+  final promptService = ref.watch(promptServiceProvider);
+  return PromptFormNotifier(promptService);
 });
 
 class PromptFormState {
@@ -14,6 +16,7 @@ class PromptFormState {
   final bool isPublic;
   final String language;
   final String category;
+  final String? error;
 
   PromptFormState({
     required this.title,
@@ -22,6 +25,7 @@ class PromptFormState {
     required this.isPublic,
     required this.language,
     required this.category,
+    this.error,
   });
 
   PromptFormState copyWith({
@@ -31,6 +35,7 @@ class PromptFormState {
     bool? isPublic,
     String? language,
     String? category,
+    String? error,
   }) {
     return PromptFormState(
       title: title ?? this.title,
@@ -39,25 +44,28 @@ class PromptFormState {
       isPublic: isPublic ?? this.isPublic,
       language: language ?? this.language,
       category: category ?? this.category,
+      error: error ?? this.error,
     );
   }
 }
 
 class PromptFormNotifier extends StateNotifier<PromptFormState> {
-  PromptFormNotifier()
+  final PromptService _promptService;
+
+  PromptFormNotifier(this._promptService)
       : super(PromptFormState(
           title: '',
           description: '',
           content: '',
           isPublic: false,
           language: 'English',
-          category: 'other',
+          category: 'OTHER',
         ));
 
   Future<void> createPrompt() async {
     try {
-      await ApiService.createPrompt(
-        category: state.isPublic ? state.category : 'other',
+      await _promptService.createPrompt(
+        category: state.isPublic ? state.category : 'OTHER',
         content: state.content,
         description: state.isPublic ? state.description : 'nothing',
         isPublic: state.isPublic,
@@ -66,15 +74,19 @@ class PromptFormNotifier extends StateNotifier<PromptFormState> {
       );
 
       state = PromptFormState(
-          title: '',
-          description: '',
-          content: '',
-          isPublic: false,
-          language: 'English',
-          category: 'other');
+        title: '',
+        description: '',
+        content: '',
+        isPublic: false,
+        language: 'English',
+        category: 'OTHER',
+      );
     } catch (e) {
-      // Handle error
-      print('Failed to create prompt: $e');
+      state = state.copyWith(error: 'Failed to create prompt: $e');
     }
+  }
+
+  bool isFormValid() {
+    return state.title.isNotEmpty && state.content.isNotEmpty;
   }
 }

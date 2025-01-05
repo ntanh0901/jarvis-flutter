@@ -1,7 +1,74 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:jarvis_application/ui/viewmodels/knowledge_base_viewmodel.dart';
 
-class ConfluenceScreen extends StatelessWidget {
-  const ConfluenceScreen({super.key});
+class ConfluenceScreen extends ConsumerStatefulWidget {
+  final String knowledgeBaseId;
+
+  const ConfluenceScreen({super.key, required this.knowledgeBaseId});
+
+  @override
+  _ConfluenceScreenState createState() => _ConfluenceScreenState();
+}
+
+class _ConfluenceScreenState extends ConsumerState<ConfluenceScreen> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _wikiPageUrlController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _accessTokenController = TextEditingController();
+  bool _isSubmitting = false;
+
+  Future<void> _addConfluenceUnit() async {
+    final name = _nameController.text;
+    final wikiPageUrl = _wikiPageUrlController.text;
+    final username = _usernameController.text;
+    final accessToken = _accessTokenController.text;
+
+    if (name.isEmpty ||
+        wikiPageUrl.isEmpty ||
+        username.isEmpty ||
+        accessToken.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('All fields are required'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await ref.read(kbViewModelProvider.notifier).addConfluenceUnit(
+            widget.knowledgeBaseId,
+            name,
+            wikiPageUrl,
+            username,
+            accessToken,
+          );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Confluence unit added successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error adding Confluence unit: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isSubmitting = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,8 +101,9 @@ class ConfluenceScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16.0),
-            const TextField(
-              decoration: InputDecoration(
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Name',
               ),
@@ -46,8 +114,9 @@ class ConfluenceScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16.0),
-            const TextField(
-              decoration: InputDecoration(
+            TextField(
+              controller: _wikiPageUrlController,
+              decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Wiki Page URL',
               ),
@@ -58,8 +127,9 @@ class ConfluenceScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16.0),
-            const TextField(
-              decoration: InputDecoration(
+            TextField(
+              controller: _usernameController,
+              decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Confluence Username',
               ),
@@ -70,8 +140,9 @@ class ConfluenceScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16.0),
-            const TextField(
-              decoration: InputDecoration(
+            TextField(
+              controller: _accessTokenController,
+              decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Confluence Access Token',
               ),
@@ -79,10 +150,12 @@ class ConfluenceScreen extends StatelessWidget {
             const SizedBox(height: 32.0),
             Center(
               child: ElevatedButton(
-                onPressed: () {
-                  // Handle connect action
-                },
-                child: const Text('Connect'),
+                onPressed: _isSubmitting ? null : _addConfluenceUnit,
+                child: _isSubmitting
+                    ? const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      )
+                    : const Text('Connect'),
               ),
             ),
           ],

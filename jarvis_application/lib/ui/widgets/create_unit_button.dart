@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:jarvis_application/ui/views/knowledgeBase/add_new_unit_screen.dart';
 
 class CreateUnitButton extends StatelessWidget {
-  const CreateUnitButton({super.key});
+  final VoidCallback onPressed;
+
+  const CreateUnitButton({super.key, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -17,13 +18,7 @@ class CreateUnitButton extends StatelessWidget {
             ),
           ),
           child: InkWell(
-            onTap: () {
-              //Add new unit
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AddNewUnit()),
-              );
-            },
+            onTap: onPressed,
             child: const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Row(

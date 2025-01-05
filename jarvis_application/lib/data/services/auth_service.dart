@@ -1,41 +1,63 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../core/constants/api_endpoints.dart';
+import '../../providers/auth_state.dart';
 import '../../providers/dio_provider.dart';
+import '../services/token_manager.dart';
+import '../services/user_manager.dart';
 
-final authServiceProvider = Provider<AuthService>((ref) {
+final authProvider = StateNotifierProvider<AuthService, AuthState>((ref) {
   final dio = ref.read(dioProvider);
-  return AuthService(dio);
+  final tokenManager = ref.read(tokenManagerProvider);
+  final userManager = ref.read(userManagerProvider);
+  return AuthService(dio, tokenManager, userManager);
 });
 
-class AuthService {
+class AuthService extends StateNotifier<AuthState> {
   final Dio _dio;
+  final TokenManager _tokenManager;
+  final UserManager _userManager;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  AuthService(this._dio);
+  AuthService(this._dio, this._tokenManager, this._userManager)
+      : super(AuthState());
 
-  Future<Map<String, dynamic>?> signUp(
-      String username, String email, String password) async {
+  void _handleError(String error) {
+    state = state.copyWith(
+      errorMessage: error.replaceFirst('Exception: ', ''),
+    );
+  }
+
+  void _setAuthenticatedState(Map<String, dynamic> response) {
+    final tokens = response['token'];
+    _tokenManager.saveTokens(
+        accessToken: tokens['accessToken'],
+        refreshToken: tokens['refreshToken']);
+    state = state.copyWith(isAuthenticated: true);
+  }
+
+  Future<void> signUp(String username, String email, String password) async {
+    state = AuthState();
     try {
       final response = await _dio.post(
         ApiEndpoints.signUp,
+        options: Options(extra: {'requiresAuth': false}),
         data: {'username': username, 'email': email, 'password': password},
       );
       if (response.statusCode == 201) {
-        return response.data;
+        _setAuthenticatedState(response.data);
       }
-    } on DioException catch (e) {
-      if (e.response != null) {
-        throw Exception(parseError(e.response));
-      }
-      throw Exception('Network error: ${e.message}');
     } catch (e) {
-      throw Exception('Error signing up: $e');
+      _handleError(_parseError(e));
     }
-    return null;
   }
 
-  Future<Map<String, dynamic>?> signIn(String email, String password) async {
+  Future<void> signIn(String email, String password) async {
+    state = AuthState();
     try {
       final response = await _dio.post(
         ApiEndpoints.signIn,
@@ -43,91 +65,83 @@ class AuthService {
         data: {'email': email, 'password': password},
       );
       if (response.statusCode == 200) {
-        return response.data;
+        _setAuthenticatedState(response.data);
       }
-    } on DioException catch (e) {
-      if (e.response != null) {
-        throw Exception(parseError(e.response));
-      }
-      throw Exception('Network error: ${e.message}');
     } catch (e) {
-      throw Exception('Error signing in: $e');
+      _handleError(_parseError(e));
     }
-    return null;
   }
 
-  Future<Map<String, dynamic>?> signInWithGoogle() async {
-    return null;
-
-    //   TODO: Implement sign in with Google
-  }
-
-  Future<Map<String, dynamic>?> signUpWithGoogle() async {
-    return null;
-
-    //   TODO: Implement sign up with Google
-  }
-
-  Future<void> signOut() async {
+  Future<void> signInWithGoogle() async {
+    state = AuthState();
     try {
-      final response = await _dio.get(
-        ApiEndpoints.signOut,
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) throw Exception('Google sign-in aborted');
+
+      log(googleUser.email);
+      log(googleUser.id);
+      log(googleUser.photoUrl.toString());
+
+      final googleAuth = await googleUser.authentication;
+      final response = await _dio.post(
+        ApiEndpoints.googleSignIn,
         options: Options(extra: {'requiresAuth': false}),
+        data: {'token': googleAuth.accessToken},
       );
+
       if (response.statusCode == 200) {
-        return response.data;
+        _setAuthenticatedState(response.data);
       }
-    } on DioException catch (e) {
-      if (e.response != null) {
-        throw Exception(parseError(e.response));
-      }
-      throw Exception('Network error: ${e.message}');
     } catch (e) {
-      throw Exception('Error signing in: $e');
+      _handleError(_parseError(e));
     }
   }
 
-  Future<Map<String, dynamic>?> getCurrentUser() async {
+  Future<void> getCurrentUser() async {
     try {
       final response = await _dio.get(
         ApiEndpoints.getCurrentUser,
       );
+
       if (response.statusCode == 200) {
-        return response.data;
+        final user = response.data;
+        state = state.copyWith(user: user, isAuthenticated: true);
       }
-    } on DioException catch (e) {
-      if (e.response != null) {
-        throw Exception(parseError(e.response));
-      }
-      throw Exception('Network error: ${e.message}');
     } catch (e) {
-      throw Exception('Error signing in: $e');
+      _handleError(_parseError(e));
     }
-    return null;
   }
 
-  String parseError(Response? response) {
-    if (response == null || response.data == null) {
-      return 'Unknown error occurred';
+  Future<void> signOut() async {
+    try {
+      await _dio.get(
+        ApiEndpoints.signOut,
+        options: Options(extra: {'requiresAuth': false}),
+      );
+      await _tokenManager.deleteAllTokens();
+      await _userManager.deleteUser();
+      state = state.copyWith(isAuthenticated: false, user: null);
+    } catch (e) {
+      _handleError(_parseError(e));
     }
+  }
 
-    if (response.data is Map) {
-      final data = response.data;
+  String _parseError(dynamic error) {
+    if (error is DioException && error.response != null) {
+      final response = error.response;
+      if (response?.data == null) return 'Unknown error occurred';
 
-      if (data.containsKey('details') && data['details'] is List) {
-        final details = data['details'];
-        if (details.isNotEmpty &&
-            details.first is Map &&
-            details.first.containsKey('issue')) {
-          return details.first['issue'];
+      if (response!.data is Map) {
+        final data = response.data;
+        if (data['details'] is List && data['details'].isNotEmpty) {
+          final details = data['details'].first;
+          if (details is Map && details.containsKey('issue')) {
+            return details['issue'];
+          }
         }
-      }
-
-      if (data.containsKey('message')) {
-        return data['message'];
+        if (data.containsKey('message')) return data['message'];
       }
     }
-
-    return 'Unknown error occurred';
+    return error.toString();
   }
 }

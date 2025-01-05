@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/prompt.dart';
-import '../views/prompts/api_prompts.dart';
+import '../../data/services/prompt_service.dart';
 
 class PromptLibraryState {
   final bool isLoading;
@@ -9,7 +9,7 @@ class PromptLibraryState {
   final List<Prompt> myPrompts;
   final List<Prompt> publicPrompts;
   final List<Prompt> filteredPrompts;
-  final List<String> selectedCategories; // Changed to a list of categories
+  final List<String> selectedCategories;
   final String searchQuery;
   final List<String> categories;
 
@@ -19,7 +19,7 @@ class PromptLibraryState {
     this.myPrompts = const [],
     this.publicPrompts = const [],
     this.filteredPrompts = const [],
-    this.selectedCategories = const [], // Default to an empty list
+    this.selectedCategories = const [],
     this.searchQuery = '',
     this.categories = const [],
   });
@@ -30,7 +30,7 @@ class PromptLibraryState {
     List<Prompt>? myPrompts,
     List<Prompt>? publicPrompts,
     List<Prompt>? filteredPrompts,
-    List<String>? selectedCategories, // Changed to a list
+    List<String>? selectedCategories,
     String? searchQuery,
     List<String>? categories,
   }) {
@@ -40,8 +40,7 @@ class PromptLibraryState {
       myPrompts: myPrompts ?? this.myPrompts,
       publicPrompts: publicPrompts ?? this.publicPrompts,
       filteredPrompts: filteredPrompts ?? this.filteredPrompts,
-      selectedCategories:
-          selectedCategories ?? this.selectedCategories, // Handle list
+      selectedCategories: selectedCategories ?? this.selectedCategories,
       searchQuery: searchQuery ?? this.searchQuery,
       categories: categories ?? this.categories,
     );
@@ -49,54 +48,74 @@ class PromptLibraryState {
 }
 
 class PromptNotifier extends StateNotifier<PromptLibraryState> {
-  PromptNotifier() : super(PromptLibraryState());
+  final PromptService _promptService;
 
-  Future<void> signInAndFetchPrompts() async {
-    state = state.copyWith(isLoading: true);
+  PromptNotifier(this._promptService) : super(PromptLibraryState());
 
-    try {
-      await ApiService.signIn();
-      await fetchMyPrompts();
-      await fetchPublicPrompts();
-    } catch (e) {
-      print('Error during sign in and fetch prompts: $e');
-    } finally {
-      state = state.copyWith(isLoading: false);
-    }
+  Future init() async {
+    await Future.wait([
+      fetchMyPrompts(),
+      fetchPublicPrompts(),
+    ]);
   }
 
-  Future<void> fetchMyPrompts() async {
+  Future<void> fetchMyPrompts({int limit = 20, int offset = 0}) async {
     try {
-      final privatePrompts = await ApiService.getPrompts(isPublic: false);
-      final favoritePrompts = await ApiService.getPrompts(isPublic: true);
+      final privatePrompts = await _promptService.getPrompts(
+          isPublic: false, limit: limit, offset: offset);
+      final favoritePrompts = await _promptService.getPrompts(
+          isPublic: true, isFavorite: true, limit: limit, offset: offset);
+      if (!mounted) return;
       state = state.copyWith(
-        myPrompts: [
-          ...privatePrompts,
-          ...favoritePrompts.where((prompt) => prompt.isFavorite == true),
-        ],
+        myPrompts: [...privatePrompts, ...favoritePrompts],
+        isLoading: false,
       );
     } catch (e) {
       print('Error fetching my prompts: $e');
     }
   }
 
-  Future<void> fetchPublicPrompts() async {
+  Future<void> fetchPublicPrompts({int limit = 20, int offset = 0}) async {
     try {
-      final fetchedPrompts = await ApiService.getPrompts(isPublic: true);
+      final fetchedPrompts = await _promptService.getPrompts(
+          isPublic: true, limit: limit, offset: offset);
       final fetchedCategories = fetchedPrompts
           .map((prompt) => prompt.category)
           .whereType<String>()
           .toSet()
           .toList();
+
+      // Update categories only if there are new categories
+      final newCategories = fetchedCategories
+          .where((category) => !state.categories.contains(category))
+          .toList();
+      final updatedCategories = state.categories.contains('All')
+          ? [...state.categories, ...newCategories]
+          : ['All', ...state.categories, ...newCategories];
+
+      if (!mounted) return;
       state = state.copyWith(
-        publicPrompts: fetchedPrompts,
-        filteredPrompts: fetchedPrompts,
-        categories: ['All', ...fetchedCategories],
-        selectedCategories: ['All'],
+        publicPrompts: [
+          ...state.publicPrompts,
+          ...fetchedPrompts,
+        ],
+        filteredPrompts: [
+          ...state.filteredPrompts,
+          ...fetchedPrompts,
+        ],
+        categories: updatedCategories,
         isLoading: false,
       );
     } catch (e) {
       print('Error fetching public prompts: $e');
+    }
+  }
+
+  Future<void> loadMorePrompts() async {
+    if (state.isMyPromptSelected) {
+      await fetchMyPrompts(limit: 20, offset: state.myPrompts.length);
+    } else {
+      await fetchPublicPrompts(limit: 20, offset: state.publicPrompts.length);
     }
   }
 
@@ -107,7 +126,15 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
 
   Future<void> deletePrompt(String id) async {
     try {
-      await ApiService.deletePrompt(id);
+      await _promptService.deletePrompt(id);
+
+      state = state.copyWith(
+        myPrompts: state.myPrompts.where((prompt) => prompt.id != id).toList(),
+        publicPrompts:
+            state.publicPrompts.where((prompt) => prompt.id != id).toList(),
+        filteredPrompts:
+            state.filteredPrompts.where((prompt) => prompt.id != id).toList(),
+      );
     } catch (e) {
       print('Error deleting prompt: $e');
     }
@@ -116,38 +143,60 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
   Future<void> toggleFavorite(Prompt prompt) async {
     try {
       final newFavoriteStatus = !(prompt.isFavorite ?? false);
+
       if (newFavoriteStatus) {
-        await ApiService.favoritePrompt(prompt.id);
+        await _promptService.favoritePrompt(prompt.id);
       } else {
-        await ApiService.unfavoritePrompt(prompt.id);
+        await _promptService.unfavoritePrompt(prompt.id);
       }
 
-      // Update the prompt locally
+      // Update local prompt object
       prompt.isFavorite = newFavoriteStatus;
 
-      refreshPrompts();
+      // 1) Update myPrompts in memory
+      //    - Add prompt if it is now a favorite and isPublic == true
+      //    - Remove prompt from myPrompts if it’s no longer a favorite
+      final updatedMyPrompts = [...state.myPrompts];
+      if (newFavoriteStatus && !updatedMyPrompts.contains(prompt)) {
+        updatedMyPrompts.add(prompt);
+      } else if (!newFavoriteStatus && updatedMyPrompts.contains(prompt)) {
+        updatedMyPrompts.remove(prompt);
+      }
+
+      // 2) Update publicPrompts in memory
+      final updatedPublicPrompts = [...state.publicPrompts];
+      final publicIndex =
+          updatedPublicPrompts.indexWhere((p) => p.id == prompt.id);
+      if (publicIndex != -1) {
+        updatedPublicPrompts[publicIndex] = prompt;
+      }
+
+      // 3) Write back to state: you can also update filteredPrompts if necessary
       state = state.copyWith(
-        myPrompts: [...state.myPrompts],
-        publicPrompts: [...state.publicPrompts],
+        myPrompts: updatedMyPrompts,
+        publicPrompts: updatedPublicPrompts,
       );
+
+      // 4) Filter again if needed
+      filterPrompts();
     } catch (e) {
-      print('Error favoriting prompt: $e');
+      print('Error toggling favorite: $e');
     }
   }
 
   Future<void> updatePrompt(
       Prompt prompt, String newTitle, String newContent) async {
     try {
-      await ApiService.updatePrompt(
+      await _promptService.updatePrompt(
         id: prompt.id,
         title: newTitle,
         content: newContent,
       );
 
-      // Update the prompt locally
       prompt.title = newTitle;
       prompt.content = newContent;
 
+      if (!mounted) return;
       state = state.copyWith(
         publicPrompts: [...state.publicPrompts],
         myPrompts: [...state.myPrompts],
@@ -169,7 +218,8 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
               false);
     }
 
-    if (state.selectedCategories.contains('All')) {
+    if (state.selectedCategories.isEmpty ||
+        state.selectedCategories.contains('All')) {
       state = state.copyWith(
         filteredPrompts: state.publicPrompts.where(matchesQuery).toList(),
       );
@@ -187,8 +237,9 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
   void changeCategory(String category) {
     final updatedCategories = List<String>.from(state.selectedCategories);
     if (category == 'All') {
-      updatedCategories.clear();
-      updatedCategories.add('All');
+      updatedCategories
+        ..clear()
+        ..add('All');
     } else {
       if (updatedCategories.contains('All')) {
         updatedCategories.remove('All');
@@ -198,6 +249,10 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
       } else {
         updatedCategories.add(category);
       }
+    }
+
+    if (updatedCategories.isEmpty) {
+      updatedCategories.add('All');
     }
 
     state = state.copyWith(selectedCategories: updatedCategories);
@@ -216,11 +271,12 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
 
   void togglePromptSelection() {
     state = state.copyWith(isMyPromptSelected: !state.isMyPromptSelected);
+    //fetchPrompts();
   }
 }
 
-// Define the Riverpod provider for the PromptNotifier
 final promptViewModelProvider =
     StateNotifierProvider<PromptNotifier, PromptLibraryState>((ref) {
-  return PromptNotifier();
+  final promptService = ref.watch(promptServiceProvider);
+  return PromptNotifier(promptService);
 });

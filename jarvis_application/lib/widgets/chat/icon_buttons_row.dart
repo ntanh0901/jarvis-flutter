@@ -18,41 +18,59 @@ class IconButtonsRow extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildIconButton(Icons.add_comment, 'add_comment'),
-            _buildIconButton(Icons.picture_as_pdf, 'upload_pdf'),
-            _buildIconButton(Icons.menu_book_outlined, 'view_book'),
-            _buildIconButton(Icons.access_time, 'view_history'),
+            Wrap(
+              spacing: 0, // Removes spacing between icons
+              children: [
+                _buildIconButton(Icons.add_comment, 'new_chat'),
+                _buildIconButton(Icons.access_time, 'view_history'),
+              ],
+            ),
           ],
         ),
-
+        const SizedBox(width: 8),
         // Remaining usage
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (remainUsage == -1)
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                  backgroundColor: Colors.grey,
+                ),
+              )
+            else
+              Text(
+                '$remainUsage',
+                style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blueAccent),
+              ),
+            const SizedBox(width: 2),
             const Icon(
               Icons.local_fire_department_sharp,
               size: 22,
               color: Colors.blueAccent,
             ),
-            const SizedBox(width: 4),
-            Text(
-              '$remainUsage',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
           ],
-        ),
+        )
       ],
     );
   }
 
   Widget _buildIconButton(IconData icon, String action) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: .4),
-      child: IconButton(
-        icon: Icon(icon),
-        iconSize: 18,
-        onPressed: () => onIconPressed(action), // Gửi action đến ActionRow
+    return IconButton(
+      icon: Icon(icon),
+      iconSize: 18,
+      constraints: const BoxConstraints(
+        minWidth: 24,
+        minHeight: 24,
       ),
+      onPressed: () => onIconPressed(action),
     );
   }
 }

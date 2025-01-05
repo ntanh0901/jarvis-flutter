@@ -1,53 +1,60 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:jarvis_application/data/services/secure_storage_provider.dart';
 
 final tokenManagerProvider = Provider<TokenManager>((ref) {
-  return TokenManager();
+  final secureStorage = ref.watch(secureStorageProvider);
+  return TokenManager(secureStorage);
 });
 
 class TokenManager {
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  final FlutterSecureStorage _secureStorage;
 
-  // Define keys for access and refresh tokens
-  static const String _accessTokenKey = 'access_token';
-  static const String _refreshTokenKey = 'refresh_token';
+  TokenManager(this._secureStorage);
 
-  // Method to get the access token
-  Future<String?> getAccessToken() async {
-    return await _secureStorage.read(key: _accessTokenKey);
+  static const _accessTokenKey = 'access_token';
+  static const _refreshTokenKey = 'refresh_token';
+  static const _kbAccessTokenKey = 'kb_access_token';
+  static const _kbRefreshTokenKey = 'kb_refresh_token';
+
+  Future<String?> getAccessToken([bool isKB = false]) async {
+    return await _secureStorage.read(
+      key: isKB ? _kbAccessTokenKey : _accessTokenKey,
+    );
   }
 
-  // Method to save tokens securely
-  // Save tokens securely
-  Future<void> saveTokens(Map<String, dynamic> tokens,
-      {bool isSaveRefreshToken = true}) async {
-    try {
-      // Store the access token
-      await _secureStorage.write(
-        key: _accessTokenKey,
-        value: tokens['accessToken'],
-      );
+  Future<String?> getRefreshToken([bool isKB = false]) async {
+    return await _secureStorage.read(
+      key: isKB ? _kbRefreshTokenKey : _refreshTokenKey,
+    );
+  }
 
-      // Store the refresh token
-      if (isSaveRefreshToken) {
-        await _secureStorage.write(
-          key: _refreshTokenKey,
-          value: tokens['refreshToken'],
-        );
-      }
-    } catch (e) {
-      print('Error saving tokens: $e');
+  Future<void> saveTokens({
+    String? accessToken,
+    String? refreshToken,
+    bool isKB = false,
+  }) async {
+    final accessKey = isKB ? _kbAccessTokenKey : _accessTokenKey;
+    final refreshKey = isKB ? _kbRefreshTokenKey : _refreshTokenKey;
+
+    if (accessToken != null) {
+      await _secureStorage.write(key: accessKey, value: accessToken);
+    }
+    if (refreshToken != null) {
+      await _secureStorage.write(key: refreshKey, value: refreshToken);
     }
   }
 
-  // Method to get the refresh token
-  Future<String?> getRefreshToken() async {
-    return await _secureStorage.read(key: _refreshTokenKey);
+  Future<void> deleteTokens([bool isKB = false]) async {
+    final accessKey = isKB ? _kbAccessTokenKey : _accessTokenKey;
+    final refreshKey = isKB ? _kbRefreshTokenKey : _refreshTokenKey;
+
+    await _secureStorage.delete(key: accessKey);
+    await _secureStorage.delete(key: refreshKey);
   }
 
-  // Method to delete tokens securely (log out)
-  Future<void> deleteTokens() async {
-    await _secureStorage.delete(key: _accessTokenKey);
-    await _secureStorage.delete(key: _refreshTokenKey);
+  Future<void> deleteAllTokens() async {
+    await deleteTokens(false);
+    await deleteTokens(true);
   }
 }

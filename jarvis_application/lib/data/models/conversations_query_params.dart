@@ -1,4 +1,3 @@
-
 import 'assistant_dto.dart';
 
 class ConversationsQueryParams {
@@ -8,21 +7,24 @@ class ConversationsQueryParams {
   Model? assistantModel;
 
   ConversationsQueryParams({
-     this.cursor ='',
-     this.limit=100,
-     this.assistantId,
-     this.assistantModel,
+    this.cursor = '',
+    this.limit = 100,
+    this.assistantId,
+    this.assistantModel,
   });
 
   void setCursor(String cursor) {
     this.cursor = cursor;
   }
+
   void setLimit(int limit) {
     this.limit = limit;
   }
+
   void setAssistantId(Id assistantId) {
     this.assistantId = assistantId;
   }
+
   void setAssistantModel(Model assistantModel) {
     this.assistantModel = assistantModel;
   }
@@ -36,20 +38,17 @@ class ConversationsQueryParams {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'cursor': cursor,
-      'limit': limit,
-      'assistantId': assistantId,
-      'assistantModel': assistantModel,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+        'cursor': cursor,
+        'limit': limit,
+        'assistantId': idValues.reverse[assistantId],
+        'assistantModel': modelValues.reverse[assistantModel],
+      }..removeWhere((key, value) => value == null);
+
   Map<String, dynamic> toJson2Params() {
     return {
       'assistantId': idValues.reverse[assistantId],
       'assistantModel': modelValues.reverse[assistantModel],
     };
   }
-
-
 }

@@ -1,10 +1,10 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:http/http.dart' as http;
+import 'package:jarvis_application/core/constants/api_endpoints.dart';
+import 'package:jarvis_application/data/models/prompt.dart';
 import 'package:jarvis_application/widgets/chat/greeting_text.dart';
 import 'package:screenshot/screenshot.dart';
 
@@ -14,20 +14,22 @@ import '../../../data/models/assistant_dto.dart';
 import '../../../data/models/chat_message.dart';
 import '../../../data/models/conversation_history_res.dart';
 import '../../../data/models/conversations_query_params.dart';
-import '../../../data/models/conversations_res.dart';
 import '../../../data/models/request_ai_chat.dart';
 import '../../../providers/dio_provider.dart';
 import '../../../widgets/chat/action_row.dart';
 import '../../../widgets/chat/conversation_history_dialog.dart';
 import '../../../widgets/chat/image_picker_helper.dart';
 import '../../../widgets/chat/logo_widget.dart';
-import '../../../widgets/chat/upload_dialog.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/scroll_arrows.dart';
+import '../prompts/prompt_dialog.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
   static const String routeName = '/chat';
 
-  const ChatPage({super.key});
+  final Prompt? initialPrompt;
+
+  const ChatPage({Key? key, this.initialPrompt}) : super(key: key);
 
   @override
   ConsumerState<ChatPage> createState() => _ChatPageState();
@@ -36,6 +38,7 @@ class ChatPage extends ConsumerStatefulWidget {
 class _ChatPageState extends ConsumerState<ChatPage>
     with WidgetsBindingObserver {
   final TextEditingController messageController = TextEditingController();
+  final GlobalKey _chatInputKey = GlobalKey();
   final ScreenshotController screenshotController = ScreenshotController();
   final ScrollController _scrollController = ScrollController();
 
@@ -72,18 +75,66 @@ class _ChatPageState extends ConsumerState<ChatPage>
   @override
   void initState() {
     super.initState();
+    if (widget.initialPrompt != null) {
+      messageController.text = widget.initialPrompt!.content;
+    }
+
+    // Listen for '/' to display prompt selection
+    messageController.addListener(() {
+      final text = messageController.text;
+      if (text.endsWith('/')) {
+        final chatInputBox =
+            _chatInputKey.currentContext?.findRenderObject() as RenderBox?;
+        final overlay =
+            Overlay.of(context).context.findRenderObject() as RenderBox;
+        if (chatInputBox != null) {
+          // Get the text field position relative to screen
+          final RenderBox overlay =
+              Overlay.of(context).context.findRenderObject() as RenderBox;
+          final textFieldRect = RelativeRect.fromRect(
+            Rect.fromPoints(
+              chatInputBox.localToGlobal(Offset.zero, ancestor: overlay),
+              chatInputBox.localToGlobal(
+                  chatInputBox.size.bottomRight(Offset.zero),
+                  ancestor: overlay),
+            ),
+            Offset.zero & overlay.size,
+          );
+
+          // Position the menu above the text field
+          final position = Offset(
+              16, // Add left padding
+              textFieldRect.top - 80);
+
+          showPromptMenu(
+            context: context,
+            ref: ref,
+            onPromptSelected: (prompt) {
+              _showPromptInfoDialog(prompt);
+            },
+            position: position,
+          );
+        }
+      }
+    });
+
+    // If there's an initial prompt...
+    if (widget.initialPrompt != null) {
+      messageController.text = widget.initialPrompt!.content;
+    }
     WidgetsBinding.instance.addObserver(this);
-    selectedAssistant = assistants.isNotEmpty ? assistants.first : null;
-    // initial Message  = empty
+    selectedAssistant =
+        Assistant.assistants.isNotEmpty ? Assistant.assistants.first : null;
     currentMessageUser = ChatMessage.empty();
     currentMessageAI = ChatMessage.empty();
-    remainUsage = 0;
+    remainUsage = -1;
     requestAiChat = RequestAiChat(
       assistant: selectedAssistant!.dto,
       content: '',
       metadata: metadata,
     );
     _dio = ref.read(dioProvider);
+    _initializeUsage();
   }
 
   @override
@@ -91,14 +142,46 @@ class _ChatPageState extends ConsumerState<ChatPage>
     WidgetsBinding.instance.removeObserver(this);
     _scrollController.dispose();
     messageController.dispose();
-    messageFocusNode.dispose(); // Dispose the focus node
+    messageFocusNode.dispose();
     super.dispose();
   }
 
-  Future<void> _sendMessage(String content, Assistant currAssistant) async {
+  void _showPromptInfoDialog(Prompt prompt) {
+    showPromptInfoDialog(
+      context: context,
+      prompt: prompt,
+      ref: ref,
+      onUsePrompt: (content) {
+        setState(() {
+          messageController.text = content;
+        });
+      },
+    );
+  }
+
+  void _initializeUsage() async {
+    try {
+      // Get initial usage from API
+      final response = await _dio.get(ApiEndpoints.getUsage);
+
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+        setState(() {
+          remainUsage = responseData['availableTokens'] ?? 0;
+        });
+      }
+    } catch (e) {
+      print("Error fetching initial usage: $e");
+      setState(() {
+        remainUsage = 0;
+      });
+    }
+  }
+
+  Future<void> _sendMessage(String content, Assistant? currAssistant) async {
     // Add message to the local list
     messages.add(ChatMessage(
-      assistant: currAssistant.dto,
+      assistant: currAssistant?.dto,
       role: 'user',
       content: content,
     ));
@@ -112,46 +195,47 @@ class _ChatPageState extends ConsumerState<ChatPage>
     try {
       Response response;
 
-      // Set up the request data
-      if (metadata.conversation.id == "") {
+      if (metadata.conversation.id!.isEmpty) {
         // First-time request
-        final requestBody = requestAiChat
-          ..setContent(content)
-          ..setAssistant(currAssistant.dto);
+        final requestBody = requestAiChat.copyWith(
+          content: content,
+          assistant: currAssistant?.dto,
+        );
 
         response = await _dio.post(
           '/api/v1/ai-chat',
           data: requestBody.toJsonFirstTime(),
-          options: Options(headers: {'x-jarvis-guid': ''}),
         );
-
-        print("Meta Req First Time: ${metadata.toJson()}");
       } else {
-        // Subsequent messages
-        final requestBody = requestAiChat
-          ..setContent(content)
-          ..setAssistant(currAssistant.dto)
-          ..setMetadata(metadata);
+        // Subsequent messages - use existing conversation ID
+        final requestBody = requestAiChat.copyWith(
+          content: content,
+          assistant: currAssistant?.dto,
+          metadata: metadata,
+        );
 
         response = await _dio.post(
           '/api/v1/ai-chat/messages',
           data: requestBody.toJson(),
           options: Options(headers: {'x-jarvis-guid': ''}),
         );
-
-        print("Meta Req Next Time: ${metadata.toJson()}");
       }
 
-      // Handle response
       if (response.statusCode == 200) {
         final responseAIChat = response.data;
 
-        conversationID = responseAIChat['conversationId'];
+        // Update conversation ID only if this is a new conversation
+        if (metadata.conversation.id!.isEmpty) {
+          conversationID = responseAIChat['conversationId'];
+          metadata.setConversationID(conversationID);
+        }
+
         final messageAI = responseAIChat['message'];
         final remainingUsage = responseAIChat['remainingUsage'];
 
+        // Add the AI response to messages
         messages.add(ChatMessage(
-          assistant: currAssistant.dto,
+          assistant: currAssistant?.dto,
           role: 'model',
           content: messageAI,
         ));
@@ -161,26 +245,21 @@ class _ChatPageState extends ConsumerState<ChatPage>
         });
         _scrollToBottom();
 
+        // Update current messages and metadata
         currentMessageUser.setValues(
           newRole: 'user',
           newContent: content,
-          newAssistant: currAssistant.dto,
+          newAssistant: currAssistant?.dto,
         );
 
         currentMessageAI.setValues(
           newRole: 'model',
           newContent: messageAI,
-          newAssistant: currAssistant.dto,
+          newAssistant: currAssistant?.dto,
         );
-        metadata.setConversationID(conversationID);
+
         metadata.addMessage(currentMessageUser);
         metadata.addMessage(currentMessageAI);
-
-        print("Meta Result: ${metadata.toJson()}");
-      } else {
-        String errorMessage =
-            "Request failed with status: ${response.statusCode}\nReason: ${response.statusMessage}";
-        _showErrorDialog(context, "Error", errorMessage);
       }
     } catch (e) {
       _showErrorDialog(context, "Error", "An error occurred: $e");
@@ -197,76 +276,9 @@ class _ChatPageState extends ConsumerState<ChatPage>
     return content.replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 
-  Future<void> _fetchConversations() async {
-    // Setup headers
-    var headers = {
-      'x-jarvis-guid': '',
-      'Authorization': 'Bearer ',
-      'Content-Type': 'application/json',
-    };
-
-    // Create query parameters
-    ConversationsQueryParams queryParams = ConversationsQueryParams(
-      cursor: '',
-      limit: 100,
-      assistantId: selectedAssistant?.dto.id,
-      assistantModel: selectedAssistant?.dto.model,
-    );
-
-    try {
-      // Build request URL
-      var url = Uri.https(
-        'api.jarvis.cx',
-        '/api/v1/ai-chat/conversations', // Đường dẫn không chứa query string
-        {
-          'assistantId': idValues.reverse[queryParams.assistantId],
-          'assistantModel': 'dify',
-        },
-      );
-
-      // print(url.toString());
-      // print("URLLLLLLLLL: ${url}");
-
-      // Send request
-      var response = await http.get(url, headers: headers);
-
-      if (response.statusCode == 200) {
-        // Parse response
-        var responseData = jsonDecode(response.body);
-        // print(responseData['items']);
-        // print("successsssssssssssssssssssssssssssssssssssssssssss data: $responseData");
-
-        ConversationsRes conversations =
-            ConversationsRes.fromJson(responseData);
-        // print("Response Dataaaaaaaaaaaaaaaa: $conversations");
-
-        setState(() {
-          items = List<Map<String, dynamic>>.from(
-            conversations.items.map((item) => {
-                  'title': item.title ?? '',
-                  'id': item.id ?? '',
-                  'createdAt': item.createdAt ?? 0,
-                }),
-          );
-          cursor = conversations.cursor;
-        });
-      } else {
-        String errorMessage =
-            "Request failed with status: ${response.statusCode}\nReason: ${response.reasonPhrase}";
-        _showErrorDialog(context, "Error", errorMessage);
-      }
-    } catch (e) {
-      _showErrorDialog(context, "Error", "An error occurred: $e");
-    }
-  }
-
   Future<void> _fetchConversationHistory(String newConversationID) async {
-    // Setup headers
-    var headers = {
-      'x-jarvis-guid': '',
-      'Authorization': 'Bearer ',
-      'Content-Type': 'application/json',
-    };
+    metadata.setConversationID(newConversationID);
+    conversationID = newConversationID; // Update the current conversationID
 
     // Create query parameters
     ConversationsQueryParams queryParams = ConversationsQueryParams(
@@ -278,35 +290,29 @@ class _ChatPageState extends ConsumerState<ChatPage>
 
     try {
       // Build request URL
-      var url = Uri.https(
-        'api.jarvis.cx',
-        '/api/v1/ai-chat/conversations/$newConversationID/messages',
-        // Đường dẫn không chứa query string
-        {
-          'assistantId': idValues.reverse[queryParams.assistantId],
-          'assistantModel': 'dify',
-        },
-      );
+      final queryParameters = {
+        'assistantId': idValues.reverse[queryParams.assistantId],
+        'assistantModel': 'dify',
+      };
 
-      // print("URLLLLLLLLL: ${url}");
+      final newConversationUrl =
+          '/api/v1/ai-chat/conversations/$newConversationID/messages';
 
       // Send request
-      var response = await http.get(url, headers: headers);
+      final response = await _dio.get(
+        newConversationUrl,
+        queryParameters: queryParameters,
+      );
 
       if (response.statusCode == 200) {
-        // Parse response
-        var responseData = jsonDecode(response.body);
-        // print(responseData['items']);
-        print(
-            "successsssssssssssssssssssssssssssssssssssssssssss data: $responseData");
-
+        var responseData = response.data;
         ConversationHistoryRes conversationHistory =
             ConversationHistoryRes.fromJson(responseData);
-        print("Historyyyyyyyyyyyyyy: $conversationHistory");
 
         setState(() {
           cursor = conversationHistory.cursor;
           messages.clear();
+
           for (var i in conversationHistory.items!) {
             messages.add(ChatMessage(
               assistant: selectedAssistant?.dto,
@@ -318,29 +324,29 @@ class _ChatPageState extends ConsumerState<ChatPage>
               role: 'model',
               content: i.answer,
             ));
+
+            // Update current messages
             currentMessageUser.setValues(
-                newRole: 'user',
-                newContent: i.query,
-                newAssistant: selectedAssistant?.dto);
+              newRole: 'user',
+              newContent: i.query,
+              newAssistant: selectedAssistant?.dto,
+            );
 
             currentMessageAI.setValues(
-                newRole: 'model',
-                newContent: i.answer,
-                newAssistant: selectedAssistant?.dto);
+              newRole: 'model',
+              newContent: i.answer,
+              newAssistant: selectedAssistant?.dto,
+            );
 
-            metadata.setConversationID(conversationID);
+            // Add messages to metadata
             metadata.addMessage(currentMessageUser);
             metadata.addMessage(currentMessageAI);
-            conversationID = newConversationID;
-            print("Meta Historyyyyyyyy: ${jsonEncode(metadata.toJson())}");
           }
         });
-
-        // metadata.conversation.id= newConversationID;
-        // metadata.conversation.messages = messages;
+        _scrollToBottom(animated: false);
       } else {
         String errorMessage =
-            "Request failed with status: ${response.statusCode}\nReason: ${response.reasonPhrase}";
+            "Request failed with status: ${response.statusCode}\nReason: ${response.statusMessage}";
         _showErrorDialog(context, "Error", errorMessage);
       }
     } catch (e) {
@@ -379,34 +385,47 @@ class _ChatPageState extends ConsumerState<ChatPage>
     );
   }
 
-  void _scrollToBottom() {
+  void _scrollToBottom({bool animated = true}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
+        if (animated) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        } else {
+          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        }
       }
     });
   }
 
   Widget _buildChatInput() {
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context)
-            .unfocus(); // Dismiss keyboard when tapping outside the input
-        // but it doesn't work =((
-      },
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+      ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        padding: const EdgeInsets.only(
+          left: 8.0,
+          right: 8.0,
+          top: 4.0,
+          bottom: 4.0,
+        ),
         child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFFEEEEEE),
-            borderRadius: BorderRadius.circular(20.0),
+          key: _chatInputKey,
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height *
+                0.15, // 15% of screen height
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20.0),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end, // Align items to bottom
             children: [
               IconButton(
                 icon: const Icon(Icons.add_circle_outline, color: Colors.blue),
@@ -419,28 +438,32 @@ class _ChatPageState extends ConsumerState<ChatPage>
               ),
               Expanded(
                 child: TextField(
-                  focusNode: messageFocusNode, // Attach the focus node
+                  maxLines: 5,
+                  minLines: 1,
+                  focusNode: messageFocusNode,
                   controller: messageController,
                   decoration: const InputDecoration(
-                    hintText: 'Type a message...',
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: 12.0,
+                    ),
+                    border: InputBorder.none,
+                    hintText: 'Ask me anything, press \'/\' for prompts...',
                     hintStyle: TextStyle(
                       color: Color(0xFFB9B9B9),
                     ),
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 8.0),
+                    hintMaxLines: 1,
                   ),
                 ),
               ),
               IconButton(
                 icon: const Icon(Icons.send, color: Colors.blue),
                 onPressed: () {
+                  _scrollToBottom();
                   final text = messageController.text.trim();
                   if (text.isNotEmpty) {
-                    _sendMessage(text, selectedAssistant!);
+                    _sendMessage(text, selectedAssistant);
                     messageController.clear();
-                    FocusScope.of(context)
-                        .unfocus(); // Dismiss keyboard after sending
+                    FocusScope.of(context).unfocus();
                   }
                 },
               ),
@@ -454,7 +477,6 @@ class _ChatPageState extends ConsumerState<ChatPage>
   Future<void> resetConversation() async {
     setState(() {
       messages.clear();
-      remainUsage = 0;
     });
 
     await Future.delayed(const Duration(milliseconds: 200));
@@ -477,15 +499,10 @@ class _ChatPageState extends ConsumerState<ChatPage>
 
   Future<void> _handleAction(String action, BuildContext context) async {
     switch (action) {
-      case 'add_comment':
+      case 'new_chat':
         await resetConversation();
         break;
-      case 'upload_pdf':
-        _showUploadDialog(context);
-        break;
-      case 'view_book':
-        _fetchConversationHistory('9117d62c-e295-443b-8259-e3609ca3f74f');
-        break;
+
       case 'view_history':
         _showConversationHistoryDialog(context);
         break;
@@ -494,38 +511,12 @@ class _ChatPageState extends ConsumerState<ChatPage>
     }
   }
 
-  void _showUploadDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return UploadDialog(
-          onFilePicked: (file) {
-            if (file != null) {
-              print('Selected file: ${file.path}');
-
-              // Xử lý file tải lên
-            }
-          },
-        );
-      },
-    );
-  }
-
-  void _showConversationHistoryDialog(BuildContext context) async {
-    // fetch conversations
-    await _fetchConversations();
-
+  void _showConversationHistoryDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) {
         return ConversationHistoryDialog(
-          initialItems: items,
           cursor: cursor,
-          onItemsUpdated: (updatedItems) {
-            setState(() {
-              items = updatedItems; // Update the local list
-            });
-          },
           onItemSelected: (conversationID) {
             _fetchConversationHistory(conversationID);
           },
@@ -540,92 +531,114 @@ class _ChatPageState extends ConsumerState<ChatPage>
       child: Screenshot(
         controller: screenshotController,
         child: Scaffold(
+          backgroundColor: Colors.white,
           appBar: AppBar(
+            surfaceTintColor: Colors.transparent,
             title: const Text(
               'Chat',
               style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 24,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            backgroundColor: Colors.white,
-            elevation: 0,
-            centerTitle: true,
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/publishing-platforms');
-                },
-                child: const Text(
-                  'Publish',
-                  style: TextStyle(color: Colors.blue, fontSize: 16),
-                ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Divider(
+                color: Colors.grey[200],
+                height: 1,
               ),
-            ],
+            ),
           ),
           drawer: const AppDrawer(),
-          body: SafeArea(
-            child: Column(
+          body: Stack(children: [
+            Column(
               children: [
-                if (messages.isEmpty) ...[
-                  const LogoWidget(),
-                  const SizedBox(height: 10),
-                  const GreetingText(),
-                  const SizedBox(height: 10),
-                ],
                 Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    itemCount: messages.length + (isTyping ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == messages.length && isTyping) {
-                        return const Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: SpinKitThreeBounce(
-                              color: Colors.grey,
-                              size: 20.0,
-                            ),
+                  child: messages.isEmpty
+                      ? const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              LogoWidget(imageType: 1),
+                              SizedBox(height: 10),
+                              GreetingText(),
+                              SizedBox(height: 10),
+                            ],
                           ),
-                        );
-                      }
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          itemCount: messages.length + (isTyping ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index == messages.length && isTyping) {
+                              return const Align(
+                                alignment: Alignment.centerLeft,
+                                child: Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: SpinKitThreeBounce(
+                                    color: Colors.grey,
+                                    size: 20.0,
+                                  ),
+                                ),
+                              );
+                            }
 
-                      final message = messages[index];
-                      return Align(
-                        alignment: message.role == 'user'
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
-                        child: Container(
-                          margin: message.role == 'user'
-                              ? const EdgeInsets.only(
-                                  left: 50, right: 10, top: 5, bottom: 5)
-                              : const EdgeInsets.only(
-                                  left: 10, right: 50, top: 5, bottom: 5),
-                          padding: const EdgeInsets.all(15),
-                          decoration: BoxDecoration(
-                            color: message.role == 'user'
-                                ? Colors.blue[100]
-                                : Colors.grey[300],
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(
-                                  message.role == 'user' ? 20 : 0),
-                              topRight: Radius.circular(
-                                  message.role == 'user' ? 0 : 20),
-                              bottomLeft: const Radius.circular(20),
-                              bottomRight: const Radius.circular(20),
-                            ),
-                          ),
-                          child: Flexible(
-                            child: Text(message.content!),
-                          ),
+                            final message = messages[index];
+                            return Align(
+                              alignment: message.role == 'user'
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                              child: Container(
+                                margin: message.role == 'user'
+                                    ? const EdgeInsets.only(
+                                        left: 30, right: 10, top: 10, bottom: 5)
+                                    : const EdgeInsets.only(
+                                        left: 10,
+                                        right: 30,
+                                        top: 20,
+                                        bottom: 5),
+                                padding: const EdgeInsets.all(15),
+                                decoration: BoxDecoration(
+                                  color: message.role == 'user'
+                                      ? const Color(0xFF6841EA)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(
+                                        message.role == 'user' ? 20 : 0),
+                                    topRight: Radius.circular(
+                                        message.role == 'user' ? 0 : 20),
+                                    bottomLeft: const Radius.circular(20),
+                                    bottomRight: const Radius.circular(20),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.2),
+                                      spreadRadius: 2,
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Flexible(
+                                  child: MarkdownBody(
+                                    data: message.content!,
+                                    styleSheet: MarkdownStyleSheet(
+                                      p: TextStyle(
+                                        color: message.role == 'user'
+                                            ? Colors.white
+                                            : Colors.black,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
                 ),
                 ActionRow(
-                  assistants: assistants,
+                  assistants: Assistant.assistants,
                   selectedAssistant: selectedAssistant,
                   onAssistantSelected: (assistant) {
                     setState(() {
@@ -638,9 +651,14 @@ class _ChatPageState extends ConsumerState<ChatPage>
                   remainUsage: remainUsage,
                 ),
                 _buildChatInput(),
+                const SizedBox(height: 10),
               ],
             ),
-          ),
+            ScrollArrows(
+              scrollController: _scrollController,
+              onScrollToBottom: _scrollToBottom,
+            ),
+          ]),
         ),
       ),
     );

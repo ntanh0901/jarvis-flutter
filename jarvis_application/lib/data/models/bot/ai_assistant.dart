@@ -7,9 +7,9 @@ class AIAssistant {
   final String? updatedAt;
   final String? createdBy;
   final String? updatedBy;
-  final String? instructions;
-  final String? description;
-  final String? openAiThreadIdPlay;
+  final String instructions;
+  final String description;
+  final String openAiThreadIdPlay;
 
   AIAssistant({
     required this.createdAt,
@@ -19,10 +19,28 @@ class AIAssistant {
     this.updatedAt,
     this.createdBy,
     this.updatedBy,
-    this.instructions,
-    this.description,
-    this.openAiThreadIdPlay,
+    required this.instructions,
+    required this.description,
+    required this.openAiThreadIdPlay,
   });
+
+  AIAssistant copyWith({
+    String? id,
+    String? assistantName,
+    String? instructions,
+    String? description,
+    String? createdAt,
+  }) {
+    return AIAssistant(
+      id: id ?? this.id,
+      assistantName: assistantName ?? this.assistantName,
+      instructions: instructions ?? this.instructions,
+      description: description ?? this.description,
+      createdAt: createdAt ?? this.createdAt,
+      openAiAssistantId: '',
+      openAiThreadIdPlay: '',
+    );
+  }
 
   factory AIAssistant.fromJson(Map<String, dynamic> json) {
     return AIAssistant(
@@ -33,8 +51,8 @@ class AIAssistant {
       updatedAt: json['updatedAt'],
       createdBy: json['createdBy'],
       updatedBy: json['updatedBy'],
-      instructions: json['instructions'],
-      description: json['description'],
+      instructions: json['instructions'] ?? '',
+      description: json['description'] ?? '',
       openAiThreadIdPlay: json['openAiThreadIdPlay'],
     );
   }

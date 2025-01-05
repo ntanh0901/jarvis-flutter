@@ -120,10 +120,11 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                   : () => _handleSubmit(authViewModel),
               child: authState is AsyncLoading
                   ? const SizedBox(
-                      width: 24,
-                      height: 24,
+                      width: 18,
+                      height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
                       ),
                     )
                   : const Text('Sign in'),
@@ -140,10 +141,10 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
   Widget _buildGoogleSignInButton(AuthViewModel authViewModel) {
     return GoogleAuthButton(
-      label: 'Sign up with Google',
+      label: 'Sign in with Google',
       onPressed: () async {
         try {
-          await authViewModel.googleSignUp();
+          await authViewModel.signInWithGoogle();
           _showMessage('Sign in with Google successful', Colors.green);
         } catch (e) {
           _showMessage('Sign in with Google failed', Colors.red);
@@ -167,7 +168,6 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       if (errorMessage != null) {
         _showMessage(errorMessage, Colors.red);
       } else {
-        _showMessage('Sign in successful', Colors.green);
         context.go('/chat');
         // get curren user
         final user = await authViewModel.getCurrentUser();

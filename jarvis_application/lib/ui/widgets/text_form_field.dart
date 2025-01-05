@@ -45,7 +45,7 @@ class CustomFormBuilderTextField extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: hintText,
                 filled: true,
-                fillColor: const Color(0xFFF5F4FA),
+                fillColor: const Color(0xFFF1F5F9),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide.none,
@@ -54,7 +54,7 @@ class CustomFormBuilderTextField extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   borderSide: const BorderSide(
                     color: Colors.blue,
-                    width: 2.0,
+                    width: 1.0,
                   ),
                 ),
                 suffixIcon: isPasswordField

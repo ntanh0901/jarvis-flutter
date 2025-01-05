@@ -1,7 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:jarvis_application/ui/viewmodels/knowledge_base_viewmodel.dart';
 
-class SlackScreen extends StatelessWidget {
-  const SlackScreen({super.key});
+class SlackScreen extends ConsumerStatefulWidget {
+  final String knowledgeBaseId;
+
+  const SlackScreen({super.key, required this.knowledgeBaseId});
+
+  @override
+  _SlackScreenState createState() => _SlackScreenState();
+}
+
+class _SlackScreenState extends ConsumerState<SlackScreen> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _workspaceController = TextEditingController();
+  final TextEditingController _botTokenController = TextEditingController();
+  bool _isSubmitting = false;
+
+  Future<void> _addSlackUnit() async {
+    final name = _nameController.text;
+    final workspace = _workspaceController.text;
+    final botToken = _botTokenController.text;
+
+    if (name.isEmpty || workspace.isEmpty || botToken.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Name, Workspace, and Bot Token cannot be empty'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await ref.read(kbViewModelProvider.notifier).addSlackUnit(
+            widget.knowledgeBaseId,
+            workspace,
+            botToken,
+            name,
+          );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Slack unit added successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error adding Slack unit: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isSubmitting = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,8 +95,9 @@ class SlackScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16.0),
-            const TextField(
-              decoration: InputDecoration(
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Name',
               ),
@@ -46,8 +108,9 @@ class SlackScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16.0),
-            const TextField(
-              decoration: InputDecoration(
+            TextField(
+              controller: _workspaceController,
+              decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Slack Workspace',
               ),
@@ -58,8 +121,9 @@ class SlackScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16.0),
-            const TextField(
-              decoration: InputDecoration(
+            TextField(
+              controller: _botTokenController,
+              decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Slack Bot Token',
               ),
@@ -67,10 +131,12 @@ class SlackScreen extends StatelessWidget {
             const SizedBox(height: 32.0),
             Center(
               child: ElevatedButton(
-                onPressed: () {
-                  // Handle connect action
-                },
-                child: const Text('Connect'),
+                onPressed: _isSubmitting ? null : _addSlackUnit,
+                child: _isSubmitting
+                    ? const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      )
+                    : const Text('Connect'),
               ),
             ),
           ],

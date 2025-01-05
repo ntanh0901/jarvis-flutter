@@ -9,6 +9,7 @@ class AppTheme {
       surface: Colors.white,
       primary: Colors.deepPurple,
     ),
+    dividerTheme: const DividerThemeData(color: Colors.grey),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.white,
       foregroundColor: Colors.black,

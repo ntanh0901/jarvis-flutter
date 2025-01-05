@@ -158,7 +158,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
       label: 'Sign up with Google',
       onPressed: () async {
         try {
-          await authViewModel.googleSignUp();
+          await authViewModel.signInWithGoogle();
           _showMessage('Sign up with Google successful', Colors.green);
           context.go('/chat');
         } catch (e) {

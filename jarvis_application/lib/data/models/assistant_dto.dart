@@ -1,4 +1,3 @@
-
 ///AssistantDto
 class AssistantDto {
   Id? id;
@@ -14,15 +13,15 @@ class AssistantDto {
   }
 
   factory AssistantDto.fromJson(Map<String, dynamic> json) => AssistantDto(
-    id: idValues.map[json["id"]]!,
-    model: modelValues.map[json["model"]] ?? Model.DIFY,
-  );
+        id: idValues.map[json["id"]]!,
+        model: modelValues.map[json["model"]] ?? Model.DIFY,
+      );
 
   Map<String, dynamic> toJson() => {
-    "id": idValues.reverse[id],
-    "model": modelValues.reverse[model],
-    "name": name, // Thêm name vào toJson
-  };
+        "id": idValues.reverse[id],
+        "model": modelValues.reverse[model],
+        "name": name, // Thêm name vào toJson
+      };
 
   @override
   String toString() => '$id ($model)';
@@ -67,13 +66,9 @@ final idValues = EnumValues({
   "gpt-4o-mini": Id.GPT_4_O_MINI
 });
 
-enum Model {
-  DIFY
-}
+enum Model { DIFY }
 
-final modelValues = EnumValues({
-  "dify": Model.DIFY
-});
+final modelValues = EnumValues({"dify": Model.DIFY});
 
 class EnumValues<T> {
   Map<String, T> map;

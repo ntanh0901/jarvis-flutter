@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:jarvis_application/data/services/auth_service.dart';
 
-import '../../providers/auth_notifier.dart';
 import 'app_logo.dart';
 
 final drawerProvider = StateNotifierProvider<DrawerNotifier, int>((ref) {
@@ -82,13 +82,13 @@ class AppDrawer extends ConsumerWidget {
         child: ListTile(
           leading: Icon(
             icon,
-            color: Colors.black,
+            color: isSelected ? const Color(0xFF3257A0) : Colors.grey,
           ),
           title: Text(
             title,
             style: TextStyle(
-              color: Colors.black,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected ? const Color(0xFF3257A0) : Colors.grey,
+              fontWeight: FontWeight.bold,
             ),
           ),
           tileColor: isSelected ? Colors.blue[700] : Colors.transparent,
@@ -116,17 +116,13 @@ class AppDrawer extends ConsumerWidget {
                 context.go('/email-compose');
                 break;
               case 5:
-                // Sign out logic
-                await ref.read(authNotifierProvider.notifier).signOut();
+                await ref.read(authProvider.notifier).signOut();
 
-                // Reset drawer state after sign-out
                 ref.read(drawerProvider.notifier).selectItem(0);
 
-                // Navigate to the sign-in page
-                if (context.mounted) {
+                Future.microtask(() {
                   context.go('/sign-in');
-                }
-
+                });
                 break;
             }
           },

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../viewmodels/knowledge_base_viewmodel.dart';
 
-class CreateNewKB extends StatefulWidget {
+class CreateNewKB extends ConsumerStatefulWidget {
   const CreateNewKB({super.key});
 
   @override
   _CreateNewKBState createState() => _CreateNewKBState();
 }
 
-class _CreateNewKBState extends State<CreateNewKB> {
+class _CreateNewKBState extends ConsumerState<CreateNewKB> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
@@ -69,8 +71,39 @@ class _CreateNewKBState extends State<CreateNewKB> {
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: () {
-                    // Handle confirm action
+                  onPressed: () async {
+                    final name = _nameController.text;
+                    final description = _descriptionController.text;
+
+                    if (name.isEmpty || description.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Name and description cannot be empty'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+
+                    try {
+                      await ref
+                          .read(kbViewModelProvider.notifier)
+                          .createKnowledgeBase(name, description);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Knowledge base created successfully'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error creating knowledge base: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   },
                   child: const Text('Confirm'),
                 ),
