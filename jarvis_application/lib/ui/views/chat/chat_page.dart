@@ -20,7 +20,6 @@ import '../../../widgets/chat/action_row.dart';
 import '../../../widgets/chat/conversation_history_dialog.dart';
 import '../../../widgets/chat/image_picker_helper.dart';
 import '../../../widgets/chat/logo_widget.dart';
-import '../../../widgets/chat/upload_dialog.dart';
 import '../../widgets/app_drawer.dart';
 import '../../widgets/scroll_arrows.dart';
 import '../prompts/prompt_dialog.dart';
@@ -403,25 +402,32 @@ class _ChatPageState extends ConsumerState<ChatPage>
   }
 
   Widget _buildChatInput() {
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-      },
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+      ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        padding: const EdgeInsets.only(
+          left: 8.0,
+          right: 8.0,
+          top: 4.0,
+          bottom: 4.0,
+        ),
         child: Container(
           key: _chatInputKey,
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height *
+                0.15, // 15% of screen height
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20.0),
+            border: Border.all(color: Colors.grey.shade300),
           ),
-          child: TextField(
-            maxLines: 5,
-            minLines: 1,
-            focusNode: messageFocusNode,
-            controller: messageController,
-            decoration: InputDecoration(
-              prefixIcon: IconButton(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end, // Align items to bottom
+            children: [
+              IconButton(
                 icon: const Icon(Icons.add_circle_outline, color: Colors.blue),
                 onPressed: () {
                   ImagePickerHelper.showImagePickerOptions(
@@ -430,7 +436,26 @@ class _ChatPageState extends ConsumerState<ChatPage>
                   );
                 },
               ),
-              suffixIcon: IconButton(
+              Expanded(
+                child: TextField(
+                  maxLines: 5,
+                  minLines: 1,
+                  focusNode: messageFocusNode,
+                  controller: messageController,
+                  decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: 12.0,
+                    ),
+                    border: InputBorder.none,
+                    hintText: 'Ask me anything, press \'/\' for prompts...',
+                    hintStyle: TextStyle(
+                      color: Color(0xFFB9B9B9),
+                    ),
+                    hintMaxLines: 1,
+                  ),
+                ),
+              ),
+              IconButton(
                 icon: const Icon(Icons.send, color: Colors.blue),
                 onPressed: () {
                   _scrollToBottom();
@@ -442,22 +467,7 @@ class _ChatPageState extends ConsumerState<ChatPage>
                   }
                 },
               ),
-              contentPadding:
-                  const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
-                borderRadius: BorderRadius.circular(20.0),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
-                borderRadius: BorderRadius.circular(20.0),
-              ),
-              hintText: 'Ask me anything, press \'/\' for prompts...',
-              hintStyle: const TextStyle(
-                color: Color(0xFFB9B9B9),
-              ),
-              isDense: true, // Reduces height slightly
-            ),
+            ],
           ),
         ),
       ),
@@ -492,32 +502,13 @@ class _ChatPageState extends ConsumerState<ChatPage>
       case 'new_chat':
         await resetConversation();
         break;
-      case 'upload_pdf':
-        _showUploadDialog(context);
-        break;
+
       case 'view_history':
         _showConversationHistoryDialog(context);
         break;
       default:
         print("Unknown action: $action");
     }
-  }
-
-  void _showUploadDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return UploadDialog(
-          onFilePicked: (file) {
-            if (file != null) {
-              print('Selected file: ${file.path}');
-
-              // Xử lý file tải lên
-            }
-          },
-        );
-      },
-    );
   }
 
   void _showConversationHistoryDialog(BuildContext context) {

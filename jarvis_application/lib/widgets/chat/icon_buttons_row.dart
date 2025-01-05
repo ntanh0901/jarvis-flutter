@@ -18,9 +18,13 @@ class IconButtonsRow extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildIconButton(Icons.add_comment, 'new_chat'),
-            _buildIconButton(Icons.picture_as_pdf, 'upload_pdf'),
-            _buildIconButton(Icons.access_time, 'view_history'),
+            Wrap(
+              spacing: 0, // Removes spacing between icons
+              children: [
+                _buildIconButton(Icons.add_comment, 'new_chat'),
+                _buildIconButton(Icons.access_time, 'view_history'),
+              ],
+            ),
           ],
         ),
 
@@ -35,7 +39,7 @@ class IconButtonsRow extends StatelessWidget {
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                  backgroundColor: Colors.grey, // Background color
+                  backgroundColor: Colors.grey,
                 ),
               )
             else
@@ -46,7 +50,7 @@ class IconButtonsRow extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     color: Colors.blueAccent),
               ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 2),
             const Icon(
               Icons.local_fire_department_sharp,
               size: 22,
@@ -62,6 +66,10 @@ class IconButtonsRow extends StatelessWidget {
     return IconButton(
       icon: Icon(icon),
       iconSize: 18,
+      constraints: const BoxConstraints(
+        minWidth: 24,
+        minHeight: 24,
+      ),
       onPressed: () => onIconPressed(action),
     );
   }

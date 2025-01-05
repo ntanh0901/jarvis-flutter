@@ -26,14 +26,14 @@ class ActionRow extends StatelessWidget {
       builder: (context, constraints) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
               AIModelDropdown(
                 assistants: assistants,
                 selectedAssistant: selectedAssistant,
                 onAssistantSelected: onAssistantSelected,
               ),
+              const Spacer(),
               IconButtonsRow(
                 onIconPressed: onActionSelected,
                 remainUsage: remainUsage,
