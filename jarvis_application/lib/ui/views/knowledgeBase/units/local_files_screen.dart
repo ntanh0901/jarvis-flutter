@@ -35,7 +35,8 @@ class _LocalFilesScreenState extends ConsumerState<LocalFilesScreen> {
     try {
       await ref.read(kbViewModelProvider.notifier).addLocalFileUnit(
             widget.knowledgeBaseId,
-            _selectedFile!.path!,
+            _selectedFile!.name!,
+            _selectedFile!.bytes!,
           );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

@@ -64,14 +64,11 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
       final privatePrompts = await _promptService.getPrompts(
           isPublic: false, limit: limit, offset: offset);
       final favoritePrompts = await _promptService.getPrompts(
-          isPublic: true, limit: limit, offset: offset);
+          isPublic: true, isFavorite: true, limit: limit, offset: offset);
       if (!mounted) return;
       state = state.copyWith(
-        myPrompts: [
-          ...state.myPrompts,
-          ...privatePrompts,
-          ...favoritePrompts.where((prompt) => prompt.isFavorite == true),
-        ],
+        myPrompts: [...privatePrompts, ...favoritePrompts],
+        isLoading: false,
       );
     } catch (e) {
       print('Error fetching my prompts: $e');
@@ -130,6 +127,13 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
   Future<void> deletePrompt(String id) async {
     try {
       await _promptService.deletePrompt(id);
+      state = state.copyWith(
+        myPrompts: state.myPrompts.where((prompt) => prompt.id != id).toList(),
+        publicPrompts:
+            state.publicPrompts.where((prompt) => prompt.id != id).toList(),
+        filteredPrompts:
+            state.filteredPrompts.where((prompt) => prompt.id != id).toList(),
+      );
     } catch (e) {
       print('Error deleting prompt: $e');
     }
@@ -266,6 +270,7 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
 
   void togglePromptSelection() {
     state = state.copyWith(isMyPromptSelected: !state.isMyPromptSelected);
+    //fetchPrompts();
   }
 }
 

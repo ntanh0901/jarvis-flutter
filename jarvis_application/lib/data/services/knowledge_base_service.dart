@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jarvis_application/core/constants/api_endpoints.dart';
@@ -147,10 +149,39 @@ class KBService {
     }
   }
 
-  Future<void> addLocalFileUnit(String id, String filePath) async {
+  String _detectMimeType(String fileName) {
+    final extension = fileName.split('.').last.toLowerCase();
+    switch (extension) {
+      case 'pdf':
+        return 'application/pdf';
+      case 'png':
+        return 'image/png';
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'doc':
+        return 'application/msword';
+      case 'docx':
+        return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      default:
+        return 'application/octet-stream';
+    }
+  }
+
+  Future<void> addLocalFileUnit(
+    String id,
+    String fileName,
+    Uint8List fileBytes,
+  ) async {
     try {
+      final mimeType = _detectMimeType(fileName);
+      final parts = mimeType.split('/');
       final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(filePath),
+        'file': MultipartFile.fromBytes(
+          fileBytes,
+          filename: fileName,
+          contentType: DioMediaType(parts[0], parts[1]),
+        ),
       });
 
       final response = await _dioKB.dio.post(

@@ -34,6 +34,7 @@ class PromptService {
     String? category,
     String? query,
     bool? isPublic,
+    bool? isFavorite,
     int limit = 20,
     int offset = 0,
   }) async {
@@ -44,6 +45,7 @@ class PromptService {
           if (category != null) 'category': category,
           if (query != null) 'query': query,
           if (isPublic != null) 'isPublic': isPublic,
+          if (isFavorite != null) 'isFavorite': isFavorite,
           'limit': limit,
           'offset': offset,
         },

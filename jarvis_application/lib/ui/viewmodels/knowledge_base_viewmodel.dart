@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jarvis_application/data/services/knowledge_base_service.dart';
 
@@ -119,9 +121,10 @@ class KBNotifier extends StateNotifier<KBState> {
     }
   }
 
-  Future<void> addLocalFileUnit(String id, String filePath) async {
+  Future<void> addLocalFileUnit(
+      String id, String fileName, Uint8List fileBytes) async {
     try {
-      await _kbService.addLocalFileUnit(id, filePath);
+      await _kbService.addLocalFileUnit(id, fileName, fileBytes);
     } catch (e) {
       print('Error adding local file unit: $e');
       rethrow;

@@ -169,11 +169,44 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                                       size: 20,
                                       color: Color(0xff697079),
                                     ),
-                                    onPressed: () {
-                                      ref
-                                          .read(
-                                              promptViewModelProvider.notifier)
-                                          .deletePrompt(prompt.id);
+                                    onPressed: () async {
+                                      final confirm = await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: const Text('Delete Prompt'),
+                                          content: const Text(
+                                              'Are you sure you want to delete this prompt?'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(false),
+                                              child: const Text('Cancel'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context)
+                                                      .pop(true),
+                                              child: const Text('Delete'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+
+                                      if (confirm ?? false) {
+                                        await ref
+                                            .read(promptViewModelProvider
+                                                .notifier)
+                                            .deletePrompt(prompt.id);
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                                'Prompt deleted successfully'),
+                                            backgroundColor: Colors.green,
+                                          ),
+                                        );
+                                      }
                                     },
                                   ),
                                 if (state.isMyPromptSelected &&
@@ -204,11 +237,21 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                                           : null,
                                       size: 20,
                                     ),
-                                    onPressed: () {
-                                      ref
+                                    onPressed: () async {
+                                      await ref
                                           .read(
                                               promptViewModelProvider.notifier)
                                           .toggleFavorite(prompt);
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(prompt.isFavorite ==
+                                                  true
+                                              ? 'Prompt removed from favorites'
+                                              : 'Prompt added to favorites'),
+                                          backgroundColor: Colors.green,
+                                        ),
+                                      );
                                     },
                                   ),
                                   IconButton(
@@ -387,6 +430,40 @@ class PromptLibraryState extends ConsumerState<PromptLibrary> {
                     content: Text('Prompt updated successfully'),
                     backgroundColor: Colors.green,
                   ),
+                );
+              },
+            ),
+            TextButton.icon(
+              style: TextButton.styleFrom(
+                backgroundColor: const Color(0xFF6841EA),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.0),
+                ),
+              ),
+              icon: const Icon(
+                CupertinoIcons.conversation_bubble,
+                color: Colors.white,
+                size: 20.0,
+              ),
+              label: const Text(
+                'Use Prompt',
+                style: TextStyle(color: Colors.white),
+              ),
+              onPressed: () {
+                // Replace placeholders with user input
+                String modifiedContent = prompt.content;
+
+                // close dialog if needed
+                Navigator.of(context).pop();
+
+                // use context.goNamed to replace the current route
+                context.goNamed(
+                  'Chat',
+                  extra: prompt.copyWith(
+                      content:
+                          modifiedContent), // pass the modified Prompt through extra
                 );
               },
             ),
