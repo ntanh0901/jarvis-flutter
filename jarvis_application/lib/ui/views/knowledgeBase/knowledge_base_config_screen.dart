@@ -74,7 +74,13 @@ class _KnowledgeBaseConfigurationState
             Navigator.pop(context);
           },
         ),
-        title: Text('Knowledge Base / ${_knowledgeBase['name']}'),
+        title: Text(
+          'Knowledge Base / ${_knowledgeBase['name']}',
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
       drawer: const AppDrawer(),
       body: RefreshIndicator(
@@ -157,7 +163,11 @@ class _KnowledgeBaseConfigurationState
                 endIndent: 10,
               ),
               kbState.isLoading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation(Colors.white),
+                    ))
                   : Expanded(
                       child: UnitsListView(units: kbState.units),
                     ),

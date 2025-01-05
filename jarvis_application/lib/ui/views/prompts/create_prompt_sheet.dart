@@ -60,12 +60,26 @@ class _CreatePromptSheetState extends ConsumerState<CreatePromptSheet> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'New Prompt',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Expanded(
+                                child: Align(
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    'New Prompt',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.close, size: 20),
+                                onPressed: () => Navigator.pop(context),
+                              ),
+                            ],
                           ),
                           IconButton(
                             icon: const Icon(Icons.close, size: 20),

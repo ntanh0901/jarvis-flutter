@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:jarvis_application/ui/views/aiBots/result_publish_page.dart';
 import 'package:provider/provider.dart';
 
@@ -27,10 +28,14 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
   @override
   void initState() {
     super.initState();
-    final platformProvider = Provider.of<PlatformProvider>(context, listen: false);
+    final platformProvider =
+        Provider.of<PlatformProvider>(context, listen: false);
 
-    _selectedPlatforms = List<bool>.filled(platformProvider.platforms.length, false);
-    platformProvider.fetchPlatformConfigurations(widget.currentAssistant.id).catchError((e) {
+    _selectedPlatforms =
+        List<bool>.filled(platformProvider.platforms.length, false);
+    platformProvider
+        .fetchPlatformConfigurations(widget.currentAssistant.id)
+        .catchError((e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
@@ -45,7 +50,8 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Publishing Platform - ${widget.currentAssistant.assistantName}"),
+        title: Text(
+            "Publishing Platform - ${widget.currentAssistant.assistantName}"),
         centerTitle: true,
       ),
       body: Consumer<PlatformProvider>(
@@ -60,17 +66,19 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
                   itemBuilder: (context, index) {
                     final platform = platforms[index];
                     return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8.0, horizontal: 16.0),
                       child: Row(
                         children: [
                           Checkbox(
                             value: _selectedPlatforms[index],
                             onChanged: platform.status
                                 ? (bool? value) {
-                              setState(() {
-                                _selectedPlatforms[index] = value ?? false;
-                              });
-                            }
+                                    setState(() {
+                                      _selectedPlatforms[index] =
+                                          value ?? false;
+                                    });
+                                  }
                                 : null,
                           ),
                           Image.asset(
@@ -91,9 +99,13 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
                                   ),
                                 ),
                                 Text(
-                                  platform.status ? "Configured" : "Not Configured",
+                                  platform.status
+                                      ? "Configured"
+                                      : "Not Configured",
                                   style: TextStyle(
-                                    color: platform.status ? Colors.green : Colors.red,
+                                    color: platform.status
+                                        ? Colors.green
+                                        : Colors.red,
                                     fontSize: 14,
                                   ),
                                 ),
@@ -104,11 +116,14 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
                           TextButton(
                             onPressed: () {
                               if (platform.name == 'Messenger') {
-                                _showMessengerConfigDialog(context, platformProvider);
+                                _showMessengerConfigDialog(
+                                    context, platformProvider);
                               } else if (platform.name == 'Slack') {
-                                _showSlackConfigDialog(context, platformProvider);
+                                _showSlackConfigDialog(
+                                    context, platformProvider);
                               } else if (platform.name == 'Telegram') {
-                                _showTelegramConfigDialog(context, platformProvider);
+                                _showTelegramConfigDialog(
+                                    context, platformProvider);
                               }
                             },
                             child: const Text(
@@ -129,59 +144,67 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
                   child: ElevatedButton(
                     onPressed: _hasSelectedPlatforms
                         ? () async {
-                      List<Map<String, dynamic>> selectedPlatformResponses = [];
-                      final platformProvider =
-                      Provider.of<PlatformProvider>(context, listen: false);
+                            List<Map<String, dynamic>>
+                                selectedPlatformResponses = [];
+                            final platformProvider =
+                                Provider.of<PlatformProvider>(context,
+                                    listen: false);
 
-                      for (int i = 0; i < platformProvider.platforms.length; i++) {
-                        if (_selectedPlatforms[i]) {
-                          final platform = platformProvider.platforms[i];
-                          try {
-                            Map<String, String>? response;
+                            for (int i = 0;
+                                i < platformProvider.platforms.length;
+                                i++) {
+                              if (_selectedPlatforms[i]) {
+                                final platform = platformProvider.platforms[i];
+                                try {
+                                  Map<String, String>? response;
 
-                            if (platform.name == 'Telegram') {
-                              response = await platformProvider.publishTelegramBot(
-                                assistantId: widget.currentAssistant.id,
-                                context: context,
-                              );
-                            } else if (platform.name == 'Slack') {
-                              response = await platformProvider.publishSlackBot(
-                                assistantId: widget.currentAssistant.id,
-                                context: context,
-                              );
-                            } else if (platform.name == 'Messenger') {
-                              response = await platformProvider.publishMessengerBot(
-                                assistantId: widget.currentAssistant.id,
-                                context: context,
-                              );
+                                  if (platform.name == 'Telegram') {
+                                    response = await platformProvider
+                                        .publishTelegramBot(
+                                      assistantId: widget.currentAssistant.id,
+                                      context: context,
+                                    );
+                                  } else if (platform.name == 'Slack') {
+                                    response =
+                                        await platformProvider.publishSlackBot(
+                                      assistantId: widget.currentAssistant.id,
+                                      context: context,
+                                    );
+                                  } else if (platform.name == 'Messenger') {
+                                    response = await platformProvider
+                                        .publishMessengerBot(
+                                      assistantId: widget.currentAssistant.id,
+                                      context: context,
+                                    );
+                                  }
+
+                                  if (response != null) {
+                                    selectedPlatformResponses.add({
+                                      'name': platform.name,
+                                      'icon': platform.icon,
+                                      'status': true,
+                                      'redirect': response['redirect'],
+                                    });
+                                  }
+                                } catch (e) {
+                                  // Error already handled in PlatformProvider
+                                }
+                              }
                             }
 
-                            if (response != null) {
-                              selectedPlatformResponses.add({
-                                'name': platform.name,
-                                'icon': platform.icon,
-                                'status': true,
-                                'redirect': response['redirect'],
-                              });
-                            }
-                          } catch (e) {
-                            // Error already handled in PlatformProvider
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ResultPublishPage(
+                                  selectedPlatforms: selectedPlatformResponses,
+                                ),
+                              ),
+                            );
                           }
-                        }
-                      }
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ResultPublishPage(
-                            selectedPlatforms: selectedPlatformResponses,
-                          ),
-                        ),
-                      );
-                    }
                         : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _hasSelectedPlatforms ? Colors.blue : Colors.grey,
+                      backgroundColor:
+                          _hasSelectedPlatforms ? Colors.blue : Colors.grey,
                     ),
                     child: const Text('Publish'),
                   ),
@@ -226,13 +249,11 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
                 const SizedBox(height: 10),
                 _buildTextField('Messenger App Secret', appSecretController),
                 const SizedBox(height: 20),
-
                 const Text(
                   "Messenger copylink",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const SizedBox(height: 10),
-
                 _buildCopyableRow("Callback URL", callbackUrl),
                 const SizedBox(height: 10),
                 _buildCopyableRow("Verify Token", verifyToken),
@@ -241,7 +262,7 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+              onPressed: () => context.pop(),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
@@ -284,8 +305,10 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
       BuildContext context, PlatformProvider platformProvider) {
     final TextEditingController tokenController = TextEditingController();
     final TextEditingController clientIdController = TextEditingController();
-    final TextEditingController clientSecretController = TextEditingController();
-    final TextEditingController signingSecretController = TextEditingController();
+    final TextEditingController clientSecretController =
+        TextEditingController();
+    final TextEditingController signingSecretController =
+        TextEditingController();
     final scaffoldContext = context;
 
     final metadata = platformProvider.slackConfig;
@@ -319,13 +342,11 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
                 const SizedBox(height: 10),
                 _buildTextField('Signing Secret', signingSecretController),
                 const SizedBox(height: 20),
-
                 const Text(
                   "Slack copylink",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const SizedBox(height: 10),
-
                 _buildCopyableRow("OAuth2 Redirect URLs", oauth2RedirectUrl),
                 const SizedBox(height: 10),
                 _buildCopyableRow("Event Request URL", eventRequestUrl),
@@ -418,7 +439,8 @@ class _PublishingPlatformPageState extends State<PublishingPlatformPage> {
                 Navigator.of(context, rootNavigator: true).pop();
 
                 try {
-                  await platformProvider.verifyTelegramBot(botToken, scaffoldContext);
+                  await platformProvider.verifyTelegramBot(
+                      botToken, scaffoldContext);
                 } catch (e) {
                   ScaffoldMessenger.of(scaffoldContext).showSnackBar(
                     SnackBar(content: Text('Error: $e')),

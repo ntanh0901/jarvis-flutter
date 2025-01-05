@@ -24,7 +24,6 @@ class AIAssistant {
     required this.openAiThreadIdPlay,
   });
 
-
   AIAssistant copyWith({
     String? id,
     String? assistantName,
@@ -42,8 +41,6 @@ class AIAssistant {
       openAiThreadIdPlay: '',
     );
   }
-
-
 
   factory AIAssistant.fromJson(Map<String, dynamic> json) {
     return AIAssistant(

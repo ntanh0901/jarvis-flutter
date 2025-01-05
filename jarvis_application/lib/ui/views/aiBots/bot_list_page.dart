@@ -59,6 +59,7 @@ class _BotListPageState extends ConsumerState<BotListPage> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
+          surfaceTintColor: Colors.transparent,
           title: const Text(
             'AI Assistants',
             style: TextStyle(
@@ -81,7 +82,7 @@ class _BotListPageState extends ConsumerState<BotListPage> {
                 width: 30,
                 height: 30,
                 child: CircularProgressIndicator(
-                  strokeWidth: 3,
+                  strokeWidth: 2,
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                   backgroundColor: Colors.grey, // Background color
                 ),
@@ -122,24 +123,24 @@ class _BotListPageState extends ConsumerState<BotListPage> {
                           itemBuilder: (context, index) {
                             final assistant = filteredAssistants[index];
                             return GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => BotChatPage(
-                                      currentAssistant: assistant,
-                                      openAiThreadId:
-                                          assistant.openAiThreadIdPlay,
-                                    ),
-                                  ),
-                                );
-                              },
                               child: AssistantItem(
                                 id: assistant.id,
                                 name: assistant.assistantName,
                                 description: assistant.description,
                                 instructions: assistant.instructions,
                                 createdAt: assistant.createdAt,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => BotChatPage(
+                                        currentAssistant: assistant,
+                                        openAiThreadId:
+                                            assistant.openAiThreadIdPlay,
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
                             );
                           },

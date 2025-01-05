@@ -533,35 +533,22 @@ class _ChatPageState extends ConsumerState<ChatPage>
         child: Scaffold(
           backgroundColor: Colors.white,
           appBar: AppBar(
-              surfaceTintColor: Colors.transparent,
-              elevation: 20,
-              title: const Text(
-                'Chat',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                ),
+            surfaceTintColor: Colors.transparent,
+            title: const Text(
+              'Chat',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
               ),
-              backgroundColor: Colors.white,
-              centerTitle: true,
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/publish');
-                  },
-                  child: const Text(
-                    'Publish',
-                    style: TextStyle(color: Colors.blue, fontSize: 16),
-                  ),
-                ),
-              ],
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(1),
-                child: Divider(
-                  color: Colors.grey[200],
-                  height: 1,
-                ),
-              )),
+            ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Divider(
+                color: Colors.grey[200],
+                height: 1,
+              ),
+            ),
+          ),
           drawer: const AppDrawer(),
           body: Stack(children: [
             Column(

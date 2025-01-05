@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../providers/ai_bot_provider.dart';
 
 class CreateAssistantDialog extends ConsumerStatefulWidget {
@@ -7,7 +8,8 @@ class CreateAssistantDialog extends ConsumerStatefulWidget {
   final String? initialName;
   final String? initialInstructions;
   final String? initialDescription;
-  final Function(String name, String instructions, String description)? onUpdate;
+  final Function(String name, String instructions, String description)?
+      onUpdate;
 
   const CreateAssistantDialog({
     Key? key,
@@ -19,7 +21,8 @@ class CreateAssistantDialog extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  ConsumerState<CreateAssistantDialog> createState() => _CreateAssistantDialogState();
+  ConsumerState<CreateAssistantDialog> createState() =>
+      _CreateAssistantDialogState();
 }
 
 class _CreateAssistantDialogState extends ConsumerState<CreateAssistantDialog> {
@@ -30,14 +33,34 @@ class _CreateAssistantDialogState extends ConsumerState<CreateAssistantDialog> {
   @override
   void initState() {
     super.initState();
-
-    // Khởi tạo giá trị ban đầu từ các tham số
     _nameController = TextEditingController(text: widget.initialName ?? '');
-    _instructionsController = TextEditingController(text: widget.initialInstructions ?? '');
-    _descriptionController = TextEditingController(text: widget.initialDescription ?? '');
+    _instructionsController =
+        TextEditingController(text: widget.initialInstructions ?? '');
+    _descriptionController =
+        TextEditingController(text: widget.initialDescription ?? '');
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _instructionsController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
   }
 
   Future<void> _createAssistant() async {
+    if (_nameController.text.isEmpty ||
+        _instructionsController.text.isEmpty ||
+        _descriptionController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('All fields are required'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     final provider = ref.read(aiAssistantProvider.notifier);
 
     try {
@@ -47,93 +70,216 @@ class _CreateAssistantDialogState extends ConsumerState<CreateAssistantDialog> {
         _descriptionController.text,
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Assistant created successfully!')),
-      );
-
-      Navigator.of(context).pop();
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Created assistant "${_nameController.text}" successfully'),
+            backgroundColor: Colors.green[400],
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to create assistant: $e'),
+            backgroundColor: Colors.red[400],
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
     }
   }
 
   Future<void> _updateAssistant() async {
+    if (_nameController.text.isEmpty ||
+        _instructionsController.text.isEmpty ||
+        _descriptionController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('All fields are required'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Check if any changes were made
+    if (widget.initialName == _nameController.text &&
+        widget.initialInstructions == _instructionsController.text &&
+        widget.initialDescription == _descriptionController.text) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No changes made'),
+          backgroundColor: Colors.grey,
+        ),
+      );
+      return;
+    }
+
     if (widget.onUpdate != null) {
       try {
-        // Gọi hàm cập nhật được truyền vào
         widget.onUpdate!(
           _nameController.text,
           _instructionsController.text,
           _descriptionController.text,
         );
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Assistant updated successfully!')),
-        );
-
         Navigator.of(context).pop();
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error updating assistant: $e'),
+              backgroundColor: Colors.red[400],
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
+            ),
+          );
+        }
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final double minDialogWidth = MediaQuery.of(context).size.width * 0.8;
+
     return AlertDialog(
-      title: Text(widget.title),
-      content: SingleChildScrollView(
+      iconPadding: const EdgeInsets.only(top: 10, right: 10),
+      icon: Align(
+        alignment: Alignment.topRight,
+        child: InkWell(
+          onTap: () => Navigator.pop(context),
+          child: const Icon(Icons.close, color: Colors.grey, size: 20),
+        ),
+      ),
+      contentPadding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          minWidth: minDialogWidth,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(
+              child: Text(
+                widget.title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20.0,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16.0),
+            const Text(
+              'Name',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8.0),
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Assistant Name',
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 10),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: const Color(0xFFF1F5F9),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide.none,
+                ),
+                hintText: 'Enter assistant name',
+                hintStyle: const TextStyle(color: Color(0xFF89929D)),
               ),
             ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _instructionsController,
-              decoration: const InputDecoration(
-                labelText: 'Instructions',
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 10),
-              ),
-              maxLines: 3,
+            const SizedBox(height: 16.0),
+            const Text(
+              'Instructions',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 10),
+            const SizedBox(height: 8.0),
+            Flexible(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16.0),
+                  color: const Color(0xffF1F2F3),
+                ),
+                child: TextField(
+                  controller: _instructionsController,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    filled: true,
+                    fillColor: Color(0xFFF1F5F9),
+                    contentPadding: EdgeInsets.all(16.0),
+                    border: InputBorder.none,
+                    hintText: 'Enter instructions',
+                    hintStyle: TextStyle(color: Color(0xFF89929D)),
+                  ),
+                ),
               ),
-              maxLines: 3,
+            ),
+            const SizedBox(height: 16.0),
+            const Text(
+              'Description',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8.0),
+            Flexible(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16.0),
+                  color: const Color(0xffF1F2F3),
+                ),
+                child: TextField(
+                  controller: _descriptionController,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    filled: true,
+                    fillColor: Color(0xFFF1F5F9),
+                    contentPadding: EdgeInsets.all(16.0),
+                    border: InputBorder.none,
+                    hintText: 'Enter description',
+                    hintStyle: TextStyle(color: Color(0xFF89929D)),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
       ),
-      actions: [
+      actions: <Widget>[
         TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('Cancel'),
+          child: const Text(
+            'Cancel',
+            style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+          ),
+          onPressed: () => Navigator.of(context).pop(),
         ),
-        ElevatedButton(
-          onPressed: widget.onUpdate != null ? _updateAssistant : _createAssistant,
-          child: Text(widget.onUpdate != null ? 'Update' : 'Create'),
+        TextButton(
+          style: TextButton.styleFrom(
+            backgroundColor: const Color(0xFF6841EA),
+            padding:
+                const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+          ),
+          onPressed:
+              widget.onUpdate != null ? _updateAssistant : _createAssistant,
+          child: Text(
+            widget.onUpdate != null ? 'Save' : 'Create',
+            style: const TextStyle(color: Colors.white),
+          ),
         ),
       ],
     );
   }
-
 }

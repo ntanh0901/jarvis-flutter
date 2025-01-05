@@ -27,7 +27,7 @@ class IconButtonsRow extends StatelessWidget {
             ),
           ],
         ),
-
+        const SizedBox(width: 8),
         // Remaining usage
         Row(
           mainAxisSize: MainAxisSize.min,
