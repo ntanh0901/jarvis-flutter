@@ -208,6 +208,45 @@ class AIAssistantProvider extends StateNotifier<List<AIAssistant>> {
       rethrow;
     }
   }
+
+  Future<void> removeKnowledgeFromAssistant({
+    required String assistantId,
+    required String knowledgeId,
+  }) async {
+    try {
+      final response = await _dioKB.dio.delete(
+          '/kb-core/v1/ai-assistant/$assistantId/knowledges/$knowledgeId');
+
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Failed to unlink knowledge. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error unlinking knowledge from assistant: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<String>> getImportedKnowledgeByAssistantId(
+      String assistantId) async {
+    try {
+      final response = await _dioKB.dio.get(
+        '/kb-core/v1/ai-assistant/$assistantId/knowledges',
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as List<dynamic>;
+        return data.map((item) => item['id'] as String).toList();
+      } else {
+        throw Exception(
+          'Failed to fetch imported knowledge. Status code: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('Error fetching imported knowledge: $e');
+      rethrow;
+    }
+  }
 }
 
 final aiAssistantProvider =

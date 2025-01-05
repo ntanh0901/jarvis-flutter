@@ -9,6 +9,7 @@ import '../../../data/models/bot/chat_bot/message.dart';
 import '../../../providers/ai_bot_provider.dart';
 import '../../../widgets/chat/greeting_text.dart';
 import '../../../widgets/chat/logo_widget.dart';
+import '../../viewmodels/knowledge_base_viewmodel.dart';
 
 class BotChatPage extends ConsumerStatefulWidget {
   static const String routeName = '/bot-chat';
@@ -54,7 +55,7 @@ class _BotChatPageState extends ConsumerState<BotChatPage> {
         messages = fetchedMessages.reversed.toList();
       });
 
-      // Cuộn xuống sau khi danh sách tin nhắn được tải xong
+      // Scroll to bottom after messages are loaded
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scrollToBottom();
       });
@@ -142,6 +143,91 @@ class _BotChatPageState extends ConsumerState<BotChatPage> {
     }
   }
 
+  Future<void> _removeKnowledge(String knowledgeId) async {
+    try {
+      await ref.read(aiAssistantProvider.notifier).removeKnowledgeFromAssistant(
+            assistantId: widget.currentAssistant.id,
+            knowledgeId: knowledgeId,
+          );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Knowledge $knowledgeId removed successfully.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to remove knowledge: $e')),
+      );
+    }
+  }
+
+  Future<void> _showKnowledgeBasesDialog() async {
+    // Use the new function
+    final knowledgeBases = await ref
+        .read(kbViewModelProvider.notifier)
+        .fetchKnowledgeBasesForDialogScreen();
+
+    // Make sure you handle the case when the result is empty
+    if (knowledgeBases.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No Knowledge Bases found.')),
+      );
+      return;
+    }
+
+    // Fetch imported knowledge or any other data you need
+    final importedKnowledge = await ref
+        .read(aiAssistantProvider.notifier)
+        .getImportedKnowledgeByAssistantId(widget.currentAssistant.id);
+
+    // Show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Knowledge Bases'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: knowledgeBases.length,
+              itemBuilder: (context, index) {
+                final knowledgeBase = knowledgeBases[index];
+                final isImported = importedKnowledge.contains(knowledgeBase.id);
+
+                return ListTile(
+                  title: Text(knowledgeBase.knowledgeName),
+                  subtitle: Text(knowledgeBase.description),
+                  trailing: ElevatedButton(
+                    onPressed: () {
+                      if (isImported) {
+                        _removeKnowledge(knowledgeBase.id);
+                      } else {
+                        _addKnowledge(knowledgeBase.id);
+                      }
+                      Navigator.of(context).pop(); // Closes dialog after action
+                    },
+                    child: Text(isImported ? 'Remove' : 'Add'),
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildChatInput() {
     return GestureDetector(
       onTap: () {
@@ -163,7 +249,7 @@ class _BotChatPageState extends ConsumerState<BotChatPage> {
               fillColor: const Color(0xFFF1F5F9),
               prefixIcon: IconButton(
                 icon: const Icon(Icons.add_circle_outline, color: Colors.blue),
-                onPressed: () {},
+                onPressed: _showKnowledgeBasesDialog,
               ),
               suffixIcon: IconButton(
                 icon: const Icon(Icons.send, color: Colors.blue),
@@ -186,7 +272,7 @@ class _BotChatPageState extends ConsumerState<BotChatPage> {
                 borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
                 borderRadius: BorderRadius.circular(20.0),
               ),
-              hintText: 'Ask me anything, press \'/\' for prompts...',
+              hintText: 'Ask me anything',
               hintStyle: const TextStyle(
                 color: Color(0xFFB9B9B9),
               ),

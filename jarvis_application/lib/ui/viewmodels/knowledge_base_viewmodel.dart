@@ -1,8 +1,6 @@
 import 'dart:typed_data';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jarvis_application/data/services/knowledge_base_service.dart';
-
 import '../../data/models/knowledge_base.dart';
 import '../../data/models/kb_unit.dart';
 
@@ -160,6 +158,16 @@ class KBNotifier extends StateNotifier<KBState> {
     } catch (e) {
       print('Error adding Confluence unit: $e');
       rethrow;
+    }
+  }
+
+  Future<List<KnowledgeResDto>> fetchKnowledgeBasesForDialogScreen() async {
+    try {
+      final kbList = await _kbService.getKnowledgeBases();
+      return kbList;
+    } catch (e) {
+      print('Error fetching KB for dialog: $e');
+      return [];
     }
   }
 
