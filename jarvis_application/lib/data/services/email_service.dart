@@ -18,6 +18,7 @@ class EmailService {
   Future<dynamic> generateEmail(
       EmailGenerationRequest request, String endpoint) async {
     try {
+      request.toJson();
       final response = await _dio.post(
         endpoint,
         data: request.toJson(),

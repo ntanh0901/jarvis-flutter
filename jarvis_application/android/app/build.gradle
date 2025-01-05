@@ -30,14 +30,14 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
-    signingConfigs {
-        debug {
-            keyAlias 'upload'
-            keyPassword '071403'
-            storeFile file( 'upload-keystore.jks')
-            storePassword '071403'
-        }
-    }
+//    signingConfigs {
+//        debug {
+//            keyAlias 'upload'
+//            keyPassword '071403'
+//            storeFile file( 'upload-keystore.jks')
+//            storePassword '071403'
+//        }
+//    }
 
     buildTypes {
         release {

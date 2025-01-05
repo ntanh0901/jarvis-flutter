@@ -39,7 +39,10 @@ class CreatePromptButton extends StatelessWidget {
             if (result == null) return;
             if (result == true) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Prompt created successfully')),
+                const SnackBar(
+                  content: Text('Prompt created successfully'),
+                  backgroundColor: Colors.green,
+                ),
               );
               if (context.findAncestorStateOfType<PromptLibraryState>() !=
                   null) {

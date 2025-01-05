@@ -127,6 +127,7 @@ class PromptNotifier extends StateNotifier<PromptLibraryState> {
   Future<void> deletePrompt(String id) async {
     try {
       await _promptService.deletePrompt(id);
+
       state = state.copyWith(
         myPrompts: state.myPrompts.where((prompt) => prompt.id != id).toList(),
         publicPrompts:

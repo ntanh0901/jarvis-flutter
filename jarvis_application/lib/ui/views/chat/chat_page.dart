@@ -89,11 +89,23 @@ class _ChatPageState extends ConsumerState<ChatPage>
         final overlay =
             Overlay.of(context).context.findRenderObject() as RenderBox;
         if (chatInputBox != null) {
-          // Calculate position above the input
-          final position = chatInputBox.localToGlobal(
-            Offset(0, -chatInputBox.size.height - 150),
-            ancestor: overlay,
+          // Get the text field position relative to screen
+          final RenderBox overlay =
+              Overlay.of(context).context.findRenderObject() as RenderBox;
+          final textFieldRect = RelativeRect.fromRect(
+            Rect.fromPoints(
+              chatInputBox.localToGlobal(Offset.zero, ancestor: overlay),
+              chatInputBox.localToGlobal(
+                  chatInputBox.size.bottomRight(Offset.zero),
+                  ancestor: overlay),
+            ),
+            Offset.zero & overlay.size,
           );
+
+          // Position the menu above the text field
+          final position = Offset(
+              16, // Add left padding
+              textFieldRect.top - 80);
 
           showPromptMenu(
             context: context,
